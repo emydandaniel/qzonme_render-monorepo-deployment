@@ -15,6 +15,7 @@ export interface IStorage {
   // Quiz operations
   getQuiz(id: number): Promise<Quiz | undefined>;
   getQuizByAccessCode(accessCode: string): Promise<Quiz | undefined>;
+  getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined>;
   createQuiz(quiz: InsertQuiz): Promise<Quiz>;
   
   // Question operations

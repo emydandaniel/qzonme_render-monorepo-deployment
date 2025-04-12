@@ -32,3 +32,17 @@ export function showAdInterstitial() {
   console.log("Ad Trigger: Show Interstitial Ad");
   // Implementation would connect to Adsterra SDK
 }
+
+export function generateUrlSlug(creatorName: string): string {
+  // Convert to lowercase and replace spaces with hyphens
+  let slug = creatorName
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '') // Remove non-word chars
+    .replace(/\-\-+/g, '-'); // Replace multiple - with single -
+  
+  // Add random characters to make it unique
+  const randomChars = Math.random().toString(36).substring(2, 6);
+  return `${slug}-${randomChars}`;
+}

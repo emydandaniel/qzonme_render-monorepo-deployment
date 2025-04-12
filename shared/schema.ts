@@ -18,6 +18,7 @@ export const quizzes = pgTable("quizzes", {
   creatorId: integer("creator_id").notNull(),
   creatorName: text("creator_name").notNull(),
   accessCode: text("access_code").notNull().unique(),
+  urlSlug: text("url_slug").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
