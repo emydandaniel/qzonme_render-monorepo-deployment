@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import AdPlaceholder from "@/components/common/AdPlaceholder";
 import Layout from "@/components/common/Layout";
 
 const FindQuiz: React.FC = () => {
@@ -13,44 +12,31 @@ const FindQuiz: React.FC = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFindQuiz = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!quizLink.trim()) {
       toast({
-        title: "Quiz link required",
-        description: "Please enter a quiz link to continue",
-        variant: "destructive"
+        title: "Link is required",
+        description: "Please enter a quiz link or slug",
+        variant: "destructive",
       });
       return;
     }
     
-    // Try to extract the quiz creator slug from the link
-    try {
-      // Handle both full URLs and just slugs
-      let slug = "";
-      
-      if (quizLink.includes("/quiz/")) {
-        // Extract the slug from a full URL like "qzonme.com/quiz/username-abc123"
-        const urlParts = quizLink.split("/quiz/");
-        slug = urlParts[urlParts.length - 1].trim();
-      } else {
-        // Treat the input as just a slug
-        slug = quizLink.trim();
-      }
-      
-      if (!slug) {
-        throw new Error("Invalid quiz link");
-      }
-      
-      // Navigate to the quiz
+    // Extract slug if it's a full URL
+    if (quizLink.includes("/quiz/")) {
+      const urlParts = quizLink.split("/quiz/");
+      const slug = urlParts[urlParts.length - 1].trim();
       navigate(`/quiz/${slug}`);
-    } catch (error) {
-      toast({
-        title: "Invalid quiz link",
-        description: "Please check the link and try again",
-        variant: "destructive"
-      });
+    }
+    // Check if it's a direct access code (legacy)
+    else if (quizLink.length === 6 && /^[A-Z0-9]{6}$/.test(quizLink)) {
+      navigate(`/quiz/code/${quizLink}`);
+    }
+    // Otherwise treat as a slug
+    else {
+      navigate(`/quiz/${quizLink.trim()}`);
     }
   };
 
@@ -61,56 +47,33 @@ const FindQuiz: React.FC = () => {
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-4 font-poppins">Find a Quiz</h2>
             <p className="text-muted-foreground mb-6">
-              Enter a quiz link shared by a friend to take their quiz and test how well you know them!
+              Enter a quiz link or slug to take your friend's quiz.
             </p>
-            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg mb-6 text-left">
-              <h3 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">How it works:</h3>
-              <ol className="list-decimal list-inside text-sm space-y-1 text-blue-600 dark:text-blue-400">
-                <li>Your friend creates a quiz and shares a link with you</li>
-                <li>Copy the link they sent you</li>
-                <li>Paste it in the field below</li>
-                <li>Click "Take This Quiz" to start answering questions</li>
-              </ol>
-            </div>
             
-            <form className="max-w-md mx-auto" onSubmit={handleSubmit}>
-              <div className="mb-6">
+            <form onSubmit={handleFindQuiz} className="max-w-md mx-auto">
+              <div className="mb-4">
                 <Label htmlFor="quiz-link" className="block text-left text-sm font-medium mb-1">
-                  Quiz Link
+                  Quiz Link or Slug
                 </Label>
                 <Input
                   type="text"
                   id="quiz-link"
                   className="input-field"
-                  placeholder="Paste the quiz link here (e.g., qzonme.com/quiz/username-abc123)"
+                  placeholder="Paste link or enter quiz code"
                   value={quizLink}
                   onChange={(e) => setQuizLink(e.target.value)}
                   required
                 />
               </div>
-              
+
               <Button 
                 type="submit" 
-                className="btn-primary w-full"
+                className="btn-primary w-full mt-4"
               >
-                Take This Quiz
+                Find Quiz
               </Button>
-              
-              <div className="mt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="btn-secondary w-full"
-                  onClick={() => navigate("/")}
-                >
-                  Back to Home
-                </Button>
-              </div>
             </form>
           </div>
-          
-          {/* Ad Placeholder */}
-          <AdPlaceholder />
         </CardContent>
       </Card>
     </Layout>

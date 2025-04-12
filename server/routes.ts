@@ -70,6 +70,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch quiz" });
     }
   });
+  
+  // Get quiz by ID
+  app.get("/api/quizzes/:quizId", async (req, res) => {
+    try {
+      const quizId = parseInt(req.params.quizId);
+      
+      if (isNaN(quizId)) {
+        return res.status(400).json({ message: "Invalid quiz ID" });
+      }
+      
+      const quiz = await storage.getQuiz(quizId);
+      
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      
+      console.log(`GET /api/quizzes/${quizId} response:`, quiz);
+      res.json(quiz);
+    } catch (error) {
+      console.error(`Error fetching quiz ${req.params.quizId}:`, error);
+      res.status(500).json({ message: "Failed to fetch quiz" });
+    }
+  });
 
   // Question routes
   app.post("/api/questions", async (req, res) => {
