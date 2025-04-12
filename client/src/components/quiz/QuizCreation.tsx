@@ -38,7 +38,8 @@ const QuizCreation: React.FC = () => {
       const quizResponse = await apiRequest("POST", "/api/quizzes", {
         creatorId: userId,
         creatorName: userName,
-        accessCode: generateAccessCode()
+        accessCode: generateAccessCode(),
+        urlSlug: generateUrlSlug(userName)
       });
       const quiz = await quizResponse.json();
       
@@ -171,6 +172,7 @@ const QuizCreation: React.FC = () => {
       const quiz = await createQuizMutation.mutateAsync();
       sessionStorage.setItem("currentQuizId", quiz.id.toString());
       sessionStorage.setItem("currentQuizAccessCode", quiz.accessCode);
+      sessionStorage.setItem("currentQuizUrlSlug", quiz.urlSlug);
       navigate(`/dashboard/${quiz.id}`);
     } catch (error) {
       toast({
