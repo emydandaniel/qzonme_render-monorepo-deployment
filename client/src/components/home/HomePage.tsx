@@ -22,6 +22,26 @@ const HomePage: React.FC = () => {
     queryKey: ["/api/quiz-attempts/recent"],
     enabled: false, // Disable for now - we'll fetch this in a real app
   });
+  
+  // Check if there's a pending quiz to answer
+  const [pendingQuiz, setPendingQuiz] = React.useState<{
+    type: 'code' | 'slug';
+    value: string;
+  } | null>(null);
+  
+  React.useEffect(() => {
+    // Check if there's a pending quiz code or slug in session storage
+    const pendingQuizCode = sessionStorage.getItem("pendingQuizCode");
+    const pendingQuizSlug = sessionStorage.getItem("pendingQuizSlug");
+    
+    if (pendingQuizCode) {
+      setPendingQuiz({ type: 'code', value: pendingQuizCode });
+      sessionStorage.removeItem("pendingQuizCode");
+    } else if (pendingQuizSlug) {
+      setPendingQuiz({ type: 'slug', value: pendingQuizSlug });
+      sessionStorage.removeItem("pendingQuizSlug");
+    }
+  }, []);
 
   const createUserMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -77,7 +97,17 @@ const HomePage: React.FC = () => {
       sessionStorage.setItem("userName", userName);
       sessionStorage.setItem("userId", user.id);
       
-      // Get quiz URL from clipboard
+      // If there's a pending quiz, navigate to it
+      if (pendingQuiz) {
+        if (pendingQuiz.type === 'code') {
+          navigate(`/quiz/code/${pendingQuiz.value}`);
+        } else {
+          navigate(`/quiz/${pendingQuiz.value}`);
+        }
+        return;
+      }
+      
+      // Otherwise, try to get quiz URL from clipboard
       navigator.clipboard.readText()
         .then(clipText => {
           // Check if clipboard contains a quiz URL or slug

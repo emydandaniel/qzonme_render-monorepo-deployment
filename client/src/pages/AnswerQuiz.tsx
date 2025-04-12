@@ -21,6 +21,22 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   const userName = sessionStorage.getItem("userName") || "";
   const userId = parseInt(sessionStorage.getItem("userId") || "0");
 
+  // Check if user is logged in, if not, save the quiz info and redirect to home
+  React.useEffect(() => {
+    if (!userName || !userId) {
+      // Save the quiz params to session storage
+      if (accessCode) {
+        sessionStorage.setItem("pendingQuizCode", accessCode);
+      } else if (creatorSlug) {
+        sessionStorage.setItem("pendingQuizSlug", creatorSlug);
+      }
+      
+      // Redirect to home page to enter name
+      navigate("/");
+      return;
+    }
+  }, [accessCode, creatorSlug, navigate, userName, userId]);
+
   // Determine if we're using access code or creator slug
   const isUsingAccessCode = !!accessCode && !creatorSlug;
   const identifier = isUsingAccessCode ? accessCode : creatorSlug;

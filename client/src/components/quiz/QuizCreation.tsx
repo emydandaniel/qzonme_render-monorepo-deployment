@@ -173,7 +173,7 @@ const QuizCreation: React.FC = () => {
       sessionStorage.setItem("currentQuizId", quiz.id.toString());
       sessionStorage.setItem("currentQuizAccessCode", quiz.accessCode);
       sessionStorage.setItem("currentQuizUrlSlug", quiz.urlSlug);
-      navigate(`/dashboard/${quiz.id}`);
+      navigate(`/share/${quiz.id}`);
     } catch (error) {
       toast({
         title: "Error",
