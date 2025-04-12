@@ -6,12 +6,14 @@ import CreateQuiz from "@/pages/CreateQuiz";
 import AnswerQuiz from "@/pages/AnswerQuiz";
 import Results from "@/pages/Results";
 import Dashboard from "@/pages/Dashboard";
+import FindQuiz from "@/pages/FindQuiz";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/create" component={CreateQuiz} />
+      <Route path="/find-quiz" component={FindQuiz} />
       <Route path="/quiz/code/:accessCode" component={AnswerQuiz} />
       <Route path="/quiz/:creatorSlug" component={AnswerQuiz} />
       <Route path="/results/:quizId/:attemptId" component={Results} />

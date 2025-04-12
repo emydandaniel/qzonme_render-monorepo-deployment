@@ -14,7 +14,6 @@ import { useQuery } from "@tanstack/react-query";
 
 const HomePage: React.FC = () => {
   const [userName, setUserName] = useState("");
-  const [accessCode, setAccessCode] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
@@ -60,7 +59,7 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleAnswerQuiz = async (e: React.FormEvent) => {
+  const handleFindQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!userName.trim()) {
@@ -72,23 +71,14 @@ const HomePage: React.FC = () => {
       return;
     }
     
-    if (!accessCode.trim()) {
-      toast({
-        title: "Quiz code is required",
-        description: "Please enter a quiz code to continue",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     try {
       const user = await createUserMutation.mutateAsync(userName);
       // Store user in session
       sessionStorage.setItem("userName", userName);
       sessionStorage.setItem("userId", user.id);
       
-      // Navigate to quiz answering
-      navigate(`/quiz/${accessCode}`);
+      // Navigate to quiz finder page
+      navigate("/find-quiz");
     } catch (error) {
       toast({
         title: "Error",
@@ -125,21 +115,6 @@ const HomePage: React.FC = () => {
                 />
               </div>
 
-              {/* For answering a quiz */}
-              <div className="mb-6">
-                <Label htmlFor="quiz-code" className="block text-left text-sm font-medium mb-1">
-                  Quiz Code (optional)
-                </Label>
-                <Input
-                  type="text"
-                  id="quiz-code"
-                  className="input-field"
-                  placeholder="Enter quiz code to answer someone's quiz"
-                  value={accessCode}
-                  onChange={(e) => setAccessCode(e.target.value)}
-                />
-              </div>
-              
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-6">
                 <Button 
                   type="button" 
@@ -152,10 +127,10 @@ const HomePage: React.FC = () => {
                 <Button 
                   type="button" 
                   className="btn-secondary flex-1" 
-                  onClick={handleAnswerQuiz}
-                  disabled={createUserMutation.isPending || !accessCode.trim()}
+                  onClick={handleFindQuiz}
+                  disabled={createUserMutation.isPending}
                 >
-                  Answer a Quiz
+                  Find a Quiz
                 </Button>
               </div>
             </form>
