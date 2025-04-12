@@ -16,6 +16,8 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
   // Fetch quiz
   const { data: quiz, isLoading: isLoadingQuiz, error } = useQuery({
     queryKey: [`/api/quizzes/${quizId}`],
+    staleTime: 0, // Don't use cached data
+    refetchOnMount: true, // Always fetch on component mount
   });
 
   React.useEffect(() => {
@@ -39,14 +41,37 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     );
   }
 
+  // Add debugging info
+  console.log("ShareQuizPage: quiz data", { quizId, quiz, error });
+  
+  // Check for the just created quiz in session storage as fallback
+  const sessionQuizId = sessionStorage.getItem("currentQuizId");
+  const sessionQuizAccessCode = sessionStorage.getItem("currentQuizAccessCode");
+  const sessionQuizUrlSlug = sessionStorage.getItem("currentQuizUrlSlug");
+  
+  // If quiz from API failed but we have session data, use that
+  if (!quiz && sessionQuizId && sessionQuizId === params.quizId && sessionQuizAccessCode && sessionQuizUrlSlug) {
+    console.log("Using session storage fallback for quiz data");
+    return (
+      <ShareQuiz
+        accessCode={sessionQuizAccessCode}
+        quizId={quizId}
+        urlSlug={sessionQuizUrlSlug}
+      />
+    );
+  }
+
   if (!quiz) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
           <h2 className="text-xl font-bold mb-2">Quiz Not Found</h2>
           <p className="text-muted-foreground mb-4">
-            Sorry, we couldn't find the quiz you're looking for.
+            Sorry, we couldn't find the quiz you're looking for (ID: {quizId}).
           </p>
+          <div className="mb-4">
+            <p className="text-sm text-gray-600">Debug info: session quiz ID: {sessionQuizId || 'none'}</p>
+          </div>
           <a href="/" className="text-primary hover:underline">
             Return to Home
           </a>
