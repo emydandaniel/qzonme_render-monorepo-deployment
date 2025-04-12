@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Copy, Twitter, Facebook, Mail } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "../common/Layout";
 
@@ -33,26 +33,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
     navigate(`/dashboard/${quizId}`);
   };
   
-  const handleShare = (platform: string) => {
-    let shareUrl = "";
-    const shareText = "Test how well you know me by taking my QzonMe quiz!";
-    
-    switch (platform) {
-      case "twitter":
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(quizLink)}`;
-        break;
-      case "facebook":
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(quizLink)}`;
-        break;
-      case "email":
-        shareUrl = `mailto:?subject=${encodeURIComponent("Take my QzonMe quiz!")}&body=${encodeURIComponent(`${shareText} ${quizLink}`)}`;
-        break;
-    }
-    
-    if (shareUrl) {
-      window.open(shareUrl, "_blank");
-    }
-  };
+  // Removed social sharing functions as requested
   
   return (
     <Layout>
@@ -79,32 +60,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
             </Button>
           </div>
           
-          <div className="flex space-x-3 justify-center mb-6">
-            <Button 
-              type="button" 
-              className="btn-secondary flex items-center" 
-              onClick={() => handleShare("twitter")}
-            >
-              <Twitter className="h-5 w-5 mr-1" />
-              Twitter
-            </Button>
-            <Button 
-              type="button" 
-              className="btn-secondary flex items-center" 
-              onClick={() => handleShare("facebook")}
-            >
-              <Facebook className="h-5 w-5 mr-1" />
-              Facebook
-            </Button>
-            <Button 
-              type="button" 
-              className="btn-secondary flex items-center" 
-              onClick={() => handleShare("email")}
-            >
-              <Mail className="h-5 w-5 mr-1" />
-              Email
-            </Button>
-          </div>
+          {/* Social media buttons removed as requested */}
           
           <div className="mt-6">
             <Button 

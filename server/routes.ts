@@ -153,6 +153,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch quiz attempts" });
     }
   });
+  
+  // Get specific quiz attempt by ID
+  app.get("/api/quiz-attempts/:attemptId", async (req, res) => {
+    try {
+      const attemptId = parseInt(req.params.attemptId);
+      
+      if (isNaN(attemptId)) {
+        return res.status(400).json({ message: "Invalid attempt ID" });
+      }
+      
+      // Find the attempt in all attempts
+      const allAttempts = Array.from(storage["quizAttempts"].values());
+      const attempt = allAttempts.find(a => a.id === attemptId);
+      
+      if (!attempt) {
+        return res.status(404).json({ message: "Quiz attempt not found" });
+      }
+      
+      console.log(`GET /api/quiz-attempts/${attemptId} response:`, attempt);
+      res.json(attempt);
+    } catch (error) {
+      console.error(`Error fetching quiz attempt ${req.params.attemptId}:`, error);
+      res.status(500).json({ message: "Failed to fetch quiz attempt" });
+    }
+  });
 
   // Verify an answer
   app.post("/api/questions/:questionId/verify", async (req, res) => {
