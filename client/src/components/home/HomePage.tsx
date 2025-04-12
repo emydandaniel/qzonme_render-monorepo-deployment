@@ -59,7 +59,7 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleFindQuiz = async (e: React.FormEvent) => {
+  const handleAnswerQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!userName.trim()) {
@@ -77,8 +77,30 @@ const HomePage: React.FC = () => {
       sessionStorage.setItem("userName", userName);
       sessionStorage.setItem("userId", user.id);
       
-      // Navigate to quiz finder page
-      navigate("/find-quiz");
+      // Get quiz URL from clipboard
+      navigator.clipboard.readText()
+        .then(clipText => {
+          // Check if clipboard contains a quiz URL or slug
+          if (clipText.includes("/quiz/") || !clipText.includes("/")) {
+            let slug = clipText;
+            
+            // Extract slug if it's a full URL
+            if (clipText.includes("/quiz/")) {
+              const urlParts = clipText.split("/quiz/");
+              slug = urlParts[urlParts.length - 1].trim();
+            }
+            
+            // Navigate to the quiz
+            navigate(`/quiz/${slug}`);
+          } else {
+            // If clipboard doesn't contain a valid quiz link, go to find-quiz page
+            navigate("/find-quiz");
+          }
+        })
+        .catch(() => {
+          // If can't access clipboard, go to find-quiz page
+          navigate("/find-quiz");
+        });
     } catch (error) {
       toast({
         title: "Error",
@@ -122,15 +144,15 @@ const HomePage: React.FC = () => {
                   onClick={handleCreateQuiz}
                   disabled={createUserMutation.isPending}
                 >
-                  Create My Quiz
+                  Create a Quiz
                 </Button>
                 <Button 
                   type="button" 
                   className="btn-secondary flex-1" 
-                  onClick={handleFindQuiz}
+                  onClick={handleAnswerQuiz}
                   disabled={createUserMutation.isPending}
                 >
-                  Find a Quiz
+                  Answer a Quiz
                 </Button>
               </div>
             </form>

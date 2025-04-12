@@ -63,6 +63,15 @@ const FindQuiz: React.FC = () => {
             <p className="text-muted-foreground mb-6">
               Enter a quiz link shared by a friend to take their quiz and test how well you know them!
             </p>
+            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg mb-6 text-left">
+              <h3 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">How it works:</h3>
+              <ol className="list-decimal list-inside text-sm space-y-1 text-blue-600 dark:text-blue-400">
+                <li>Your friend creates a quiz and shares a link with you</li>
+                <li>Copy the link they sent you</li>
+                <li>Paste it in the field below</li>
+                <li>Click "Take This Quiz" to start answering questions</li>
+              </ol>
+            </div>
             
             <form className="max-w-md mx-auto" onSubmit={handleSubmit}>
               <div className="mb-6">
