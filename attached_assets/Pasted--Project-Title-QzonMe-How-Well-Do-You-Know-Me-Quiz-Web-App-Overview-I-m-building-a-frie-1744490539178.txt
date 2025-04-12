@@ -1,0 +1,87 @@
+🧠 Project Title: QzonMe – “How Well Do You Know Me?” Quiz Web App
+
+📄 Overview:
+I’m building a friendship quiz web app called QzonMe (domain: QzonMe.com). It allows users to create a personalized quiz with at least 5 questions (can be more), and share a link for their friends to try and see how well they know them.
+
+🎯 Core Features:
+
+Visitors first input their name before creating or answering any quiz.
+
+While creating a quiz:
+
+The creator sets each question as either multiple choice (1 correct answer) or open-ended (2+ acceptable correct answers).
+
+Only open-ended questions can include optional tips.
+
+A minimum of 5 questions must be set (can be more).
+
+After quiz creation, a unique shareable link is generated.
+
+Friends visiting the link will:
+
+Land on a home page with an intro, leaderboard, and name input form.
+
+Answer one question per page.
+
+See a results page at the end, showing correct/incorrect answers, score, and updated leaderboard.
+
+Option to create their own quiz after seeing results.
+
+Leaderboard is visible:
+
+To quiz creator via a personal dashboard.
+
+To anyone answering before or after they complete the quiz.
+
+Navigation via Start, Next, and Submit buttons that dynamically load the next view (next question or results).
+
+Should be responsive and mobile-friendly.
+
+🎨 Styling and Branding:
+
+Embedded in a Blogger site using an iframe (no scrollbar or border).
+
+Should nearly fill the page width of the Blogger site.
+
+Design colors:
+
+Primary: #FF4403 for buttons, icons, and logo
+
+CTA Hover/Highlight: #E76F51
+
+💰 Ad Placement (Adsterra)
+Add placeholder <div>s or comments for future ad integration:
+
+1 banner/native ad container per page (shown when creating or answering).
+
+1 interstitial ad trigger after every 5 questions answered (for both creators and answerers).
+
+html
+Copy
+Edit
+<!-- Ad Placeholder: Banner/Native Ad Here -->
+<!-- Ad Trigger: Show Interstitial Ad after 5 questions -->
+🛠️ What I want the AI to generate now:
+
+Base HTML structure for:
+
+Home page (with name input, intro, and leaderboard)
+
+Quiz creation flow
+
+Quiz answering flow (1 question per page)
+
+Result/Leaderboard display
+
+Basic styling using CSS (clean layout, responsive, color theme applied)
+
+Simple JS to handle navigating between views/pages (Start > Q1 > Q2 > … > Results)
+
+Dummy placeholder data/functions for:
+
+Storing questions/answers
+
+Generating and linking quizzes
+
+Updating and displaying the leaderboard
+
