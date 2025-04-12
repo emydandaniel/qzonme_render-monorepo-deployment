@@ -41,10 +41,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/quizzes/:accessCode", async (req, res) => {
+  app.get("/api/quizzes/code/:accessCode", async (req, res) => {
     try {
       const accessCode = req.params.accessCode;
       const quiz = await storage.getQuizByAccessCode(accessCode);
+      
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      
+      res.json(quiz);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch quiz" });
+    }
+  });
+  
+  app.get("/api/quizzes/slug/:urlSlug", async (req, res) => {
+    try {
+      const urlSlug = req.params.urlSlug;
+      const quiz = await storage.getQuizByUrlSlug(urlSlug);
       
       if (!quiz) {
         return res.status(404).json({ message: "Quiz not found" });

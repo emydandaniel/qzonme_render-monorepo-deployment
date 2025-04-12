@@ -50,7 +50,7 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
   }
 
   if (showShareView) {
-    return <ShareQuiz accessCode={quiz.accessCode} quizId={quizId} />;
+    return <ShareQuiz accessCode={quiz.accessCode} quizId={quizId} urlSlug={quiz.urlSlug} />;
   }
 
   return (

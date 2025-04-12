@@ -9,21 +9,27 @@ import { calculateScore } from "@/lib/quizUtils";
 
 interface AnswerQuizProps {
   params: {
-    accessCode: string;
+    accessCode?: string;
+    creatorSlug?: string;
   };
 }
 
 const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
-  const { accessCode } = params;
+  const { accessCode, creatorSlug } = params;
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const userName = sessionStorage.getItem("userName") || "";
   const userId = parseInt(sessionStorage.getItem("userId") || "0");
 
-  // Fetch quiz by access code
+  // Determine if we're using access code or creator slug
+  const isUsingAccessCode = !!accessCode && !creatorSlug;
+  const identifier = isUsingAccessCode ? accessCode : creatorSlug;
+  const endpoint = isUsingAccessCode ? `/api/quizzes/code/${identifier}` : `/api/quizzes/slug/${identifier}`;
+
+  // Fetch quiz by access code or URL slug
   const { data: quiz, isLoading: isLoadingQuiz } = useQuery({
-    queryKey: [`/api/quizzes/${accessCode}`],
-    enabled: !!accessCode,
+    queryKey: [endpoint],
+    enabled: !!identifier,
   });
 
   // Fetch questions for the quiz

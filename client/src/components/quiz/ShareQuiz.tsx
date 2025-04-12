@@ -9,14 +9,15 @@ import Layout from "../common/Layout";
 interface ShareQuizProps {
   accessCode: string;
   quizId: number;
+  urlSlug: string;
 }
 
-const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId }) => {
+const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   
-  const quizLink = `${window.location.origin}/quiz/${accessCode}`;
+  const quizLink = `${window.location.origin}/quiz/${urlSlug}`;
   
   const handleCopyLink = () => {
     navigator.clipboard.writeText(quizLink);

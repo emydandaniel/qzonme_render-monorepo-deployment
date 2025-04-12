@@ -74,6 +74,12 @@ export class MemStorage implements IStorage {
     );
   }
   
+  async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
+    return Array.from(this.quizzes.values()).find(
+      (quiz) => quiz.urlSlug === urlSlug
+    );
+  }
+  
   async createQuiz(insertQuiz: InsertQuiz): Promise<Quiz> {
     const id = this.quizId++;
     const createdAt = new Date();
@@ -81,10 +87,14 @@ export class MemStorage implements IStorage {
     // Generate a unique access code if not provided
     const accessCode = insertQuiz.accessCode || nanoid(8);
     
+    // Generate a URL slug based on creator name
+    const urlSlug = insertQuiz.urlSlug || `${insertQuiz.creatorName.toLowerCase().replace(/\s+/g, '-')}-${nanoid(6)}`;
+    
     const quiz: Quiz = { 
       id, 
       ...insertQuiz,
       accessCode,
+      urlSlug,
       createdAt
     };
     
