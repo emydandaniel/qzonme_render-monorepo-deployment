@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import * as pathModule from "path";
 
 const app = express();
 app.use(express.json());
@@ -8,7 +9,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
+  const reqPath = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
@@ -19,8 +20,8 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+    if (reqPath.startsWith("/api")) {
+      let logLine = `${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
@@ -54,6 +55,19 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
+    
+    // History API fallback - serve index.html for any route that doesn't match an API or static resource
+    // This is necessary for client-side routing to work with direct URL access
+    app.get('*', (req, res) => {
+      // Skip API routes
+      if (req.path.startsWith('/api') || req.path.startsWith('/uploads') || req.path.startsWith('/assets')) {
+        return;
+      }
+      
+      // For all other routes, serve the index.html file
+      const distPath = pathModule.resolve(import.meta.dirname, "public");
+      res.sendFile(pathModule.resolve(distPath, "index.html"));
+    });
   }
 
   // ALWAYS serve the app on port 5000
