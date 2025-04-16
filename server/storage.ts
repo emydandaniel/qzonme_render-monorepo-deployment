@@ -75,34 +75,9 @@ export class MemStorage implements IStorage {
   }
   
   async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
-    // Try exact match first
-    const exactMatch = Array.from(this.quizzes.values()).find(
+    return Array.from(this.quizzes.values()).find(
       (quiz) => quiz.urlSlug === urlSlug
     );
-    
-    if (exactMatch) {
-      console.log(`Found exact match for URL slug: ${urlSlug}`);
-      return exactMatch;
-    }
-    
-    // For testing locally, try to match just the first part before the dash
-    if (urlSlug.includes('-')) {
-      const namePrefix = urlSlug.split('-')[0];
-      console.log(`No exact match found, trying prefix match with: ${namePrefix}`);
-      
-      const prefixMatch = Array.from(this.quizzes.values()).find(
-        (quiz) => quiz.urlSlug.startsWith(namePrefix + '-')
-      );
-      
-      if (prefixMatch) {
-        console.log(`Found prefix match for URL slug: ${urlSlug} -> ${prefixMatch.urlSlug}`);
-        return prefixMatch;
-      }
-    }
-    
-    // No matches found
-    console.log(`No matches found for URL slug: ${urlSlug}`);
-    return undefined;
   }
   
   async createQuiz(insertQuiz: InsertQuiz): Promise<Quiz> {
@@ -136,18 +111,7 @@ export class MemStorage implements IStorage {
   
   async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
     const id = this.questionId++;
-    // Create a type-safe Question object
-    const question: Question = { 
-      id,
-      quizId: insertQuestion.quizId,
-      text: insertQuestion.text,
-      type: insertQuestion.type,
-      options: insertQuestion.options,
-      correctAnswers: insertQuestion.correctAnswers,
-      order: insertQuestion.order,
-      hint: insertQuestion.hint ?? null,
-      imageUrl: insertQuestion.imageUrl ?? null
-    };
+    const question: Question = { id, ...insertQuestion };
     this.questions.set(id, question);
     return question;
   }

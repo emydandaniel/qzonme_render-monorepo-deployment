@@ -17,15 +17,10 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   
-  // Toggle between local and production URLs based on environment
-  // For local testing, use relative URL that works on localhost
-  const isLocalDev = window.location.hostname === 'localhost';
-  const customDomain = isLocalDev ? window.location.origin : "https://qzonme.com";
+  // Use the custom domain for sharing as requested
+  const customDomain = "https://qzonme.com";
   const quizLink = `${customDomain}/quiz/${urlSlug}`;
   const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}`;
-  
-  // Also provide access code for alternative sharing
-  const accessCodeMessage = `Access code: ${accessCode}`;
   
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareMessage);
@@ -71,7 +66,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
             </div>
             <Button 
               type="button" 
-              className="w-full mb-4" 
+              className="w-full" 
               onClick={handleCopyLink}
               disabled={copied}
             >
@@ -81,15 +76,6 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
                 </>
               )}
             </Button>
-            
-            {/* Access code section */}
-            <div className="mt-4 p-2 bg-gray-100 rounded border border-gray-200">
-              <p className="text-sm text-gray-700 mb-1 text-left">Alternative sharing:</p>
-              <div className="flex items-center justify-between bg-white p-2 rounded">
-                <code className="text-sm font-mono text-gray-800">{accessCode}</code>
-                <span className="text-xs text-gray-500">Access Code</span>
-              </div>
-            </div>
           </div>
           
           <div className="mt-6">

@@ -15,16 +15,11 @@ interface AnswerQuizProps {
 }
 
 const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
-  // Safely extract parameters
-  const accessCode = params?.accessCode;
-  const creatorSlug = params?.creatorSlug;
-  
+  const { accessCode, creatorSlug } = params;
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const userName = sessionStorage.getItem("userName") || "";
   const userId = parseInt(sessionStorage.getItem("userId") || "0");
-  
-  console.log("AnswerQuiz component rendered with params:", { params, accessCode, creatorSlug });
 
   // Check if user is logged in, if not, save the quiz info and redirect to home
   React.useEffect(() => {
@@ -46,11 +41,6 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   const isUsingAccessCode = !!accessCode && !creatorSlug;
   const identifier = isUsingAccessCode ? accessCode : creatorSlug;
   const endpoint = isUsingAccessCode ? `/api/quizzes/code/${identifier}` : `/api/quizzes/slug/${identifier}`;
-  
-  // Debug the URL params
-  React.useEffect(() => {
-    console.log("URL Parameters:", { accessCode, creatorSlug, isUsingAccessCode, endpoint });
-  }, [accessCode, creatorSlug, isUsingAccessCode, endpoint]);
 
   // Fetch quiz by access code or URL slug
   const { data: quiz, isLoading: isLoadingQuiz, error: quizError } = useQuery<Quiz>({
@@ -123,14 +113,9 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
         <p className="mb-4">We couldn't find a quiz with the identifier: <br />
           <code className="bg-gray-100 p-1 rounded">{identifier}</code>
         </p>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600">
           This quiz may have been removed or the link is incorrect.
         </p>
-        <div className="mt-6">
-          <a href="/find-quiz" className="text-blue-600 underline">
-            Try finding the quiz by name or access code
-          </a>
-        </div>
       </div>
     );
   }

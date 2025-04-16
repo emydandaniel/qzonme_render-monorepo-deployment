@@ -16,12 +16,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/create" component={CreateQuiz} />
       <Route path="/find-quiz" component={FindQuiz} />
-      <Route path="/quiz/code/:accessCode">
-        {(params) => <AnswerQuiz params={params} />}
-      </Route>
-      <Route path="/quiz/:creatorSlug">
-        {(params) => <AnswerQuiz params={params} />}
-      </Route>
+      <Route path="/quiz/code/:accessCode" component={AnswerQuiz} />
+      <Route path="/quiz/:creatorSlug" component={AnswerQuiz} />
       <Route path="/results/:quizId/:attemptId" component={Results} />
       <Route path="/dashboard/:quizId" component={Dashboard} />
       <Route path="/share/:quizId" component={ShareQuizPage} />
