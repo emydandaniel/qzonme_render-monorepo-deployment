@@ -34,17 +34,18 @@ export function showAdInterstitial() {
 }
 
 export function generateUrlSlug(creatorName: string): string {
-  // Convert to lowercase and replace spaces with hyphens
-  let slug = creatorName
+  // Convert to lowercase and clean the name (no special chars)
+  let cleanName = creatorName
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '') // Remove non-word chars
-    .replace(/\-\-+/g, '-'); // Replace multiple - with single -
+    .replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric chars
+    
+  // Limit the name to 10 characters max
+  cleanName = cleanName.substring(0, 10);
   
-  // Add random characters to make it unique
+  // Add random characters to make it unique (4 characters)
   const randomChars = Math.random().toString(36).substring(2, 6);
-  return `${slug}-${randomChars}`;
+  return `${cleanName}-${randomChars}`;
 }
 
 export function getRemarkByScore(score: number, total: number): string {
