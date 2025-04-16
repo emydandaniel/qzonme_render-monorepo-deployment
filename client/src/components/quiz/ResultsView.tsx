@@ -7,7 +7,7 @@ import { formatPercentage, getRemarkByScore } from "@/lib/utils";
 import Leaderboard from "../common/Leaderboard";
 import AdPlaceholder from "../common/AdPlaceholder";
 import Layout from "../common/Layout";
-import { Check, Copy, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ResultsViewProps {
@@ -50,32 +50,8 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   });
   
   const [showAnswers, setShowAnswers] = React.useState(false);
-  const [copied, setCopied] = React.useState(false);
   const personalizedRemark = getRemarkByScore(score, questions.length);
   const { toast } = useToast();
-  
-  // Removed shared URL section as this component no longer needs it
-  
-  const handleCopyShareLink = () => {
-    navigator.clipboard.writeText(shareMessage)
-      .then(() => {
-        setCopied(true);
-        toast({
-          title: "Copied!",
-          description: "Now paste it to your friend 👌🏽",
-          duration: 3000
-        });
-        setTimeout(() => setCopied(false), 3000);
-      })
-      .catch(err => {
-        console.error('Error copying text: ', err);
-        toast({
-          title: "Couldn't copy",
-          description: "Please try again or copy manually",
-          variant: "destructive"
-        });
-      });
-  };
   
   return (
     <Layout>
