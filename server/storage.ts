@@ -76,7 +76,7 @@ export class MemStorage implements IStorage {
   
   async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
     return Array.from(this.quizzes.values()).find(
-      (quiz) => quiz.urlSlug === urlSlug
+      (quiz) => quiz.urlSlug.toLowerCase() === urlSlug.toLowerCase()
     );
   }
   
@@ -111,7 +111,12 @@ export class MemStorage implements IStorage {
   
   async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
     const id = this.questionId++;
-    const question: Question = { id, ...insertQuestion };
+    const question: Question = { 
+      id, 
+      ...insertQuestion,
+      hint: insertQuestion.hint || null,
+      imageUrl: insertQuestion.imageUrl || null
+    };
     this.questions.set(id, question);
     return question;
   }
