@@ -115,18 +115,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const urlSlug = req.params.urlSlug;
       console.log(`Looking up quiz with URL slug: "${urlSlug}"`);
       
-      // Debug: List all available quizzes and their slugs
-      const allQuizzes = Array.from(storage["quizzes"].values());
-      console.log("Available quizzes:", allQuizzes.map(q => ({ id: q.id, urlSlug: q.urlSlug })));
+      // First, try exact match
+      let quiz = await storage.getQuizByUrlSlug(urlSlug);
       
-      const quiz = await storage.getQuizByUrlSlug(urlSlug);
-      
+      // If no exact match, try checking if the slug uses a different casing
       if (!quiz) {
-        console.log(`No quiz found with URL slug: "${urlSlug}"`);
-        return res.status(404).json({ message: "Quiz not found" });
+        const allQuizzes = Array.from(storage["quizzes"].values());
+        const slugMatch = allQuizzes.find(q => 
+          q.urlSlug.toLowerCase() === urlSlug.toLowerCase()
+        );
+        
+        if (slugMatch) {
+          quiz = slugMatch;
+          console.log(`Found quiz with case-insensitive match: ${slugMatch.urlSlug}`);
+        } else {
+          console.log(`No quiz found with URL slug: "${urlSlug}"`);
+          return res.status(404).json({ message: "Quiz not found" });
+        }
       }
       
-      console.log(`Found quiz for slug "${urlSlug}":`, quiz);
       res.json(quiz);
     } catch (error) {
       console.error(`Error fetching quiz by slug "${req.params.urlSlug}":`, error);

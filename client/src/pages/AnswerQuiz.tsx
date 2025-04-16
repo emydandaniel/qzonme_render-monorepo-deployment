@@ -45,7 +45,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   // Fetch quiz by access code or URL slug
   const { data: quiz, isLoading: isLoadingQuiz, error: quizError } = useQuery<Quiz>({
     queryKey: [endpoint],
-    enabled: !!identifier,
+    enabled: !!identifier && !!userName && !!userId,
     retry: 3, // Retry failed requests up to 3 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
