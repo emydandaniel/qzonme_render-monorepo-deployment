@@ -51,51 +51,16 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     };
   });
 
-  // Check if current user's attempt is already in the attempts list
-  const userAttemptExists = React.useMemo(() => {
-    return attempts.some(attempt => 
-      attempt.id === currentAttemptId || 
-      (attempt.userName === userName && attempt.score === score)
-    );
-  }, [attempts, userName, score, currentAttemptId]);
-  
+  // Log attempt and user data for debugging
   console.log("ResultsView:", { 
-    userAttemptExists, 
     attemptsCount: attempts.length, 
     userName,
+    score,
     attempts: attempts.map(a => ({ id: a.id, name: a.userName, score: a.score }))
   });
   
-  // Create a modified attempts array that includes current user if they're not already in attempts
-  const enhancedAttempts = React.useMemo(() => {
-    // If the user's attempt is already in the list, use that
-    if (userAttemptExists) {
-      return attempts;
-    }
-    
-    // Otherwise, add a temporary entry for the current user
-    if (userName) {
-      const newAttempt = {
-        id: currentAttemptId || -1,
-        quizId: questions[0]?.quizId || 0,
-        userAnswerId: 0, 
-        userName: userName,
-        score: score,
-        totalQuestions: questions.length,
-        answers: answers,
-        completedAt: new Date(),
-      };
-      
-      console.log("Adding temporary attempt to leaderboard for current user:", newAttempt);
-      
-      return [
-        ...attempts,
-        newAttempt
-      ];
-    }
-    
-    return attempts;
-  }, [attempts, userName, score, questions, answers, currentAttemptId, userAttemptExists]);
+  // We don't need to manually enhance the attempts array anymore
+  // The Leaderboard component will handle this directly
   
   const [showAnswers, setShowAnswers] = React.useState(false);
   const personalizedRemark = getRemarkByScore(score, questions.length);
@@ -169,7 +134,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
           <div className="mt-8">
             <h3 className="font-poppins font-semibold text-lg mb-3">Leaderboard</h3>
             <Leaderboard 
-              attempts={enhancedAttempts} 
+              attempts={attempts} 
               currentUserName={userName}
               currentUserScore={score}
               currentUserTotalQuestions={questions.length}
