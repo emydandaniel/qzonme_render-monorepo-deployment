@@ -168,7 +168,12 @@ const ResultsView: React.FC<ResultsViewProps> = ({
           {/* Leaderboard */}
           <div className="mt-8">
             <h3 className="font-poppins font-semibold text-lg mb-3">Leaderboard</h3>
-            <Leaderboard attempts={enhancedAttempts} currentUserName={userName} />
+            <Leaderboard 
+              attempts={enhancedAttempts} 
+              currentUserName={userName}
+              currentUserScore={score}
+              currentUserTotalQuestions={questions.length}
+            />
           </div>
           
           <div className="mt-8 flex justify-center">
