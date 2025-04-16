@@ -8,6 +8,7 @@ import Results from "@/pages/Results";
 import Dashboard from "@/pages/Dashboard";
 import FindQuiz from "@/pages/FindQuiz";
 import ShareQuizPage from "@/pages/ShareQuizPage";
+import TestQuizLookup from "@/pages/TestQuizLookup";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/results/:quizId/:attemptId" component={Results} />
       <Route path="/dashboard/:quizId" component={Dashboard} />
       <Route path="/share/:quizId" component={ShareQuizPage} />
+      <Route path="/test-quiz-lookup" component={TestQuizLookup} />
       <Route component={NotFound} />
     </Switch>
   );
