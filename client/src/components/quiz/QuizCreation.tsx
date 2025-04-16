@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Image, Upload, X } from "lucide-react";
 import MultipleChoiceEditor from "./MultipleChoiceEditor";
 import QuestionList from "./QuestionList";
 import AdPlaceholder from "../common/AdPlaceholder";
@@ -22,6 +23,8 @@ const QuizCreation: React.FC = () => {
   const [correctOption, setCorrectOption] = useState<number>(0);
   // Image handling for questions (to be implemented)
   const [questionImage, setQuestionImage] = useState<File | null>(null);
+  const [questionImagePreview, setQuestionImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [, navigate] = useLocation();
@@ -29,6 +32,25 @@ const QuizCreation: React.FC = () => {
 
   const userId = parseInt(sessionStorage.getItem("userId") || "0");
   const userName = sessionStorage.getItem("userName") || "";
+
+  // Image upload mutation
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      return response.json();
+    }
+  });
 
   const createQuizMutation = useMutation({
     mutationFn: async () => {
@@ -55,7 +77,7 @@ const QuizCreation: React.FC = () => {
     }
   });
 
-  const handleAddQuestion = () => {
+  const handleAddQuestion = async () => {
     if (!questionText.trim()) {
       toast({
         title: "Question text is required",
@@ -78,29 +100,83 @@ const QuizCreation: React.FC = () => {
     }
     correctAnswers = [options[correctOption]];
 
-    const newQuestion: Question = {
-      id: Date.now(), // Temporary ID until saved to server
-      quizId: 0, // Will be set when quiz is created
-      text: questionText,
-      type: questionType,
-      options: options,
-      correctAnswers,
-      hint: null,
-      order: questions.length,
-      // Will implement image handling later
-      imageUrl: null
-    };
+    try {
+      // Handle image upload if present
+      let imageUrl = null;
+      if (questionImage) {
+        // In a real implementation, we would upload the image to a server here
+        // For this prototype, we'll simulate by using the data URL from preview
+        imageUrl = questionImagePreview;
+        
+        // Commented out actual image upload for now as we need to implement the server endpoint
+        // const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
+        // imageUrl = uploadResult.imageUrl;
+      }
 
-    setQuestions([...questions, newQuestion]);
-    resetForm();
-    setCurrentQuestionIndex(questions.length + 1);
+      const newQuestion: Question = {
+        id: Date.now(), // Temporary ID until saved to server
+        quizId: 0, // Will be set when quiz is created
+        text: questionText,
+        type: questionType,
+        options: options,
+        correctAnswers,
+        hint: null,
+        order: questions.length,
+        imageUrl: imageUrl
+      };
+
+      setQuestions([...questions, newQuestion]);
+      resetForm();
+      setCurrentQuestionIndex(questions.length + 1);
+      
+      toast({
+        title: questionImage ? "Question with image added" : "Question added",
+        description: "Your question has been added to the quiz",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add question. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Image must be less than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setQuestionImage(file);
+      const imageUrl = URL.createObjectURL(file);
+      setQuestionImagePreview(imageUrl);
+    }
+  };
+  
+  const handleRemoveImage = () => {
+    setQuestionImage(null);
+    if (questionImagePreview) {
+      URL.revokeObjectURL(questionImagePreview);
+      setQuestionImagePreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const resetForm = () => {
     setQuestionText("");
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
-    setQuestionImage(null);
+    handleRemoveImage();
   };
 
   const handleEditQuestion = (index: number) => {
@@ -114,10 +190,17 @@ const QuizCreation: React.FC = () => {
       ));
     }
     
-    // Will implement image handling later
-    // if (question.imageUrl) {
-    //   // Handle loading existing image
-    // }
+    // Handle editing a question with an image
+    if (question.imageUrl) {
+      // For data URLs, we can use them directly
+      if (question.imageUrl.startsWith('data:')) {
+        setQuestionImagePreview(question.imageUrl);
+      } 
+      // For remote URLs, we'd need to handle differently
+      else {
+        setQuestionImagePreview(question.imageUrl);
+      }
+    }
     
     // Remove the question from the list
     const updatedQuestions = [...questions];
@@ -207,6 +290,49 @@ const QuizCreation: React.FC = () => {
                 value={questionText}
                 onChange={(e) => setQuestionText(e.target.value)}
               />
+            </div>
+            
+            {/* Image upload area */}
+            <div className="mb-6">
+              <Label className="block text-sm font-medium mb-2">
+                Question Image (Optional)
+              </Label>
+              
+              {questionImagePreview ? (
+                <div className="relative w-full h-40 bg-gray-100 rounded-md overflow-hidden mb-2">
+                  <img 
+                    src={questionImagePreview} 
+                    alt="Question preview" 
+                    className="w-full h-full object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+                    aria-label="Remove image"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-primary transition-colors mb-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="flex flex-col items-center">
+                    <Image className="h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm font-medium text-gray-600 mb-1">Click to upload an image</p>
+                    <p className="text-xs text-gray-500">PNG, JPG or GIF (max. 5MB)</p>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                </div>
+              )}
             </div>
             
             {/* Multiple choice editor (open-ended removed) */}

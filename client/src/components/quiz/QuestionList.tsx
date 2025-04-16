@@ -1,7 +1,8 @@
 import React from "react";
 import { Question } from "@shared/schema";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface QuestionListProps {
   questions: Question[];
