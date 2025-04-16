@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -9,6 +9,48 @@ import {
   questionAnswerSchema
 } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from 'url';
+
+// Setup dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Setup multer for image uploads
+const uploadDir = path.join(__dirname, "../uploads");
+
+// Ensure upload directory exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage_config = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // Create a unique filename with timestamp and random string
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage_config,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    // Accept images only
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      // @ts-ignore - Multer types aren't perfect
+      return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
@@ -222,6 +264,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(500).json({ message: "Failed to verify answer" });
       }
     }
+  });
+  
+  // Image upload endpoint
+  app.post("/api/upload-image", upload.single('image'), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      // Return the file path that can be used to retrieve the image
+      const fileUrl = `/uploads/${req.file.filename}`;
+      
+      res.status(201).json({ 
+        imageUrl: fileUrl,
+        message: "Image uploaded successfully" 
+      });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      res.status(500).json({ message: "Failed to upload image" });
+    }
+  });
+  
+  // Serve uploaded files
+  app.use('/uploads', (req, res, next) => {
+    const filePath = path.join(uploadDir, path.basename(req.path));
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+      if (err) {
+        res.status(404).send('File not found');
+      } else {
+        next();
+      }
+    });
+  }, (req, res) => {
+    const filePath = path.join(uploadDir, path.basename(req.path));
+    res.sendFile(filePath);
   });
 
   const httpServer = createServer(app);

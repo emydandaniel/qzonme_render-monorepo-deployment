@@ -30,8 +30,31 @@ const QuestionList: React.FC<QuestionListProps> = ({
           key={index} 
           className="p-3 bg-gray-50 rounded-lg flex justify-between items-center"
         >
-          <span>{question.text}</span>
+          <div className="flex items-center gap-2">
+            {question.imageUrl && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative w-8 h-8 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                      <img 
+                        src={question.imageUrl} 
+                        alt="" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>This question has an image</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <span>{question.text}</span>
+          </div>
           <div className="flex space-x-2">
+            {question.imageUrl && (
+              <ImageIcon className="h-5 w-5 text-green-500 mr-1" />
+            )}
             <Button
               variant="ghost"
               size="icon"

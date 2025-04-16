@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Image, Upload, X } from "lucide-react";
+import { Image, Loader2, Upload, X } from "lucide-react";
 import MultipleChoiceEditor from "./MultipleChoiceEditor";
 import QuestionList from "./QuestionList";
 import AdPlaceholder from "../common/AdPlaceholder";
@@ -104,13 +104,19 @@ const QuizCreation: React.FC = () => {
       // Handle image upload if present
       let imageUrl = null;
       if (questionImage) {
-        // In a real implementation, we would upload the image to a server here
-        // For this prototype, we'll simulate by using the data URL from preview
-        imageUrl = questionImagePreview;
-        
-        // Commented out actual image upload for now as we need to implement the server endpoint
-        // const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
-        // imageUrl = uploadResult.imageUrl;
+        try {
+          const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
+          imageUrl = uploadResult.imageUrl;
+        } catch (err) {
+          console.error("Failed to upload image:", err);
+          toast({
+            title: "Image upload failed",
+            description: "Your question will be added without the image",
+            variant: "destructive"
+          });
+          // Fallback to no image
+          imageUrl = null;
+        }
       }
 
       const newQuestion: Question = {
@@ -357,8 +363,16 @@ const QuizCreation: React.FC = () => {
               type="button" 
               className="btn-primary" 
               onClick={handleAddQuestion}
+              disabled={uploadImageMutation.isPending}
             >
-              {questions.length > 0 ? "Add Question" : "First Question"}
+              {uploadImageMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                questions.length > 0 ? "Add Question" : "First Question"
+              )}
             </Button>
           </div>
         </CardContent>
