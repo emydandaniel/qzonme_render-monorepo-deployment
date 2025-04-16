@@ -146,9 +146,17 @@ const HomePage: React.FC = () => {
         <CardContent className="pt-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-4 font-poppins">Welcome to QzonMe</h2>
-            <p className="text-muted-foreground mb-6">
-              Create a quiz and find out how well your friends really know you, or test your knowledge about your friends!
-            </p>
+            
+            {/* Different description based on whether we are on the main domain or a shared link */}
+            {pendingQuiz ? (
+              <p className="text-muted-foreground mb-6">
+                Before you answer this quiz, we need to know who you are! Enter your name below to continue.
+              </p>
+            ) : (
+              <p className="text-muted-foreground mb-6">
+                QzonMe is a fun way to test how well your friends really know you. Built with love by students for good vibes & laughs 🧡
+              </p>
+            )}
             
             {/* Name Input Form */}
             <form className="max-w-md mx-auto">
@@ -168,22 +176,36 @@ const HomePage: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-6">
-                <Button 
-                  type="button" 
-                  className="btn-primary flex-1" 
-                  onClick={handleCreateQuiz}
-                  disabled={createUserMutation.isPending}
-                >
-                  Create a Quiz
-                </Button>
-                <Button 
-                  type="button" 
-                  className="btn-secondary flex-1" 
-                  onClick={handleAnswerQuiz}
-                  disabled={createUserMutation.isPending}
-                >
-                  Answer a Quiz
-                </Button>
+                {/* Show both buttons on main site, only Answer button on shared links */}
+                {!pendingQuiz ? (
+                  <>
+                    <Button 
+                      type="button" 
+                      className="btn-primary flex-1" 
+                      onClick={handleCreateQuiz}
+                      disabled={createUserMutation.isPending}
+                    >
+                      Create a Quiz
+                    </Button>
+                    <Button 
+                      type="button" 
+                      className="btn-secondary flex-1" 
+                      onClick={handleAnswerQuiz}
+                      disabled={createUserMutation.isPending}
+                    >
+                      Answer a Quiz
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    type="button" 
+                    className="btn-primary w-full" 
+                    onClick={handleAnswerQuiz}
+                    disabled={createUserMutation.isPending}
+                  >
+                    Answer Quiz
+                  </Button>
+                )}
               </div>
             </form>
           </div>

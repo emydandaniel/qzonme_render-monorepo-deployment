@@ -7,7 +7,8 @@ import { formatPercentage, getRemarkByScore } from "@/lib/utils";
 import Leaderboard from "../common/Leaderboard";
 import AdPlaceholder from "../common/AdPlaceholder";
 import Layout from "../common/Layout";
-import { Check, X } from "lucide-react";
+import { Check, Copy, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ResultsViewProps {
   userName: string;
@@ -49,7 +50,37 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   });
   
   const [showAnswers, setShowAnswers] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
   const personalizedRemark = getRemarkByScore(score, questions.length);
+  const { toast } = useToast();
+  
+  // Get the current URL for sharing
+  const quizId = sessionStorage.getItem("currentQuizId") || "1";
+  const urlSlug = sessionStorage.getItem("currentQuizUrlSlug") || "";
+  const shareUrl = `https://qzonme.com/quiz/${urlSlug || quizId}`;
+  
+  const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${shareUrl}`;
+  
+  const handleCopyShareLink = () => {
+    navigator.clipboard.writeText(shareMessage)
+      .then(() => {
+        setCopied(true);
+        toast({
+          title: "Copied!",
+          description: "Now paste it to your friend 👌🏽",
+          duration: 3000
+        });
+        setTimeout(() => setCopied(false), 3000);
+      })
+      .catch(err => {
+        console.error('Error copying text: ', err);
+        toast({
+          title: "Couldn't copy",
+          description: "Please try again or copy manually",
+          variant: "destructive"
+        });
+      });
+  };
   
   return (
     <Layout>
@@ -111,6 +142,31 @@ const ResultsView: React.FC<ResultsViewProps> = ({
                 </ul>
               </div>
             )}
+          </div>
+          
+          {/* Share Box */}
+          <div className="mt-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 className="font-poppins font-semibold text-lg mb-2">Share This Quiz</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Copy this message to invite your friends to take your quiz!
+            </p>
+            <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3">
+              Hey! I made this QzonMe quiz just for YOU. 👀<br/>
+              Let's see if you really know me 👇<br/>
+              <span className="text-blue-500 truncate block">{shareUrl}</span>
+            </div>
+            <Button 
+              type="button" 
+              className="w-full" 
+              onClick={handleCopyShareLink}
+              disabled={copied}
+            >
+              {copied ? "Copied!" : (
+                <>
+                  <Copy className="h-4 w-4 mr-2" /> Copy Message
+                </>
+              )}
+            </Button>
           </div>
           
           {/* Leaderboard */}
