@@ -17,6 +17,7 @@ interface ResultsViewProps {
   answers: QuestionAnswer[];
   attempts: QuizAttempt[];
   score: number;
+  currentAttemptId: number;  // Add the current attempt ID
 }
 
 const ResultsView: React.FC<ResultsViewProps> = ({
@@ -25,7 +26,8 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   questions,
   answers,
   attempts,
-  score
+  score,
+  currentAttemptId
 }) => {
   const [, navigate] = useLocation();
   const percentage = formatPercentage(score, questions.length);
@@ -48,31 +50,52 @@ const ResultsView: React.FC<ResultsViewProps> = ({
       answer
     };
   });
+
+  // Check if current user's attempt is already in the attempts list
+  const userAttemptExists = React.useMemo(() => {
+    return attempts.some(attempt => 
+      attempt.id === currentAttemptId || 
+      (attempt.userName === userName && attempt.score === score)
+    );
+  }, [attempts, userName, score, currentAttemptId]);
+  
+  console.log("ResultsView:", { 
+    userAttemptExists, 
+    attemptsCount: attempts.length, 
+    userName,
+    attempts: attempts.map(a => ({ id: a.id, name: a.userName, score: a.score }))
+  });
   
   // Create a modified attempts array that includes current user if they're not already in attempts
   const enhancedAttempts = React.useMemo(() => {
-    // Check if current user is already in the attempts list
-    const userExists = attempts.some(attempt => attempt.userName === userName);
+    // If the user's attempt is already in the list, use that
+    if (userAttemptExists) {
+      return attempts;
+    }
     
-    if (!userExists && userName) {
-      // Add the current user's attempt if it doesn't exist yet
+    // Otherwise, add a temporary entry for the current user
+    if (userName) {
+      const newAttempt = {
+        id: currentAttemptId || -1,
+        quizId: questions[0]?.quizId || 0,
+        userAnswerId: 0, 
+        userName: userName,
+        score: score,
+        totalQuestions: questions.length,
+        answers: answers,
+        completedAt: new Date(),
+      };
+      
+      console.log("Adding temporary attempt to leaderboard for current user:", newAttempt);
+      
       return [
         ...attempts,
-        {
-          id: -1, // Temporary ID that won't conflict with real IDs
-          quizId: questions[0]?.quizId || 0,
-          userAnswerId: 0, 
-          userName: userName,
-          score: score,
-          totalQuestions: questions.length,
-          answers: answers,
-          completedAt: new Date(),
-        }
+        newAttempt
       ];
     }
     
     return attempts;
-  }, [attempts, userName, score, questions.length, answers]);
+  }, [attempts, userName, score, questions, answers, currentAttemptId, userAttemptExists]);
   
   const [showAnswers, setShowAnswers] = React.useState(false);
   const personalizedRemark = getRemarkByScore(score, questions.length);
