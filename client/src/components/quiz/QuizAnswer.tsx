@@ -113,8 +113,51 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
     }
   };
   
+  if (questions.length === 0) {
+    return (
+      <Layout>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <div className="flex items-center mb-6 justify-center">
+              <div 
+                className="w-10 h-10 rounded-full bg-primary bg-opacity-20 flex items-center justify-center text-primary font-semibold"
+              >
+                {createAvatarPlaceholder(quizCreator)}
+              </div>
+              <div className="ml-3">
+                <h2 className="font-poppins font-semibold">{quizCreator}'s Quiz</h2>
+                <p className="text-sm text-muted-foreground">
+                  How well do you know {quizCreator}?
+                </p>
+              </div>
+            </div>
+            
+            <div className="py-8">
+              <h3 className="text-xl font-semibold mb-4">This quiz doesn't have any questions yet!</h3>
+              <p className="text-muted-foreground mb-6">
+                {quizCreator} is still setting up this quiz. Please check back later.
+              </p>
+              <Button onClick={() => window.location.href = "/"}>
+                Back to Home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </Layout>
+    );
+  }
+  
   if (!currentQuestion) {
-    return <div>Loading questions...</div>;
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-40">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading questions...</p>
+          </div>
+        </div>
+      </Layout>
+    );
   }
   
   return (
