@@ -19,11 +19,11 @@ import { validateQuiz } from "@/lib/quizUtils";
 
 const QuizCreation: React.FC = () => {
   const [questionText, setQuestionText] = useState("");
-  const [questionType, setQuestionType] = useState<"multiple-choice" | "open-ended">("multiple-choice");
+  const [questionType] = useState<"multiple-choice">("multiple-choice");
   const [options, setOptions] = useState<string[]>(["", "", "", ""]);
   const [correctOption, setCorrectOption] = useState<number>(0);
-  const [acceptedAnswers, setAcceptedAnswers] = useState("");
-  const [hint, setHint] = useState("");
+  // Image handling for questions (to be implemented)
+  const [questionImage, setQuestionImage] = useState<File | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [, navigate] = useLocation();
@@ -69,39 +69,28 @@ const QuizCreation: React.FC = () => {
 
     let correctAnswers: string[] = [];
     
-    if (questionType === "multiple-choice") {
-      // Validate multiple choice options
-      if (options.some(opt => !opt.trim())) {
-        toast({
-          title: "All options are required",
-          description: "Please fill in all options",
-          variant: "destructive"
-        });
-        return;
-      }
-      correctAnswers = [options[correctOption]];
-    } else {
-      // Validate open-ended answers
-      if (!acceptedAnswers.trim()) {
-        toast({
-          title: "Accepted answers are required",
-          description: "Please enter at least one accepted answer",
-          variant: "destructive"
-        });
-        return;
-      }
-      correctAnswers = acceptedAnswers.split(',').map(a => a.trim());
+    // Validate multiple choice options
+    if (options.some(opt => !opt.trim())) {
+      toast({
+        title: "All options are required",
+        description: "Please fill in all options",
+        variant: "destructive"
+      });
+      return;
     }
+    correctAnswers = [options[correctOption]];
 
     const newQuestion: Question = {
       id: Date.now(), // Temporary ID until saved to server
       quizId: 0, // Will be set when quiz is created
       text: questionText,
       type: questionType,
-      options: questionType === "multiple-choice" ? options : null,
+      options: options,
       correctAnswers,
-      hint: questionType === "open-ended" ? hint : null,
-      order: questions.length
+      hint: null,
+      order: questions.length,
+      // Will implement image handling later
+      imageUrl: null
     };
 
     setQuestions([...questions, newQuestion]);
@@ -111,27 +100,26 @@ const QuizCreation: React.FC = () => {
 
   const resetForm = () => {
     setQuestionText("");
-    setQuestionType("multiple-choice");
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
-    setAcceptedAnswers("");
-    setHint("");
+    setQuestionImage(null);
   };
 
   const handleEditQuestion = (index: number) => {
     const question = questions[index];
     setQuestionText(question.text);
-    setQuestionType(question.type as "multiple-choice" | "open-ended");
     
-    if (question.type === "multiple-choice" && question.options) {
+    if (question.options) {
       setOptions(question.options as string[]);
       setCorrectOption((question.options as string[]).findIndex(
         opt => opt === (question.correctAnswers as string[])[0]
       ));
-    } else {
-      setAcceptedAnswers((question.correctAnswers as string[]).join(", "));
-      setHint(question.hint || "");
     }
+    
+    // Will implement image handling later
+    // if (question.imageUrl) {
+    //   // Handle loading existing image
+    // }
     
     // Remove the question from the list
     const updatedQuestions = [...questions];
@@ -223,40 +211,13 @@ const QuizCreation: React.FC = () => {
               />
             </div>
             
-            <div className="mb-4">
-              <Label className="block text-sm font-medium mb-2">Question Type</Label>
-              <RadioGroup
-                value={questionType}
-                onValueChange={(val) => setQuestionType(val as "multiple-choice" | "open-ended")}
-                className="flex space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="multiple-choice" id="multiple-choice" />
-                  <Label htmlFor="multiple-choice">Multiple Choice</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="open-ended" id="open-ended" />
-                  <Label htmlFor="open-ended">Open-Ended</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            
-            {/* Question type specific editors */}
-            {questionType === "multiple-choice" ? (
-              <MultipleChoiceEditor
-                options={options}
-                setOptions={setOptions}
-                correctOption={correctOption}
-                setCorrectOption={setCorrectOption}
-              />
-            ) : (
-              <OpenEndedEditor
-                acceptedAnswers={acceptedAnswers}
-                setAcceptedAnswers={setAcceptedAnswers}
-                hint={hint}
-                setHint={setHint}
-              />
-            )}
+            {/* Multiple choice editor (open-ended removed) */}
+            <MultipleChoiceEditor
+              options={options}
+              setOptions={setOptions}
+              correctOption={correctOption}
+              setCorrectOption={setCorrectOption}
+            />
           </div>
           
           <div className="flex justify-between mt-6">

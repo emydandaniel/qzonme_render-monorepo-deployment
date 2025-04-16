@@ -1,0 +1,43 @@
+Hey Replit AI! I have a list of bug fixes, new features, and improvements to implement on my QzonMe quiz app. Please go through the tasks below step-by-step:
+🧩 1. Quiz Logic Updates
+•	Remove the open-ended question type completely.
+•	Keep only multiple choice questions and allow each question to optionally include an image upload, which should display while answering the quiz.
+•	Add a "Previous" button during quiz answering that lets users navigate back to earlier questions.
+•	Add a progress bar on the quiz answering page to show how many questions have been answered out of the total (e.g., “2 of 7”).
+📊 2. Leaderboard & Dashboard Improvements
+•	When someone finishes a quiz, update the leaderboard immediately to show names and scores of all participants. Right now it just shows a number without details.
+•	Fix the “View Dashboard” button on the quiz creators url generation page(after someone creates a quiz). It should lead to the dashboard/leaderboard showing names and scores of everyone who’s taken the quiz.
+•	When the site is accessed through a shared quiz link, show only the “Answer Quiz” button on the homepage (hide the “Create Quiz” button).
+•	On the result page, after a participant completes a quiz, show the “Create Your Own Quiz” button instead of on the homepage.
+•	On the custom domain homepage (like https://qzonme.com), only show the “Create Quiz” button. Add a short site description below it:
+QzonMe is a fun way to test how well your friends really know you. Built with love by students for good vibes & laughs 🧡
+🎯 3. Result Page Enhancements
+•	On the result page:
+o	Do not show all answers by default.
+o	Add a button that says: “View Your Answers”. When clicked, it should display all questions, showing which were answered correctly or incorrectly.
+o	Place this button above the leaderboard.
+o	After the leaderboard, place a “Create Your Own Quiz” button.
+•	Remove the “Try Again” button from the result page.
+💬 4. Personalized Remark Based on Score
+•	Instead of saying “Great job!” for everyone, show remarks based on the percentage of correct answers. Here’s an example scale to use:
+o	0–20%: “Oops! You don’t know me at all 😅”
+o	21–40%: “Hmm… you kinda know me 🤔”
+o	41–60%: “Not bad! You’re getting there 👀”
+o	61–80%: “Yoo you really know me! 🔥🔥”
+o	81–100%: “Perfect! You're basically my twin 🧠❤️” Adjust it dynamically to support any number of quiz questions.
+📲 5. Social Sharing Features
+•	Add Open Graph + Twitter Card meta tags in the <head> of the HTML pages (especially quiz result and quiz share pages), so that when someone shares their quiz, it shows a proper preview.
+Use this content:
+o	Title: "I Made This Quiz Just for You 💬"
+o	Description: "How well do you really know me? Try this private QzonMe quiz I made just for close friends."
+o	Image: https://qzonme.com/assets/qzonme-logo.jpg
+o	URL: use https://qzonme.com/quiz/abc123 for now, but replace it dynamically
+•	On the result page, add a box that allows users to share their quiz via copy-paste. Include a “Copy Message” button that copies this to clipboard:
+•	Hey! I made this QzonMe quiz just for YOU. 👀  
+•	Let’s see if you really know me 👇  
+•	https://qzonme.com/quiz/abc123
+Show a confirmation message like “Copied! Now paste it to your friend 👌🏽” when clicked.
+🌐 6. Branding
+•	Add a favicon (browser tab icon) using this image:
+https://qzonme.com/assets/qzonme-logo.jpg
+
