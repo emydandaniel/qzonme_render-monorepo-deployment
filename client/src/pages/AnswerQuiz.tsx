@@ -15,11 +15,16 @@ interface AnswerQuizProps {
 }
 
 const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
-  const { accessCode, creatorSlug } = params;
+  // Safely extract parameters
+  const accessCode = params?.accessCode;
+  const creatorSlug = params?.creatorSlug;
+  
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const userName = sessionStorage.getItem("userName") || "";
   const userId = parseInt(sessionStorage.getItem("userId") || "0");
+  
+  console.log("AnswerQuiz component rendered with params:", { params, accessCode, creatorSlug });
 
   // Check if user is logged in, if not, save the quiz info and redirect to home
   React.useEffect(() => {
