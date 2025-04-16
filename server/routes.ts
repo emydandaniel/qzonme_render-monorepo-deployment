@@ -82,6 +82,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   });
+  
+  // Get all quizzes (for testing)
+  app.get("/api/quizzes", async (req, res) => {
+    try {
+      // Get all quizzes from the storage
+      const allQuizzes = Array.from(storage["quizzes"].values());
+      res.json(allQuizzes);
+    } catch (error) {
+      console.error("Error fetching all quizzes:", error);
+      res.status(500).json({ message: "Failed to fetch quizzes" });
+    }
+  });
 
   app.get("/api/quizzes/code/:accessCode", async (req, res) => {
     try {
