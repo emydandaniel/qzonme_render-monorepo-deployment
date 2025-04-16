@@ -51,6 +51,8 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     enabled: !!identifier && !!userName && !!userId,
     retry: 3, // Retry failed requests up to 3 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
+    staleTime: 0, // Don't use stale data
+    refetchOnMount: true, // Always refetch on mount
   });
   
   // Debug logs removed
@@ -59,6 +61,8 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
     queryKey: [`/api/quizzes/${quiz?.id}/questions`],
     enabled: !!quiz?.id,
+    staleTime: 0, // Don't use stale data
+    refetchOnMount: true, // Always refetch on mount
   });
 
   // Submit quiz attempt
@@ -111,6 +115,25 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   }
 
   if (quizError) {
+    // Convert error object to string for debugging
+    const errorMessage = quizError instanceof Error 
+      ? quizError.message
+      : 'Unknown error occurred';
+    
+    // Extract more details if it's a response error
+    let detailedError = "";
+    try {
+      if (errorMessage.includes('{')) {
+        const jsonPart = errorMessage.substring(errorMessage.indexOf('{'));
+        const errorObj = JSON.parse(jsonPart);
+        detailedError = errorObj.message || 'No detailed message available';
+      }
+    } catch (e) {
+      detailedError = errorMessage;
+    }
+
+    console.log("Quiz error details:", { errorMessage, detailedError });
+    
     return (
       <Layout>
         <Card>
@@ -120,7 +143,11 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
               <p className="mb-4">There was a problem loading the quiz with identifier: <br />
                 <code className="bg-gray-100 p-1 rounded">{identifier}</code>
               </p>
-              <p className="text-sm text-gray-600 mb-6">Please check that the URL is correct and try again.</p>
+              <p className="text-sm text-gray-600 mb-6">
+                Please check that the URL is correct and try again.
+                <br />
+                <span className="text-xs text-red-500">{detailedError}</span>
+              </p>
               <Button onClick={() => window.location.href = "/"}>
                 Back to Home
               </Button>
