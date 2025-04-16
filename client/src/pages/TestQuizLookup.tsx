@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/common/Layout";
 
 const TestQuizLookup: React.FC = () => {
-  const [slug, setSlug] = useState("testuser-UN4Zg1");
+  const [slug, setSlug] = useState("testuser-test123");
   const [, navigate] = useLocation();
   
   const handleGo = () => {

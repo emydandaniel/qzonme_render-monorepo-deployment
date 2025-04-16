@@ -103,8 +103,31 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     return <div>Loading quiz...</div>;
   }
 
+  if (quizError) {
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-2xl font-bold text-red-500 mb-4">Error Loading Quiz</h2>
+        <p className="mb-4">There was a problem loading the quiz with identifier: <br />
+          <code className="bg-gray-100 p-1 rounded">{identifier}</code>
+        </p>
+        <p className="text-sm text-gray-600">Error details: {(quizError as Error).message || 'Unknown error'}</p>
+      </div>
+    );
+  }
+  
   if (!quiz) {
-    return <div>Quiz not found</div>;
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-2xl font-bold text-orange-500 mb-4">Quiz Not Found</h2>
+        <p className="mb-4">We couldn't find a quiz with the identifier: <br />
+          <code className="bg-gray-100 p-1 rounded">{identifier}</code>
+        </p>
+        <p className="text-sm text-gray-600">
+          Type: {isUsingAccessCode ? 'Access Code' : 'Creator Slug'}<br />
+          Endpoint: {endpoint}
+        </p>
+      </div>
+    );
   }
 
   return (
