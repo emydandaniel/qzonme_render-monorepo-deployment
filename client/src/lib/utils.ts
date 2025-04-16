@@ -46,3 +46,19 @@ export function generateUrlSlug(creatorName: string): string {
   const randomChars = Math.random().toString(36).substring(2, 6);
   return `${slug}-${randomChars}`;
 }
+
+export function getRemarkByScore(score: number, total: number): string {
+  const percentage = total === 0 ? 0 : (score / total) * 100;
+  
+  if (percentage <= 20) {
+    return "Oops! You don't know me at all 😅";
+  } else if (percentage <= 40) {
+    return "Hmm… you kinda know me 🤔";
+  } else if (percentage <= 60) {
+    return "Not bad! You're getting there 👀";
+  } else if (percentage <= 80) {
+    return "Yoo you really know me! 🔥🔥";
+  } else {
+    return "Perfect! You're basically my twin 🧠❤️";
+  }
+}

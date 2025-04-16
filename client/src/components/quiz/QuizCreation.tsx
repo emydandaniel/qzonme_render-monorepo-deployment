@@ -223,7 +223,48 @@ const QuizCreation: React.FC = () => {
 
   const handlePrevQuestion = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
+      // If we're creating a new question, save the current data first
+      if (questionText.trim() || options.some(o => o.trim())) {
+        toast({
+          title: "Save changes?",
+          description: "Please add the current question first or clear the form",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Load the previous question
+      const prevIndex = currentQuestionIndex - 1;
+      if (prevIndex >= 0 && prevIndex < questions.length) {
+        const prevQuestion = questions[prevIndex];
+        
+        // Load the question data into the form
+        setQuestionText(prevQuestion.text);
+        
+        if (prevQuestion.options) {
+          setOptions(prevQuestion.options as string[]);
+          // Find which option is the correct one
+          const correctIndex = (prevQuestion.options as string[]).findIndex(
+            opt => (prevQuestion.correctAnswers as string[]).includes(opt)
+          );
+          setCorrectOption(correctIndex >= 0 ? correctIndex : 0);
+        }
+        
+        // Handle question image if present
+        if (prevQuestion.imageUrl) {
+          setQuestionImagePreview(prevQuestion.imageUrl);
+        } else {
+          handleRemoveImage();
+        }
+        
+        // Remove the question from the list
+        const updatedQuestions = [...questions];
+        updatedQuestions.splice(prevIndex, 1);
+        setQuestions(updatedQuestions);
+        
+        // Update current index
+        setCurrentQuestionIndex(prevIndex);
+      }
     }
   };
 
