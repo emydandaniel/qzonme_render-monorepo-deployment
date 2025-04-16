@@ -2,6 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import DashboardView from "@/components/quiz/Dashboard";
 import ShareQuiz from "@/components/quiz/ShareQuiz";
+import { Question, QuizAttempt, Quiz } from "@shared/schema";
 
 interface DashboardProps {
   params: {
@@ -20,18 +21,18 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
   }, [params.quizId]);
 
   // Fetch quiz
-  const { data: quiz, isLoading: isLoadingQuiz } = useQuery({
+  const { data: quiz, isLoading: isLoadingQuiz } = useQuery<Quiz>({
     queryKey: [`/api/quizzes/${quizId}`],
   });
 
   // Fetch questions
-  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery({
+  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
     queryKey: [`/api/quizzes/${quizId}/questions`],
     enabled: !!quizId,
   });
 
   // Fetch quiz attempts
-  const { data: attempts = [], isLoading: isLoadingAttempts } = useQuery({
+  const { data: attempts = [], isLoading: isLoadingAttempts } = useQuery<QuizAttempt[]>({
     queryKey: [`/api/quizzes/${quizId}/attempts`],
     enabled: !!quizId,
   });
