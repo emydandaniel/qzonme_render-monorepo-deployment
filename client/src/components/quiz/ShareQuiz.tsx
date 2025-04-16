@@ -17,10 +17,10 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   
-  // Format domain for sharing - use the current domain
-  const currentDomain = window.location.origin;
-  console.log("Current domain for sharing:", currentDomain);
-  const quizLink = `${currentDomain}/quiz/${urlSlug}`;
+  // Use the custom domain for sharing as requested
+  const customDomain = "https://qzonme.com";
+  console.log("Using custom domain for sharing:", customDomain);
+  const quizLink = `${customDomain}/quiz/${urlSlug}`;
   console.log("Generated quiz link:", quizLink);
   const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}`;
   

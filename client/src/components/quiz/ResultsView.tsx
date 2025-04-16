@@ -54,12 +54,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   const personalizedRemark = getRemarkByScore(score, questions.length);
   const { toast } = useToast();
   
-  // Get the current URL for sharing
-  const quizId = sessionStorage.getItem("currentQuizId") || "1";
-  const urlSlug = sessionStorage.getItem("currentQuizUrlSlug") || "";
-  const shareUrl = `https://qzonme.com/quiz/${urlSlug || quizId}`;
-  
-  const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${shareUrl}`;
+  // Removed shared URL section as this component no longer needs it
   
   const handleCopyShareLink = () => {
     navigator.clipboard.writeText(shareMessage)
@@ -144,30 +139,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
             )}
           </div>
           
-          {/* Share Box */}
-          <div className="mt-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <h3 className="font-poppins font-semibold text-lg mb-2">Share This Quiz</h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Copy this message to invite your friends to take your quiz!
-            </p>
-            <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3">
-              Hey! I made this QzonMe quiz just for YOU. 👀<br/>
-              Let's see if you really know me 👇<br/>
-              <span className="text-blue-500 truncate block">{shareUrl}</span>
-            </div>
-            <Button 
-              type="button" 
-              className="w-full" 
-              onClick={handleCopyShareLink}
-              disabled={copied}
-            >
-              {copied ? "Copied!" : (
-                <>
-                  <Copy className="h-4 w-4 mr-2" /> Copy Message
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Share box removed as requested */}
           
           {/* Leaderboard */}
           <div className="mt-8">
