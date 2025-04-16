@@ -118,9 +118,14 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
         <p className="mb-4">We couldn't find a quiz with the identifier: <br />
           <code className="bg-gray-100 p-1 rounded">{identifier}</code>
         </p>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 mb-4">
           This quiz may have been removed or the link is incorrect.
         </p>
+        <div className="mt-6">
+          <a href="/find-quiz" className="text-blue-600 underline">
+            Try finding the quiz by name or access code
+          </a>
+        </div>
       </div>
     );
   }
