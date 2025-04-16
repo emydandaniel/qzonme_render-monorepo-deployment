@@ -3,14 +3,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { Question, QuestionAnswer } from "@shared/schema";
 import { createAvatarPlaceholder, showAdInterstitial } from "@/lib/utils";
 import { verifyAnswer } from "@/lib/quizUtils";
 import { apiRequest } from "@/lib/queryClient";
 import AdPlaceholder from "../common/AdPlaceholder";
 import Layout from "../common/Layout";
-import { Info } from "lucide-react";
 
 interface QuizAnswerProps {
   quizId: number;
@@ -28,11 +27,13 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<QuestionAnswer[]>([]);
   const [selectedOption, setSelectedOption] = useState<string>("");
-  const [openEndedAnswer, setOpenEndedAnswer] = useState<string>("");
   const { toast } = useToast();
   
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  
+  // Calculate progress percentage
+  const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
   
   // Calculate progress dots (maximum 5 dots)
   const progressDots = Array(Math.min(questions.length, 5))
@@ -51,8 +52,8 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
   });
   
   const handleNext = async () => {
-    // Check if an answer is selected/entered
-    if (currentQuestion.type === "multiple-choice" && !selectedOption) {
+    // Check if an answer is selected
+    if (!selectedOption) {
       toast({
         title: "Please select an answer",
         description: "You must select an option to continue",
@@ -61,27 +62,14 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
       return;
     }
     
-    if (currentQuestion.type === "open-ended" && !openEndedAnswer.trim()) {
-      toast({
-        title: "Please enter an answer",
-        description: "You must provide an answer to continue",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const answer = currentQuestion.type === "multiple-choice" 
-      ? selectedOption 
-      : openEndedAnswer.trim();
-    
     try {
       // Verify if the answer is correct
-      const isCorrect = await verifyAnswerMutation.mutateAsync(answer);
+      const isCorrect = await verifyAnswerMutation.mutateAsync(selectedOption);
       
       // Save the answer
       const questionAnswer: QuestionAnswer = {
         questionId: currentQuestion.id,
-        userAnswer: answer,
+        userAnswer: selectedOption,
         isCorrect
       };
       
@@ -90,7 +78,6 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
       
       // Reset inputs for next question
       setSelectedOption("");
-      setOpenEndedAnswer("");
       
       // Show interstitial ad every 5 questions
       if ((currentQuestionIndex + 1) % 5 === 0) {
@@ -149,14 +136,15 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
             </div>
           </div>
           
-          {/* Progress indicator */}
-          <div className="flex justify-center space-x-2 mb-6">
-            {progressDots.map((isActive, i) => (
-              <div 
-                key={i} 
-                className={`progress-dot ${isActive ? 'active' : ''}`}
-              ></div>
-            ))}
+          {/* Progress indicator with number */}
+          <div className="mb-3 flex justify-between items-center text-sm text-muted-foreground">
+            <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
+            <span>{Math.round(progressPercentage)}% complete</span>
+          </div>
+          
+          {/* Progress bar */}
+          <div className="mb-6">
+            <Progress value={progressPercentage} className="h-2" />
           </div>
           
           {/* Question container */}
@@ -165,53 +153,38 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
               <h3 className="text-xl font-poppins font-semibold mb-2">
                 {currentQuestion.text}
               </h3>
-            </div>
-            
-            {/* Multiple choice question */}
-            {currentQuestion.type === "multiple-choice" && (
-              <div className="space-y-3">
-                {(currentQuestion.options as string[]).map((option, index) => (
-                  <label 
-                    key={index}
-                    className={`block p-3 bg-white border ${
-                      selectedOption === option ? 'border-primary' : 'border-gray-200'
-                    } rounded-lg hover:border-primary cursor-pointer transition-colors`}
-                    onClick={() => handleOptionSelect(option)}
-                  >
-                    <div className="flex items-center">
-                      <div className={`w-5 h-5 rounded-full ${
-                        selectedOption === option ? 'bg-primary' : 'border-2 border-gray-300'
-                      } mr-3 flex-shrink-0`}></div>
-                      <span>{option}</span>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            )}
-            
-            {/* Open-ended question */}
-            {currentQuestion.type === "open-ended" && (
-              <div>
-                <div className="mb-6">
-                  <Input
-                    type="text"
-                    className="input-field"
-                    placeholder="Type your answer here..."
-                    value={openEndedAnswer}
-                    onChange={(e) => setOpenEndedAnswer(e.target.value)}
+              
+              {/* Display question image if available */}
+              {currentQuestion.imageUrl && (
+                <div className="mt-3 mb-4">
+                  <img 
+                    src={currentQuestion.imageUrl} 
+                    alt="Question image" 
+                    className="max-w-full max-h-64 mx-auto rounded-lg"
                   />
                 </div>
-                
-                {currentQuestion.hint && (
-                  <div className="bg-blue-50 p-4 rounded-lg mb-4 flex items-start">
-                    <Info className="h-5 w-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
-                    <p className="text-sm text-blue-700">
-                      Hint: {currentQuestion.hint}
-                    </p>
+              )}
+            </div>
+            
+            {/* Multiple choice options */}
+            <div className="space-y-3">
+              {(currentQuestion.options as string[]).map((option, index) => (
+                <label 
+                  key={index}
+                  className={`block p-3 bg-white border ${
+                    selectedOption === option ? 'border-primary' : 'border-gray-200'
+                  } rounded-lg hover:border-primary cursor-pointer transition-colors`}
+                  onClick={() => handleOptionSelect(option)}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 rounded-full ${
+                      selectedOption === option ? 'bg-primary' : 'border-2 border-gray-300'
+                    } mr-3 flex-shrink-0`}></div>
+                    <span>{option}</span>
                   </div>
-                )}
-              </div>
-            )}
+                </label>
+              ))}
+            </div>
           </div>
           
           <div className="flex justify-between mt-6">

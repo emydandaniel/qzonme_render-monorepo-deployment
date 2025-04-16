@@ -32,11 +32,12 @@ export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
   quizId: integer("quiz_id").notNull(),
   text: text("text").notNull(),
-  type: text("type").notNull(), // "multiple-choice" or "open-ended"
-  options: jsonb("options"), // For multiple-choice: array of options
+  type: text("type").notNull(), // Now only "multiple-choice"
+  options: jsonb("options").notNull(), // For multiple-choice: array of options
   correctAnswers: jsonb("correct_answers").notNull(), // Array of correct answers
-  hint: text("hint"), // Optional hint for open-ended questions
+  hint: text("hint"), // Keeping for backwards compatibility
   order: integer("order").notNull(), // Question order in the quiz
+  imageUrl: text("image_url"), // Added for storing image URLs for questions
 });
 
 export const insertQuestionSchema = createInsertSchema(questions).omit({
