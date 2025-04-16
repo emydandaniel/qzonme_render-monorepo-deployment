@@ -24,11 +24,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ attempts, currentUserName }) 
     return scoreB - scoreA;
   });
 
-  // Debug leaderboard data
-  console.log("Leaderboard data:", {
-    attempts: sortedAttempts,
-    currentUserName
-  });
+  // Debug logs removed
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200">
