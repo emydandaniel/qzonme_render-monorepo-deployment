@@ -13,15 +13,10 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
   const quizId = parseInt(params.quizId);
   const [showShareView, setShowShareView] = React.useState(false);
 
-  // Check if we just created the quiz
+  // We no longer want to show the share view when coming to dashboard
+  // The share view is only shown after quiz creation
   React.useEffect(() => {
-    const isNewQuiz = sessionStorage.getItem("currentQuizId") === params.quizId;
-    setShowShareView(isNewQuiz);
-    
-    // Clean up
-    return () => {
-      sessionStorage.removeItem("currentQuizId");
-    };
+    setShowShareView(false);
   }, [params.quizId]);
 
   // Fetch quiz

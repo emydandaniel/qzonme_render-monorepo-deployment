@@ -103,6 +103,10 @@ const QuizCreation: React.FC = () => {
     try {
       // Handle image upload if present
       let imageUrl = null;
+      
+      // Check if we're editing a question with an existing image URL
+      const existingImageUrl = sessionStorage.getItem("currentEditingImageUrl");
+      
       if (questionImage) {
         try {
           const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
@@ -117,7 +121,13 @@ const QuizCreation: React.FC = () => {
           // Fallback to no image
           imageUrl = null;
         }
+      } else if (questionImagePreview && existingImageUrl) {
+        // Use the existing image URL if we're editing and have a preview
+        imageUrl = existingImageUrl;
       }
+      
+      // Clear the current editing image URL from session storage
+      sessionStorage.removeItem("currentEditingImageUrl");
 
       const newQuestion: Question = {
         id: Date.now(), // Temporary ID until saved to server
@@ -206,6 +216,12 @@ const QuizCreation: React.FC = () => {
       else {
         setQuestionImagePreview(question.imageUrl);
       }
+      
+      // Store the image URL to be preserved through the next edit
+      sessionStorage.setItem("currentEditingImageUrl", question.imageUrl);
+    } else {
+      handleRemoveImage();
+      sessionStorage.removeItem("currentEditingImageUrl");
     }
     
     // Remove the question from the list
@@ -253,8 +269,11 @@ const QuizCreation: React.FC = () => {
         // Handle question image if present
         if (prevQuestion.imageUrl) {
           setQuestionImagePreview(prevQuestion.imageUrl);
+          // Store the image URL to be preserved through the next edit
+          sessionStorage.setItem("currentEditingImageUrl", prevQuestion.imageUrl);
         } else {
           handleRemoveImage();
+          sessionStorage.removeItem("currentEditingImageUrl");
         }
         
         // Remove the question from the list

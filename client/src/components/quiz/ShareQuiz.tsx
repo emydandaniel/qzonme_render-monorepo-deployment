@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, BarChart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "../common/Layout";
 
@@ -17,19 +17,25 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   
-  const quizLink = `${window.location.origin}/quiz/${urlSlug}`;
+  // Format domain for sharing
+  const domain = 'qzonme.com';
+  const shareDomain = domain;
+  const quizLink = `https://${shareDomain}/quiz/${urlSlug}`;
+  const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}`;
   
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(quizLink);
+    navigator.clipboard.writeText(shareMessage);
     setCopied(true);
     toast({
-      title: "Link Copied",
-      description: "Quiz link copied to clipboard"
+      title: "Copied!",
+      description: "Now paste it to your friend 👌🏽",
+      duration: 3000
     });
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 3000);
   };
   
   const handleViewDashboard = () => {
+    // Navigate to the dashboard with the quiz ID
     navigate(`/dashboard/${quizId}`);
   };
   
@@ -48,19 +54,30 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
             Share this link with your friends to see how well they know you.
           </p>
           
-          <div className="flex items-center p-3 bg-gray-50 rounded-lg mb-6">
-            <input 
-              type="text" 
-              value={quizLink} 
-              className="bg-transparent flex-1 border-none focus:outline-none text-sm"
-              readOnly
-            />
-            <Button variant="ghost" className="ml-2 text-primary" onClick={handleCopyLink}>
-              {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+          {/* Share Box - Same style as in Results page */}
+          <div className="p-4 border border-gray-200 rounded-lg bg-gray-50 mb-6">
+            <h3 className="font-poppins font-semibold text-lg mb-2 text-left">Share This Quiz</h3>
+            <p className="text-sm text-gray-600 mb-3 text-left">
+              Copy this message to invite your friends to take your quiz!
+            </p>
+            <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3 text-left">
+              Hey! I made this QzonMe quiz just for YOU. 👀<br/>
+              Let's see if you really know me 👇<br/>
+              <span className="text-blue-500 truncate block">{quizLink}</span>
+            </div>
+            <Button 
+              type="button" 
+              className="w-full" 
+              onClick={handleCopyLink}
+              disabled={copied}
+            >
+              {copied ? "Copied!" : (
+                <>
+                  <Copy className="h-4 w-4 mr-2" /> Copy Message
+                </>
+              )}
             </Button>
           </div>
-          
-          {/* Social media buttons removed as requested */}
           
           <div className="mt-6">
             <Button 
@@ -68,7 +85,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               className="btn-primary" 
               onClick={handleViewDashboard}
             >
-              View My Dashboard
+              <BarChart className="h-4 w-4 mr-2" /> View My Dashboard
             </Button>
           </div>
         </CardContent>
