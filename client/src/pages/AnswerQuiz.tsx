@@ -43,8 +43,6 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   const endpoint = isUsingAccessCode ? `/api/quizzes/code/${identifier}` : `/api/quizzes/slug/${identifier}`;
 
   // Fetch quiz by access code or URL slug
-  console.log(`Fetching quiz with ${isUsingAccessCode ? 'access code' : 'URL slug'}: "${identifier}" from endpoint: ${endpoint}`);
-  
   const { data: quiz, isLoading: isLoadingQuiz, error: quizError } = useQuery<Quiz>({
     queryKey: [endpoint],
     enabled: !!identifier,
@@ -52,14 +50,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
   
-  // Log the result for debugging
-  React.useEffect(() => {
-    if (quiz) {
-      console.log("Quiz fetched successfully:", quiz);
-    } else if (quizError) {
-      console.error("Error fetching quiz:", quizError);
-    }
-  }, [quiz, quizError]);
+  // Debug logs removed
 
   // Fetch questions for the quiz
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
@@ -123,8 +114,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
           <code className="bg-gray-100 p-1 rounded">{identifier}</code>
         </p>
         <p className="text-sm text-gray-600">
-          Type: {isUsingAccessCode ? 'Access Code' : 'Creator Slug'}<br />
-          Endpoint: {endpoint}
+          This quiz may have been removed or the link is incorrect.
         </p>
       </div>
     );
