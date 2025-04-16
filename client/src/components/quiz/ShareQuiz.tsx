@@ -17,8 +17,10 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   
-  // Use the custom domain for sharing as requested
-  const customDomain = "https://qzonme.com";
+  // Toggle between local and production URLs based on environment
+  // For local testing, use relative URL that works on localhost
+  const isLocalDev = true; // Set to false when deploying to production
+  const customDomain = isLocalDev ? window.location.origin : "https://qzonme.com";
   const quizLink = `${customDomain}/quiz/${urlSlug}`;
   const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}`;
   

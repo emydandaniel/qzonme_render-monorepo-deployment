@@ -117,13 +117,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Debug: List all available quizzes and their slugs
       const allQuizzes = Array.from(storage["quizzes"].values());
-      console.log("Available quizzes:", allQuizzes.map(q => ({ id: q.id, urlSlug: q.urlSlug })));
+      console.log("Available quizzes:", JSON.stringify(allQuizzes.map(q => ({ id: q.id, urlSlug: q.urlSlug }))));
+      
+      // Find directly
+      const matchingQuiz = allQuizzes.find(q => q.urlSlug === urlSlug);
+      console.log(`Direct match found: ${!!matchingQuiz}`);
       
       const quiz = await storage.getQuizByUrlSlug(urlSlug);
       
       if (!quiz) {
         console.log(`No quiz found with URL slug: "${urlSlug}"`);
-        return res.status(404).json({ message: "Quiz not found" });
+        return res.status(404).json({ 
+          message: "Quiz not found", 
+          debugInfo: {
+            requestedSlug: urlSlug,
+            availableSlugs: allQuizzes.map(q => q.urlSlug)
+          }
+        });
       }
       
       console.log(`Found quiz for slug "${urlSlug}":`, quiz);

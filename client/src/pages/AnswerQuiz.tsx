@@ -41,6 +41,11 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   const isUsingAccessCode = !!accessCode && !creatorSlug;
   const identifier = isUsingAccessCode ? accessCode : creatorSlug;
   const endpoint = isUsingAccessCode ? `/api/quizzes/code/${identifier}` : `/api/quizzes/slug/${identifier}`;
+  
+  // Debug the URL params
+  React.useEffect(() => {
+    console.log("URL Parameters:", { accessCode, creatorSlug, isUsingAccessCode, endpoint });
+  }, [accessCode, creatorSlug, isUsingAccessCode, endpoint]);
 
   // Fetch quiz by access code or URL slug
   const { data: quiz, isLoading: isLoadingQuiz, error: quizError } = useQuery<Quiz>({
