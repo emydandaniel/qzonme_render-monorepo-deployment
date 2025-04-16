@@ -3,26 +3,19 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import Leaderboard from "@/components/common/Leaderboard";
 import AdPlaceholder from "@/components/common/AdPlaceholder";
 import Layout from "@/components/common/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useQuery } from "@tanstack/react-query";
-import { QuizAttempt } from "@shared/schema";
 
 const HomePage: React.FC = () => {
   const [userName, setUserName] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  // Get recent attempts for leaderboard preview
-  const { data: recentAttempts = [] } = useQuery<QuizAttempt[]>({
-    queryKey: ["/api/quiz-attempts/recent"],
-    enabled: false, // Disable for now - we'll fetch this in a real app
-  });
+  // Removed leaderboard section as requested
   
   // Check if there's a pending quiz to answer
   const [pendingQuiz, setPendingQuiz] = React.useState<{
@@ -209,12 +202,6 @@ const HomePage: React.FC = () => {
                 )}
               </div>
             </form>
-          </div>
-          
-          {/* Leaderboard Preview */}
-          <div className="mt-8">
-            <h3 className="font-poppins font-semibold text-lg mb-3">Top Scores</h3>
-            <Leaderboard attempts={recentAttempts as QuizAttempt[]} />
           </div>
           
           {/* Ad Placeholder */}

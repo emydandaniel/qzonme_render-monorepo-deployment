@@ -49,6 +49,31 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     };
   });
   
+  // Create a modified attempts array that includes current user if they're not already in attempts
+  const enhancedAttempts = React.useMemo(() => {
+    // Check if current user is already in the attempts list
+    const userExists = attempts.some(attempt => attempt.userName === userName);
+    
+    if (!userExists && userName) {
+      // Add the current user's attempt if it doesn't exist yet
+      return [
+        ...attempts,
+        {
+          id: -1, // Temporary ID that won't conflict with real IDs
+          quizId: questions[0]?.quizId || 0,
+          userAnswerId: 0, 
+          userName: userName,
+          score: score,
+          totalQuestions: questions.length,
+          answers: answers,
+          completedAt: new Date(),
+        }
+      ];
+    }
+    
+    return attempts;
+  }, [attempts, userName, score, questions.length, answers]);
+  
   const [showAnswers, setShowAnswers] = React.useState(false);
   const personalizedRemark = getRemarkByScore(score, questions.length);
   const { toast } = useToast();
@@ -120,7 +145,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
           {/* Leaderboard */}
           <div className="mt-8">
             <h3 className="font-poppins font-semibold text-lg mb-3">Leaderboard</h3>
-            <Leaderboard attempts={attempts} currentUserName={userName} />
+            <Leaderboard attempts={enhancedAttempts} currentUserName={userName} />
           </div>
           
           <div className="mt-8 flex justify-center">
