@@ -101,14 +101,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/quizzes/slug/:urlSlug", async (req, res) => {
     try {
       const urlSlug = req.params.urlSlug;
+      console.log(`Looking up quiz with URL slug: "${urlSlug}"`);
+      
+      // Debug: List all available quizzes and their slugs
+      const allQuizzes = Array.from(storage["quizzes"].values());
+      console.log("Available quizzes:", allQuizzes.map(q => ({ id: q.id, urlSlug: q.urlSlug })));
+      
       const quiz = await storage.getQuizByUrlSlug(urlSlug);
       
       if (!quiz) {
+        console.log(`No quiz found with URL slug: "${urlSlug}"`);
         return res.status(404).json({ message: "Quiz not found" });
       }
       
+      console.log(`Found quiz for slug "${urlSlug}":`, quiz);
       res.json(quiz);
     } catch (error) {
+      console.error(`Error fetching quiz by slug "${req.params.urlSlug}":`, error);
       res.status(500).json({ message: "Failed to fetch quiz" });
     }
   });

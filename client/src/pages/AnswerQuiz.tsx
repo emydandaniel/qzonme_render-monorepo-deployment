@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { questionAnswerSchema, QuestionAnswer } from "@shared/schema";
+import { questionAnswerSchema, QuestionAnswer, Quiz, Question } from "@shared/schema";
 import QuizAnswer from "@/components/quiz/QuizAnswer";
 import { calculateScore } from "@/lib/quizUtils";
 
@@ -43,13 +43,24 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   const endpoint = isUsingAccessCode ? `/api/quizzes/code/${identifier}` : `/api/quizzes/slug/${identifier}`;
 
   // Fetch quiz by access code or URL slug
-  const { data: quiz, isLoading: isLoadingQuiz } = useQuery({
+  console.log(`Fetching quiz with ${isUsingAccessCode ? 'access code' : 'URL slug'}: "${identifier}" from endpoint: ${endpoint}`);
+  
+  const { data: quiz, isLoading: isLoadingQuiz, error: quizError } = useQuery<Quiz>({
     queryKey: [endpoint],
     enabled: !!identifier,
   });
+  
+  // Log the result for debugging
+  React.useEffect(() => {
+    if (quiz) {
+      console.log("Quiz fetched successfully:", quiz);
+    } else if (quizError) {
+      console.error("Error fetching quiz:", quizError);
+    }
+  }, [quiz, quizError]);
 
   // Fetch questions for the quiz
-  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery({
+  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
     queryKey: [`/api/quizzes/${quiz?.id}/questions`],
     enabled: !!quiz?.id,
   });
