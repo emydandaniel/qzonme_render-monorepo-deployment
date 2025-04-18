@@ -170,36 +170,23 @@ const HomePage: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-6">
-                {/* Show both buttons on main site, only Answer button on shared links */}
-                {!pendingQuiz ? (
-                  <>
-                    <Button 
-                      type="button" 
-                      className="btn-primary flex-1" 
-                      onClick={handleCreateQuiz}
-                      disabled={createUserMutation.isPending}
-                    >
-                      Create a Quiz
-                    </Button>
-                    <Button 
-                      type="button" 
-                      className="btn-secondary flex-1" 
-                      onClick={handleAnswerQuiz}
-                      disabled={createUserMutation.isPending}
-                    >
-                      Answer a Quiz
-                    </Button>
-                  </>
-                ) : (
-                  <Button 
-                    type="button" 
-                    className="btn-primary w-full" 
-                    onClick={handleAnswerQuiz}
-                    disabled={createUserMutation.isPending}
-                  >
-                    Answer Quiz
-                  </Button>
-                )}
+                {/* Always show both buttons, regardless of how the page was accessed */}
+                <Button 
+                  type="button" 
+                  className="btn-primary flex-1" 
+                  onClick={handleCreateQuiz}
+                  disabled={createUserMutation.isPending}
+                >
+                  Create a Quiz
+                </Button>
+                <Button 
+                  type="button" 
+                  className={pendingQuiz ? "btn-primary flex-1" : "btn-secondary flex-1"} 
+                  onClick={handleAnswerQuiz}
+                  disabled={createUserMutation.isPending}
+                >
+                  {pendingQuiz ? "Answer This Quiz" : "Answer a Quiz"}
+                </Button>
               </div>
             </form>
           </div>
