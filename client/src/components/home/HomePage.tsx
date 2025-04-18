@@ -141,9 +141,6 @@ const HomePage: React.FC = () => {
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-4 font-poppins">Welcome to QzonMe</h2>
             
-            {/* Impact.com verification code */}
-            <p className="text-xs text-gray-400 mb-2">Impact-Site-Verification: b5fda72b-96df-433f-b071-569f9e25e6f2</p>
-            
             {/* Different description based on whether we are on the main domain or a shared link */}
             {pendingQuiz ? (
               <p className="text-muted-foreground mb-6">
