@@ -109,6 +109,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Quiz not found" });
       }
       
+      // Check if quiz is expired
+      const isExpired = await storage.isQuizExpired(quiz.id);
+      if (isExpired) {
+        return res.status(404).json({ message: "Quiz has expired", expired: true });
+      }
+      
       res.json(quiz);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch quiz" });
@@ -161,11 +167,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Quiz not found" });
       }
       
+      // Check if quiz is expired
+      const isExpired = await storage.isQuizExpired(quizId);
+      if (isExpired) {
+        return res.status(404).json({ message: "Quiz has expired", expired: true });
+      }
+      
       console.log(`GET /api/quizzes/${quizId} response:`, quiz);
       res.json(quiz);
     } catch (error) {
       console.error(`Error fetching quiz ${req.params.quizId}:`, error);
       res.status(500).json({ message: "Failed to fetch quiz" });
+    }
+  });
+  
+  // Get quizzes created by a user
+  app.get("/api/users/:userId/quizzes", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const quizzes = await storage.getUserQuizzes(userId);
+      
+      // Filter out expired quizzes
+      const now = new Date();
+      const activeQuizzes = quizzes.filter(quiz => !quiz.expiresAt || quiz.expiresAt > now);
+      
+      res.json(activeQuizzes);
+    } catch (error) {
+      console.error(`Error fetching quizzes for user ${req.params.userId}:`, error);
+      res.status(500).json({ message: "Failed to fetch user quizzes" });
     }
   });
 

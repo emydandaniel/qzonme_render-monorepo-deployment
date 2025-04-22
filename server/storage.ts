@@ -17,6 +17,8 @@ export interface IStorage {
   getQuizByAccessCode(accessCode: string): Promise<Quiz | undefined>;
   getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined>;
   createQuiz(quiz: InsertQuiz): Promise<Quiz>;
+  isQuizExpired(quizId: number): Promise<boolean>;
+  getUserQuizzes(creatorId: number): Promise<Quiz[]>;
   
   // Question operations
   getQuestionsByQuizId(quizId: number): Promise<Question[]>;
@@ -84,6 +86,10 @@ export class MemStorage implements IStorage {
     const id = this.quizId++;
     const createdAt = new Date();
     
+    // Calculate expiration date (30 days from creation)
+    const expiresAt = new Date(createdAt);
+    expiresAt.setDate(expiresAt.getDate() + 30);
+    
     // Generate a unique access code if not provided
     const accessCode = insertQuiz.accessCode || nanoid(8);
     
@@ -95,11 +101,26 @@ export class MemStorage implements IStorage {
       ...insertQuiz,
       accessCode,
       urlSlug,
-      createdAt
+      createdAt,
+      expiresAt
     };
     
     this.quizzes.set(id, quiz);
     return quiz;
+  }
+  
+  async isQuizExpired(quizId: number): Promise<boolean> {
+    const quiz = await this.getQuiz(quizId);
+    if (!quiz || !quiz.expiresAt) return false;
+    
+    const now = new Date();
+    return now > quiz.expiresAt;
+  }
+  
+  async getUserQuizzes(creatorId: number): Promise<Quiz[]> {
+    return Array.from(this.quizzes.values())
+      .filter(quiz => quiz.creatorId === creatorId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
   
   // Question methods
