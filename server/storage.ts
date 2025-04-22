@@ -89,28 +89,65 @@ export class MemStorage implements IStorage {
   }
   
   async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
-    // Case-insensitive search for URL slug
-    console.log(`Searching for quiz with URL slug: "${urlSlug}" (case-insensitive)`);
-    
-    // We need to be careful with case handling in slugs to ensure uniqueness
-    const quiz = Array.from(this.quizzes.values()).find(
-      (quiz) => quiz.urlSlug.toLowerCase() === urlSlug.toLowerCase()
+    console.log(`[MemStorage] Searching for quiz with URL slug: "${urlSlug}"`);
+
+    // Strategy 1: Exact match (case-sensitive)
+    let matchedQuiz = Array.from(this.quizzes.values()).find(
+      (quiz) => quiz.urlSlug === urlSlug
     );
     
-    if (quiz) {
-      console.log(`Found quiz with URL slug: ${quiz.urlSlug}, created by: ${quiz.creatorName}`);
+    if (matchedQuiz) {
+      console.log(`[MemStorage] Found quiz with exact match: ${matchedQuiz.urlSlug}`);
+    } else {
+      // Strategy 2: Case-insensitive exact match
+      matchedQuiz = Array.from(this.quizzes.values()).find(
+        (quiz) => quiz.urlSlug.toLowerCase() === urlSlug.toLowerCase()
+      );
       
-      // Check if the quiz has expired
-      if (this.isQuizExpired(quiz)) {
-        console.log(`Quiz found but it has expired: ${quiz.urlSlug}`);
+      if (matchedQuiz) {
+        console.log(`[MemStorage] Found quiz with case-insensitive match: ${matchedQuiz.urlSlug}`);
+      } else if (urlSlug.length >= 6) {
+        // Strategy 3: Check if slug is a prefix of a full slug (for truncated URLs)
+        matchedQuiz = Array.from(this.quizzes.values()).find(
+          (quiz) => quiz.urlSlug.toLowerCase().startsWith(urlSlug.toLowerCase())
+        );
+        
+        if (matchedQuiz) {
+          console.log(`[MemStorage] Found quiz with prefix match: ${matchedQuiz.urlSlug}`);
+        } else if (urlSlug.includes('-')) {
+          // Strategy 4: Check if the creator name part matches
+          const slugPrefix = urlSlug.split('-')[0].toLowerCase();
+          
+          // Find all quizzes with this creator name prefix
+          const matchingQuizzes = Array.from(this.quizzes.values())
+            .filter(quiz => quiz.urlSlug.toLowerCase().startsWith(slugPrefix + '-'));
+            
+          // If we got matches, use the most recent one
+          if (matchingQuizzes.length > 0) {
+            // Sort by creation date (newest first)
+            matchingQuizzes.sort((a, b) => 
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            matchedQuiz = matchingQuizzes[0];
+            console.log(`[MemStorage] Found quiz with creator name match: ${matchedQuiz.urlSlug}`);
+          }
+        }
+      }
+    }
+    
+    // If we found a quiz, check if it's expired
+    if (matchedQuiz) {
+      if (this.isQuizExpired(matchedQuiz)) {
+        console.log(`[MemStorage] Quiz found but it has expired: ${matchedQuiz.urlSlug}`);
         await this.cleanupExpiredQuizzes();
         return undefined;
       }
       
-      return quiz;
+      console.log(`[MemStorage] Returning quiz with URL slug: ${matchedQuiz.urlSlug}, created by: ${matchedQuiz.creatorName}`);
+      return matchedQuiz;
     }
     
-    console.log(`No quiz found with URL slug: "${urlSlug}"`);
+    console.log(`[MemStorage] No quiz found with URL slug: "${urlSlug}"`);
     return undefined;
   }
   

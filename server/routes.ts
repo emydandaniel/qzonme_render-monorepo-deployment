@@ -6,7 +6,8 @@ import {
   insertQuizSchema, 
   insertQuestionSchema, 
   insertQuizAttemptSchema,
-  questionAnswerSchema
+  questionAnswerSchema,
+  Quiz
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -111,9 +112,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all quizzes (for testing)
   app.get("/api/quizzes", async (req, res) => {
     try {
-      // Get all quizzes from the storage
-      const allQuizzes = Array.from(storage["quizzes"].values());
-      res.json(allQuizzes);
+      // We'll just return the first 100 quizzes for testing purposes
+      // This will work with both MemStorage and DatabaseStorage
+      const quizzes: Quiz[] = [];
+      
+      // Get first 100 quizzes by iterating through IDs
+      for (let i = 1; i <= 100; i++) {
+        const quiz = await storage.getQuiz(i);
+        if (quiz) {
+          quizzes.push(quiz);
+        }
+      }
+      
+      res.json(quizzes);
     } catch (error) {
       console.error("Error fetching all quizzes:", error);
       res.status(500).json({ message: "Failed to fetch quizzes" });
@@ -143,20 +154,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // First, try exact match
       let quiz = await storage.getQuizByUrlSlug(urlSlug);
       
-      // If no exact match, try checking if the slug uses a different casing
+      // We actually don't need additional logic here anymore
+      // The storage.getQuizByUrlSlug method already implements all the matching strategies
       if (!quiz) {
-        const allQuizzes = Array.from(storage["quizzes"].values());
-        const slugMatch = allQuizzes.find(q => 
-          q.urlSlug.toLowerCase() === urlSlug.toLowerCase()
-        );
-        
-        if (slugMatch) {
-          quiz = slugMatch;
-          console.log(`Found quiz with case-insensitive match: ${slugMatch.urlSlug}`);
-        } else {
-          console.log(`No quiz found with URL slug: "${urlSlug}"`);
-          return res.status(404).json({ message: "Quiz not found" });
-        }
+        console.log(`No quiz found with URL slug: "${urlSlug}" after trying all matching strategies`);
+        return res.status(404).json({ message: "Quiz not found" });
       }
       
       res.json(quiz);
