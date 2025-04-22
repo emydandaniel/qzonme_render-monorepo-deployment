@@ -1,22 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getCreatorQuiz, isQuizExpired } from "@/lib/localStorageUtils";
 import AdPlaceholder from "@/components/common/AdPlaceholder";
 import Layout from "@/components/common/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BarChart } from "lucide-react";
 
 const HomePage: React.FC = () => {
   const [userName, setUserName] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [savedQuiz, setSavedQuiz] = useState<{
+    quizId: number;
+    creatorName: string;
+  } | null>(null);
 
-  // Removed leaderboard section as requested
-  
   // Check if there's a pending quiz to answer
   const [pendingQuiz, setPendingQuiz] = React.useState<{
     type: 'code' | 'slug';
@@ -34,6 +38,15 @@ const HomePage: React.FC = () => {
     } else if (pendingQuizSlug) {
       setPendingQuiz({ type: 'slug', value: pendingQuizSlug });
       sessionStorage.removeItem("pendingQuizSlug");
+    }
+    
+    // Check if user has a saved quiz in localStorage
+    const savedQuizData = getCreatorQuiz();
+    if (savedQuizData && !isQuizExpired(savedQuizData.createdAt)) {
+      setSavedQuiz({
+        quizId: savedQuizData.quizId,
+        creatorName: savedQuizData.creatorName
+      });
     }
   }, []);
 

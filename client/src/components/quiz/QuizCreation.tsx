@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { generateAccessCode, generateUrlSlug } from "@/lib/utils";
+import { saveCreatorQuiz } from "@/lib/localStorageUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -305,9 +306,29 @@ const QuizCreation: React.FC = () => {
 
     try {
       const quiz = await createQuizMutation.mutateAsync();
+      
+      // Save to sessionStorage for immediate use
       sessionStorage.setItem("currentQuizId", quiz.id.toString());
       sessionStorage.setItem("currentQuizAccessCode", quiz.accessCode);
       sessionStorage.setItem("currentQuizUrlSlug", quiz.urlSlug);
+      
+      // Save to localStorage for persistent storage
+      saveCreatorQuiz({
+        quizId: quiz.id,
+        accessCode: quiz.accessCode,
+        urlSlug: quiz.urlSlug,
+        createdAt: quiz.createdAt,
+        creatorName: userName
+      });
+      
+      // Show success toast
+      toast({
+        title: "Quiz created successfully!",
+        description: "Your quiz has been saved and is ready to share",
+        variant: "default"
+      });
+      
+      // Navigate to share page
       navigate(`/share/${quiz.id}`);
     } catch (error) {
       toast({
