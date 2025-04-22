@@ -27,16 +27,24 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   // Check if user is logged in, if not, save the quiz info and redirect to home
   React.useEffect(() => {
     if (!userName || !userId) {
-      // Save the quiz params to session storage
+      // Clear any previous quiz state to prevent conflicts
+      sessionStorage.removeItem("currentQuizId");
+      sessionStorage.removeItem("currentAttemptId");
+      
+      // Save only the quiz parameters from URL to session storage temporarily
       if (accessCode) {
         sessionStorage.setItem("pendingQuizCode", accessCode);
+        console.log(`Saving pending quiz access code: ${accessCode}`);
       } else if (creatorSlug) {
         sessionStorage.setItem("pendingQuizSlug", creatorSlug);
+        console.log(`Saving pending quiz slug: ${creatorSlug}`);
       }
       
       // Redirect to home page to enter name
       navigate("/");
       return;
+    } else {
+      console.log(`User authenticated: ${userName} (${userId}), loading quiz ${accessCode || creatorSlug}`);
     }
   }, [accessCode, creatorSlug, navigate, userName, userId]);
 

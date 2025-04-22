@@ -1,0 +1,34 @@
+There are several critical bugs related to quiz routing, dashboard identity, and localStorage conflicts. Please address all of the following:
+
+---
+
+1. **Wrong Quiz Showing from Direct Link:**
+   - When someone clicks on a quiz link (like https://qzonme.com/quiz/{quiz-id}), it sometimes shows a previously created quiz from a different user.
+   - This likely means quiz data is being pulled from localStorage or session instead of always using the `quiz-id` from the URL.
+   - Fix this by ensuring that the quiz data is always fetched fresh from the database using the URL's quiz ID. Do not override it with cached or stored values.
+
+2. **“Quiz Not Found” Bug:**
+   - If a user tries to open someone else’s quiz, they sometimes see “Quiz not found,” even though the link is valid.
+   - This may happen because their browser tries to reuse the wrong quiz reference from memory or localStorage.
+   - Add logic to ensure quiz loading always checks for the actual quiz ID from the URL, and not from previous session or device storage.
+
+3. **Incorrect Leaderboard Updates:**
+   - After someone submits answers, the results and leaderboard are not updating the correct quiz.
+   - In one test, a user submitted answers to a quiz but their name showed up on someone else’s leaderboard.
+   - Fix the submission and scoring logic to ensure that each answer is associated with the quiz identified by the quiz ID in the URL, and not by any cached quiz session.
+
+4. **Dashboard Not Updating:**
+   - The quiz creator’s dashboard does not reflect the new attempts even when their quiz has been answered.
+   - Ensure that the backend is correctly recording the new attempt under the quiz ID, and that the dashboard query pulls real-time data from the database, not from a stale variable.
+
+5. **“Share My Quiz” Button Shows Old Quiz Link:**
+   - On the dashboard, clicking the share button leads to the wrong quiz link (from a previously created quiz, possibly from another user on the same device).
+   - Fix this by retrieving the quiz ID based on the quiz actually shown in the dashboard, not what’s in localStorage.
+   - Consider clearing or resetting localStorage if a new quiz is created or loaded to avoid conflicts between multiple users on the same device.
+
+---
+
+Please fix these routing, storage, and update issues so that:
+- Each quiz opens and functions independently
+- Leaderboards and dashboards reflect accurate data
+- No user sees or affects someone else’s quiz by mistake
