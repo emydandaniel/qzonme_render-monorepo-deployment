@@ -43,9 +43,18 @@ export function generateUrlSlug(creatorName: string): string {
   // Limit the name to 10 characters max
   cleanName = cleanName.substring(0, 10);
   
-  // Add random characters to make it unique (4 characters)
-  const randomChars = Math.random().toString(36).substring(2, 6);
-  return `${cleanName}-${randomChars}`;
+  // Create a truly unique suffix by combining:
+  // 1. Current timestamp (as hex) - provides time-based uniqueness
+  const timestamp = Date.now().toString(16);
+  
+  // 2. Random UUID-like string (8 characters) - adds randomness
+  const randomChars = Math.random().toString(36).substring(2, 10);
+  
+  // 3. Add a unique nonce (random number) for extra entropy
+  const nonce = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  
+  // Combine all elements to create a truly unique slug
+  return `${cleanName}-${timestamp}${randomChars.substring(0, 4)}`;
 }
 
 export function getRemarkByScore(score: number, total: number): string {
