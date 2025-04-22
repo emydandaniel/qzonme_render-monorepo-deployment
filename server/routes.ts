@@ -145,6 +145,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Check if quiz is expired
+      const isExpired = await storage.isQuizExpired(quiz.id);
+      if (isExpired) {
+        return res.status(404).json({ message: "Quiz has expired", expired: true });
+      }
+      
       res.json(quiz);
     } catch (error) {
       console.error(`Error fetching quiz by slug "${req.params.urlSlug}":`, error);

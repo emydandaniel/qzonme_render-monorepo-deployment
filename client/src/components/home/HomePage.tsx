@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import AdPlaceholder from "@/components/common/AdPlaceholder";
@@ -9,6 +9,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AlertCircle, Clock, BarChart3 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Define the Quiz type to match server response
+interface Quiz {
+  id: number;
+  creatorId: number;
+  creatorName: string;
+  accessCode: string;
+  urlSlug: string;
+  createdAt: string;
+  expiresAt: string;
+}
 
 const HomePage: React.FC = () => {
   const [userName, setUserName] = useState("");
@@ -23,6 +36,31 @@ const HomePage: React.FC = () => {
     value: string;
   } | null>(null);
   
+  // Check if the user has created quizzes
+  const [userId, setUserId] = useState<number | null>(null);
+  const [hasActiveQuizzes, setHasActiveQuizzes] = useState(false);
+  
+  // Query to fetch user's active quizzes
+  const userQuizzesQuery = useQuery<Quiz[]>({
+    queryKey: ['userQuizzes', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const response = await apiRequest("GET", `/api/users/${userId}/quizzes`);
+      return response.json();
+    },
+    enabled: !!userId
+  });
+  
+  // Update hasActiveQuizzes when the query data changes
+  useEffect(() => {
+    const data = userQuizzesQuery.data;
+    if (data && Array.isArray(data) && data.length > 0) {
+      setHasActiveQuizzes(true);
+    } else {
+      setHasActiveQuizzes(false);
+    }
+  }, [userQuizzesQuery.data]);
+  
   React.useEffect(() => {
     // Check if there's a pending quiz code or slug in session storage
     const pendingQuizCode = sessionStorage.getItem("pendingQuizCode");
@@ -34,6 +72,15 @@ const HomePage: React.FC = () => {
     } else if (pendingQuizSlug) {
       setPendingQuiz({ type: 'slug', value: pendingQuizSlug });
       sessionStorage.removeItem("pendingQuizSlug");
+    }
+    
+    // Check if userId exists in session storage
+    const storedUserId = sessionStorage.getItem("userId");
+    const storedUserName = sessionStorage.getItem("userName");
+    
+    if (storedUserId && storedUserName) {
+      setUserId(parseInt(storedUserId));
+      setUserName(storedUserName);
     }
   }, []);
 
@@ -133,6 +180,15 @@ const HomePage: React.FC = () => {
       });
     }
   };
+  
+  // Handle viewing the dashboard for an active quiz
+  const handleViewDashboard = () => {
+    if (!userQuizzesQuery.data || userQuizzesQuery.data.length === 0) return;
+    
+    // Navigate to the dashboard of the most recent quiz
+    const mostRecentQuiz = userQuizzesQuery.data[0];
+    navigate(`/dashboard/${mostRecentQuiz.id}`);
+  };
 
   return (
     <Layout>
@@ -190,6 +246,29 @@ const HomePage: React.FC = () => {
               </div>
             </form>
           </div>
+          
+          {/* Show the View Dashboard button if user has active quizzes */}
+          {hasActiveQuizzes && (
+            <div className="mt-6 mb-6">
+              <Alert variant="default" className="mb-4">
+                <Clock className="h-4 w-4 mr-2" />
+                <AlertTitle>Quiz Expiration Notice</AlertTitle>
+                <AlertDescription>
+                  Your created quizzes are available for 30 days. After that, they will be automatically removed.
+                </AlertDescription>
+              </Alert>
+              
+              <Button 
+                type="button"
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                onClick={handleViewDashboard}
+                disabled={userQuizzesQuery.isLoading}
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                View Your Quiz Dashboard
+              </Button>
+            </div>
+          )}
           
           {/* Ad Placeholder */}
           <AdPlaceholder />
