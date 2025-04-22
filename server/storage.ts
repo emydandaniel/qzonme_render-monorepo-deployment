@@ -5,6 +5,8 @@ import {
   quizAttempts, type QuizAttempt, type InsertQuizAttempt
 } from "@shared/schema";
 import { nanoid } from "nanoid";
+import { db } from "./db";
+import { eq, desc, asc } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -27,7 +29,81 @@ export interface IStorage {
   createQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt>;
 }
 
-// In-memory storage implementation
+// PostgreSQL database storage implementation
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async getQuiz(id: number): Promise<Quiz | undefined> {
+    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
+    return quiz || undefined;
+  }
+
+  async getQuizByAccessCode(accessCode: string): Promise<Quiz | undefined> {
+    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.accessCode, accessCode));
+    return quiz || undefined;
+  }
+
+  async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
+    // Case-insensitive search by converting both to lowercase
+    const allQuizzes = await db.select().from(quizzes);
+    return allQuizzes.find(quiz => 
+      quiz.urlSlug.toLowerCase() === urlSlug.toLowerCase()
+    );
+  }
+
+  async createQuiz(insertQuiz: InsertQuiz): Promise<Quiz> {
+    // Generate a unique access code if not provided
+    const accessCode = insertQuiz.accessCode || nanoid(8);
+    
+    // Generate a URL slug based on creator name
+    const urlSlug = insertQuiz.urlSlug || `${insertQuiz.creatorName.toLowerCase().replace(/\s+/g, '-')}-${nanoid(6)}`;
+    
+    const [quiz] = await db.insert(quizzes).values({
+      ...insertQuiz,
+      accessCode,
+      urlSlug
+    }).returning();
+    
+    return quiz;
+  }
+
+  async getQuestionsByQuizId(quizId: number): Promise<Question[]> {
+    return db.select().from(questions)
+      .where(eq(questions.quizId, quizId))
+      .orderBy(asc(questions.order));
+  }
+
+  async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
+    const [question] = await db.insert(questions).values({
+      ...insertQuestion,
+      hint: insertQuestion.hint || null,
+      imageUrl: insertQuestion.imageUrl || null
+    }).returning();
+    
+    return question;
+  }
+
+  async getQuizAttempts(quizId: number): Promise<QuizAttempt[]> {
+    return db.select().from(quizAttempts)
+      .where(eq(quizAttempts.quizId, quizId))
+      .orderBy(desc(quizAttempts.score));
+  }
+
+  async createQuizAttempt(insertAttempt: InsertQuizAttempt): Promise<QuizAttempt> {
+    const [attempt] = await db.insert(quizAttempts).values(insertAttempt).returning();
+    return attempt;
+  }
+}
+
+// In-memory storage implementation (keeping for reference)
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private quizzes: Map<number, Quiz>;
@@ -143,4 +219,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Switch from MemStorage to DatabaseStorage
+export const storage = new DatabaseStorage();
