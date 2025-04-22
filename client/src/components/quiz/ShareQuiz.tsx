@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Copy, BarChart } from "lucide-react";
+import { Check, Copy, BarChart, Clock } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "../common/Layout";
 
@@ -77,6 +78,15 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               )}
             </Button>
           </div>
+          
+          {/* Expiration Notice */}
+          <Alert className="mb-6 bg-amber-50 text-amber-800 border-amber-200">
+            <Clock className="h-4 w-4 text-amber-600 mr-2" />
+            <AlertTitle>30-Day Expiration Notice</AlertTitle>
+            <AlertDescription>
+              Your quiz will automatically expire after 30 days. After expiration, the quiz and all responses will be permanently deleted.
+            </AlertDescription>
+          </Alert>
           
           <div className="mt-6">
             <Button 
