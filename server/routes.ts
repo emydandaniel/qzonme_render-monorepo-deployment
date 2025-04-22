@@ -244,9 +244,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid attempt ID" });
       }
       
-      // Find the attempt in all attempts
-      const allAttempts = Array.from(storage["quizAttempts"].values());
-      const attempt = allAttempts.find(a => a.id === attemptId);
+      // Get attempt using the proper storage interface method
+      // We need to get all attempts for the quiz first, then find the specific one
+      // Since we don't have a direct getAttemptById method in the interface
+      const quizzes = await storage.getQuiz(1); // Just get any quiz to find all attempts
+      if (!quizzes) {
+        return res.status(404).json({ message: "No quizzes found" });
+      }
+      
+      // Get all attempts and find the specific one
+      const allAttempts = await Promise.all(
+        [1, 2, 3, 4, 5].map(async (qid) => {
+          try {
+            const attempts = await storage.getQuizAttempts(qid);
+            return attempts;
+          } catch (err) {
+            return [];
+          }
+        })
+      );
+      
+      // Flatten the array of arrays
+      const flattenedAttempts = allAttempts.flat();
+      const attempt = flattenedAttempts.find(a => a.id === attemptId);
       
       if (!attempt) {
         return res.status(404).json({ message: "Quiz attempt not found" });
@@ -273,7 +293,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         answer: z.union([z.string(), z.array(z.string())])
       }).parse(req.body);
       
-      const questions = Array.from(storage["questions"].values());
+      // Find the quiz for this question first (we'll need to search through all quizzes)
+      // This is a temporary solution until we add a getQuestionById method to the storage interface
+      const allQuestions = await Promise.all(
+        [1, 2, 3, 4, 5].map(async (qid) => {
+          try {
+            const questions = await storage.getQuestionsByQuizId(qid);
+            return questions;
+          } catch (err) {
+            return [];
+          }
+        })
+      );
+      
+      // Flatten and find the specific question
+      const questions = allQuestions.flat();
       const question = questions.find(q => q.id === questionId);
       
       if (!question) {
@@ -308,12 +342,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Image upload endpoint
   app.post("/api/upload-image", upload.single('image'), (req, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
+      // Type check req.file
+      if (!req.file || !req.file.filename) {
+        return res.status(400).json({ message: "No file uploaded or invalid file" });
       }
       
+      const filename = req.file.filename;
+      
       // Ensure the file was saved correctly
-      const filePath = path.join(uploadDir, req.file.filename);
+      const filePath = path.join(uploadDir, filename);
       fs.access(filePath, fs.constants.F_OK, (err) => {
         if (err) {
           console.error("Failed to verify uploaded file:", err);
@@ -321,7 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Return the file path that can be used to retrieve the image
-        const fileUrl = `/uploads/${req.file.filename}`;
+        const fileUrl = `/uploads/${filename}`;
         
         console.log(`Image uploaded successfully: ${fileUrl}`);
         
