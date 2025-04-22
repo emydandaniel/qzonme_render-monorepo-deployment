@@ -4,7 +4,7 @@ import {
   questions, type Question, type InsertQuestion,
   quizAttempts as quizAttemptsTable, type QuizAttempt, type InsertQuizAttempt
 } from "@shared/schema";
-import { db } from "./db";
+import { db, isDbAvailable } from "./db";
 import { eq, lt, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -198,68 +198,123 @@ export class MemStorage implements IStorage {
 
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
+  private readonly isDbConnected: boolean;
+  
   constructor() {
-    // Initialize database and run cleanup on startup
-    this.cleanupExpiredQuizzes(); 
+    this.isDbConnected = isDbAvailable && db !== null;
+    // Initialize database and run cleanup on startup only if DB is connected
+    if (this.isDbConnected) {
+      this.cleanupExpiredQuizzes();
+    } else {
+      console.warn("Database not connected. Some operations may fail.");
+    }
   }
+  
+  // Create a fallback instance for when DB is not available
+  private fallbackStorage = new MemStorage();
   
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.getUser(id);
+    }
+    
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user || undefined;
+    } catch (error) {
+      console.error("Database error in getUser:", error);
+      return this.fallbackStorage.getUser(id);
+    }
   }
   
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.createUser(insertUser);
+    }
+    
+    try {
+      const [user] = await db.insert(users).values(insertUser).returning();
+      return user;
+    } catch (error) {
+      console.error("Database error in createUser:", error);
+      return this.fallbackStorage.createUser(insertUser);
+    }
   }
   
   // Quiz methods
   async getQuiz(id: number): Promise<Quiz | undefined> {
-    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
-    
-    if (quiz && this.isQuizExpired(quiz)) {
-      await this.cleanupExpiredQuizzes();
-      return undefined;
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.getQuiz(id);
     }
     
-    return quiz || undefined;
+    try {
+      const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
+      
+      if (quiz && this.isQuizExpired(quiz)) {
+        await this.cleanupExpiredQuizzes();
+        return undefined;
+      }
+      
+      return quiz || undefined;
+    } catch (error) {
+      console.error("Database error in getQuiz:", error);
+      return this.fallbackStorage.getQuiz(id);
+    }
   }
   
   async getQuizByAccessCode(accessCode: string): Promise<Quiz | undefined> {
-    const [quiz] = await db.select()
-      .from(quizzes)
-      .where(eq(quizzes.accessCode, accessCode));
-    
-    if (quiz && this.isQuizExpired(quiz)) {
-      await this.cleanupExpiredQuizzes();
-      return undefined;
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.getQuizByAccessCode(accessCode);
     }
     
-    return quiz || undefined;
+    try {
+      const [quiz] = await db.select()
+        .from(quizzes)
+        .where(eq(quizzes.accessCode, accessCode));
+      
+      if (quiz && this.isQuizExpired(quiz)) {
+        await this.cleanupExpiredQuizzes();
+        return undefined;
+      }
+      
+      return quiz || undefined;
+    } catch (error) {
+      console.error("Database error in getQuizByAccessCode:", error);
+      return this.fallbackStorage.getQuizByAccessCode(accessCode);
+    }
   }
   
   async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
-    // Try an exact match first
-    let [quiz] = await db.select()
-      .from(quizzes)
-      .where(eq(quizzes.urlSlug, urlSlug));
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.getQuizByUrlSlug(urlSlug);
+    }
     
-    // If no match, try case-insensitive comparison
-    if (!quiz) {
-      const allQuizzes = await db.select().from(quizzes);
-      const matchedQuiz = allQuizzes.find(q => q.urlSlug.toLowerCase() === urlSlug.toLowerCase());
-      if (matchedQuiz) {
-        quiz = matchedQuiz;
+    try {
+      // Try an exact match first
+      let [quiz] = await db.select()
+        .from(quizzes)
+        .where(eq(quizzes.urlSlug, urlSlug));
+      
+      // If no match, try case-insensitive comparison
+      if (!quiz) {
+        const allQuizzes = await db.select().from(quizzes);
+        const matchedQuiz = allQuizzes.find((q: Quiz) => q.urlSlug.toLowerCase() === urlSlug.toLowerCase());
+        if (matchedQuiz) {
+          quiz = matchedQuiz;
+        }
       }
+      
+      if (quiz && this.isQuizExpired(quiz)) {
+        await this.cleanupExpiredQuizzes();
+        return undefined;
+      }
+      
+      return quiz;
+    } catch (error) {
+      console.error("Database error in getQuizByUrlSlug:", error);
+      return this.fallbackStorage.getQuizByUrlSlug(urlSlug);
     }
-    
-    if (quiz && this.isQuizExpired(quiz)) {
-      await this.cleanupExpiredQuizzes();
-      return undefined;
-    }
-    
-    return quiz;
   }
   
   isQuizExpired(quiz: Quiz): boolean {
@@ -271,6 +326,10 @@ export class DatabaseStorage implements IStorage {
   }
   
   async cleanupExpiredQuizzes(): Promise<void> {
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.cleanupExpiredQuizzes();
+    }
+    
     try {
       const expirationDays = 30;
       const now = new Date();
@@ -314,68 +373,124 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error("Error cleaning up expired quizzes:", error);
+      return this.fallbackStorage.cleanupExpiredQuizzes();
     }
   }
   
   async createQuiz(insertQuiz: InsertQuiz): Promise<Quiz> {
-    // Generate a unique access code if not provided
-    const accessCode = insertQuiz.accessCode || nanoid(8);
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.createQuiz(insertQuiz);
+    }
     
-    // Generate a URL slug based on creator name
-    const urlSlug = insertQuiz.urlSlug || 
-      `${insertQuiz.creatorName.toLowerCase().replace(/\s+/g, '-')}-${nanoid(6)}`;
-    
-    const [quiz] = await db.insert(quizzes)
-      .values({
-        ...insertQuiz,
-        accessCode,
-        urlSlug,
-      })
-      .returning();
+    try {
+      // Generate a unique access code if not provided
+      const accessCode = insertQuiz.accessCode || nanoid(8);
       
-    return quiz;
+      // Generate a URL slug based on creator name
+      const urlSlug = insertQuiz.urlSlug || 
+        `${insertQuiz.creatorName.toLowerCase().replace(/\s+/g, '-')}-${nanoid(6)}`;
+      
+      const [quiz] = await db.insert(quizzes)
+        .values({
+          ...insertQuiz,
+          accessCode,
+          urlSlug,
+        })
+        .returning();
+        
+      return quiz;
+    } catch (error) {
+      console.error("Database error in createQuiz:", error);
+      return this.fallbackStorage.createQuiz(insertQuiz);
+    }
   }
   
   // Question methods
   async getQuestionsByQuizId(quizId: number): Promise<Question[]> {
-    const quizQuestions = await db.select()
-      .from(questions)
-      .where(eq(questions.quizId, quizId))
-      .orderBy(questions.order);
-      
-    return quizQuestions;
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.getQuestionsByQuizId(quizId);
+    }
+    
+    try {
+      const quizQuestions = await db.select()
+        .from(questions)
+        .where(eq(questions.quizId, quizId))
+        .orderBy(questions.order);
+        
+      return quizQuestions;
+    } catch (error) {
+      console.error("Database error in getQuestionsByQuizId:", error);
+      return this.fallbackStorage.getQuestionsByQuizId(quizId);
+    }
   }
   
   async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
-    const [question] = await db.insert(questions)
-      .values({
-        ...insertQuestion,
-        hint: insertQuestion.hint || null,
-        imageUrl: insertQuestion.imageUrl || null
-      })
-      .returning();
-      
-    return question;
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.createQuestion(insertQuestion);
+    }
+    
+    try {
+      const [question] = await db.insert(questions)
+        .values({
+          ...insertQuestion,
+          hint: insertQuestion.hint || null,
+          imageUrl: insertQuestion.imageUrl || null
+        })
+        .returning();
+        
+      return question;
+    } catch (error) {
+      console.error("Database error in createQuestion:", error);
+      return this.fallbackStorage.createQuestion(insertQuestion);
+    }
   }
   
   // Quiz Attempt methods
   async getQuizAttempts(quizId: number): Promise<QuizAttempt[]> {
-    const attempts = await db.select()
-      .from(quizAttemptsTable)
-      .where(eq(quizAttemptsTable.quizId, quizId))
-      .orderBy(desc(quizAttemptsTable.score));
-      
-    return attempts;
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.getQuizAttempts(quizId);
+    }
+    
+    try {
+      const attempts = await db.select()
+        .from(quizAttemptsTable)
+        .where(eq(quizAttemptsTable.quizId, quizId))
+        .orderBy(desc(quizAttemptsTable.score));
+        
+      return attempts;
+    } catch (error) {
+      console.error("Database error in getQuizAttempts:", error);
+      return this.fallbackStorage.getQuizAttempts(quizId);
+    }
   }
   
   async createQuizAttempt(insertAttempt: InsertQuizAttempt): Promise<QuizAttempt> {
-    const [attempt] = await db.insert(quizAttemptsTable)
-      .values(insertAttempt)
-      .returning();
-      
-    return attempt;
+    if (!this.isDbConnected) {
+      return this.fallbackStorage.createQuizAttempt(insertAttempt);
+    }
+    
+    try {
+      const [attempt] = await db.insert(quizAttemptsTable)
+        .values(insertAttempt)
+        .returning();
+        
+      return attempt;
+    } catch (error) {
+      console.error("Database error in createQuizAttempt:", error);
+      return this.fallbackStorage.createQuizAttempt(insertAttempt);
+    }
   }
 }
 
-// Initialize database storage
-export const storage = new DatabaseStorage();
+// Initialize the appropriate storage based on database availability
+let storageInstance: IStorage;
+
+if (isDbAvailable && db) {
+  console.log("Using persistent database storage");
+  storageInstance = new DatabaseStorage();
+} else {
+  console.log("Using in-memory storage");
+  storageInstance = new MemStorage();
+}
+
+export const storage: IStorage = storageInstance;
