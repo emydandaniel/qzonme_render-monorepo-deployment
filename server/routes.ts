@@ -53,11 +53,6 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Google Search Console verification file route
-  app.get("/googleed3b604ceb8d883e.html", (req, res) => {
-    res.setHeader('Content-Type', 'text/html');
-    res.send('google-site-verification: googleed3b604ceb8d883e.html');
-  });
   // User routes
   app.post("/api/users", async (req, res) => {
     try {
