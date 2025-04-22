@@ -42,19 +42,9 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     navigate(`/quiz/${accessCode}`);
   };
   
-  // Match questions with answers for display, ensure we match correctly by quiz ID
+  // Match questions with answers for display
   const questionAnswers = questions.map(question => {
-    // Find answers that match both question ID and have the correct quiz ID if available
-    const answer = answers.find(a => 
-      a.questionId === question.id && 
-      (!a.quizId || a.quizId === question.quizId) // Check for quiz ID match if it exists
-    );
-    
-    // Log any missing/mismatched answers for debugging
-    if (!answer) {
-      console.warn(`No matching answer found for question ID ${question.id} in quiz ${question.quizId}`);
-    }
-    
+    const answer = answers.find(a => a.questionId === question.id);
     return {
       question,
       answer

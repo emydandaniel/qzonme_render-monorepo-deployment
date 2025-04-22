@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { generateAccessCode, generateUrlSlug } from "@/lib/utils";
-import { saveCreatorQuiz } from "@/lib/localStorageUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -55,20 +54,14 @@ const QuizCreation: React.FC = () => {
 
   const createQuizMutation = useMutation({
     mutationFn: async () => {
-      // Generate a truly unique URL slug with enhanced uniqueness guarantees
-      const uniqueSlug = generateUrlSlug(userName);
-      console.log(`Generated unique slug for quiz: ${uniqueSlug}`);
-      
-      // Create the quiz with this unique slug
+      // Create the quiz
       const quizResponse = await apiRequest("POST", "/api/quizzes", {
         creatorId: userId,
         creatorName: userName,
         accessCode: generateAccessCode(),
-        urlSlug: uniqueSlug
+        urlSlug: generateUrlSlug(userName)
       });
       const quiz = await quizResponse.json();
-      
-      console.log(`Quiz created with ID ${quiz.id} and URL slug ${quiz.urlSlug}`);
       
       // Create all questions for the quiz
       const questionPromises = questions.map((question, index) =>
@@ -312,29 +305,9 @@ const QuizCreation: React.FC = () => {
 
     try {
       const quiz = await createQuizMutation.mutateAsync();
-      
-      // Save to sessionStorage for immediate use
       sessionStorage.setItem("currentQuizId", quiz.id.toString());
       sessionStorage.setItem("currentQuizAccessCode", quiz.accessCode);
       sessionStorage.setItem("currentQuizUrlSlug", quiz.urlSlug);
-      
-      // Save to localStorage for persistent storage
-      saveCreatorQuiz({
-        quizId: quiz.id,
-        accessCode: quiz.accessCode,
-        urlSlug: quiz.urlSlug,
-        createdAt: quiz.createdAt,
-        creatorName: userName
-      });
-      
-      // Show success toast
-      toast({
-        title: "Quiz created successfully!",
-        description: "Your quiz has been saved and is ready to share",
-        variant: "default"
-      });
-      
-      // Navigate to share page
       navigate(`/share/${quiz.id}`);
     } catch (error) {
       toast({

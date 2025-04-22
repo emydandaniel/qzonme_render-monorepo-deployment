@@ -66,16 +66,12 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
       // Verify if the answer is correct
       const isCorrect = await verifyAnswerMutation.mutateAsync(selectedOption);
       
-      // Save the answer with explicit quiz ID reference to prevent any confusion
+      // Save the answer
       const questionAnswer: QuestionAnswer = {
         questionId: currentQuestion.id,
-        quizId: quizId, // Explicitly include the quiz ID
         userAnswer: selectedOption,
         isCorrect
       };
-      
-      // Log the answer for debugging
-      console.log(`Saving answer for quiz ${quizId}, question ${currentQuestion.id}: ${selectedOption} (${isCorrect ? 'correct' : 'incorrect'})`);
       
       const updatedAnswers = [...userAnswers, questionAnswer];
       setUserAnswers(updatedAnswers);

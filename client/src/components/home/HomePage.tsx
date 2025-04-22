@@ -1,29 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { getAllCreatorQuizzes, getCreatorQuiz, isQuizExpired, getCurrentQuizId, getCreatorQuizById } from "@/lib/localStorageUtils";
 import AdPlaceholder from "@/components/common/AdPlaceholder";
 import Layout from "@/components/common/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BarChart, ChevronRight, Activity } from "lucide-react";
 
 const HomePage: React.FC = () => {
   const [userName, setUserName] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [savedQuizzes, setSavedQuizzes] = useState<{
-    quizId: number;
-    creatorName: string;
-    accessCode: string;
-  }[]>([]);
-  
-  const [currentQuizId, setCurrentQuizId] = useState<number | null>(null);
 
+  // Removed leaderboard section as requested
+  
   // Check if there's a pending quiz to answer
   const [pendingQuiz, setPendingQuiz] = React.useState<{
     type: 'code' | 'slug';
@@ -36,48 +29,11 @@ const HomePage: React.FC = () => {
     const pendingQuizSlug = sessionStorage.getItem("pendingQuizSlug");
     
     if (pendingQuizCode) {
-      console.log(`Found pending quiz code: ${pendingQuizCode}`);
       setPendingQuiz({ type: 'code', value: pendingQuizCode });
       sessionStorage.removeItem("pendingQuizCode");
     } else if (pendingQuizSlug) {
-      console.log(`Found pending quiz slug: ${pendingQuizSlug}`);
       setPendingQuiz({ type: 'slug', value: pendingQuizSlug });
       sessionStorage.removeItem("pendingQuizSlug");
-    }
-    
-    // Check for saved quizzes in localStorage using the new multi-quiz system
-    const allQuizzes = getAllCreatorQuizzes();
-    const activeQuizId = getCurrentQuizId();
-    
-    // Filter out expired quizzes
-    const validQuizzes = allQuizzes.filter(quiz => !isQuizExpired(quiz.createdAt));
-    
-    if (validQuizzes.length > 0) {
-      setSavedQuizzes(validQuizzes.map(quiz => ({
-        quizId: quiz.quizId,
-        creatorName: quiz.creatorName,
-        accessCode: quiz.accessCode
-      })));
-      
-      // Set current quiz ID - use the active one if valid, otherwise the most recent
-      if (activeQuizId && validQuizzes.some(q => q.quizId === activeQuizId)) {
-        setCurrentQuizId(activeQuizId);
-      } else if (validQuizzes.length > 0) {
-        setCurrentQuizId(validQuizzes[validQuizzes.length - 1].quizId);
-      }
-    }
-    
-    // For backward compatibility
-    if (validQuizzes.length === 0) {
-      const legacyQuiz = getCreatorQuiz();
-      if (legacyQuiz && !isQuizExpired(legacyQuiz.createdAt)) {
-        setSavedQuizzes([{
-          quizId: legacyQuiz.quizId,
-          creatorName: legacyQuiz.creatorName,
-          accessCode: legacyQuiz.accessCode
-        }]);
-        setCurrentQuizId(legacyQuiz.quizId);
-      }
     }
   }, []);
 
@@ -177,18 +133,6 @@ const HomePage: React.FC = () => {
       });
     }
   };
-  
-  const handleViewDashboard = (quizId: number) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    // Store user name in session if entered
-    if (userName.trim()) {
-      sessionStorage.setItem("userName", userName);
-    }
-    
-    // Navigate to the dashboard
-    navigate(`/dashboard/${quizId}`);
-  };
 
   return (
     <Layout>
@@ -244,38 +188,6 @@ const HomePage: React.FC = () => {
                   {pendingQuiz ? "Answer This Quiz" : "Answer a Quiz"}
                 </Button>
               </div>
-              
-              {/* Show Dashboard buttons if user has saved quizzes */}
-              {savedQuizzes.length > 0 && (
-                <div className="mt-4">
-                  <div className="mb-2 text-left">
-                    <h3 className="text-sm font-medium text-muted-foreground">Your Quizzes</h3>
-                  </div>
-                  
-                  {/* List all saved quizzes */}
-                  <div className="space-y-2">
-                    {savedQuizzes.map((quiz) => (
-                      <Button
-                        key={quiz.quizId}
-                        type="button"
-                        className="w-full flex items-center justify-between"
-                        variant={currentQuizId === quiz.quizId ? "default" : "outline"}
-                        onClick={handleViewDashboard(quiz.quizId)}
-                      >
-                        <div className="flex items-center">
-                          <Activity className="mr-2 h-4 w-4" />
-                          <span>{quiz.creatorName}'s Quiz</span>
-                        </div>
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    ))}
-                  </div>
-                  
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Check your dashboard to view stats and share your quiz again.
-                  </p>
-                </div>
-              )}
             </form>
           </div>
           

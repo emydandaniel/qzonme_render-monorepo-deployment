@@ -6,8 +6,7 @@ import {
   insertQuizSchema, 
   insertQuestionSchema, 
   insertQuizAttemptSchema,
-  questionAnswerSchema,
-  Quiz
+  questionAnswerSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -78,32 +77,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/quizzes", async (req, res) => {
     try {
       const quizData = insertQuizSchema.parse(req.body);
-      
-      // Check if the URL slug already exists to ensure uniqueness
-      // This is a critical check to prevent overwriting existing quizzes
-      const existingQuiz = await storage.getQuizByUrlSlug(quizData.urlSlug);
-      
-      if (existingQuiz) {
-        console.log(`URL slug collision detected: ${quizData.urlSlug}`);
-        
-        // Generate a new unique URL slug by adding additional entropy
-        const timestamp = Date.now().toString(36);
-        const extraRandomness = Math.random().toString(36).substring(2, 6);
-        quizData.urlSlug = `${quizData.urlSlug}-${timestamp}${extraRandomness}`;
-        
-        console.log(`Generated new unique URL slug: ${quizData.urlSlug}`);
-      }
-      
-      // Now create the quiz with the verified unique slug
       const quiz = await storage.createQuiz(quizData);
-      
-      console.log(`Successfully created quiz with id ${quiz.id} and URL slug ${quiz.urlSlug}`);
       res.status(201).json(quiz);
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid quiz data", error: (error as z.ZodError).message });
       } else {
-        console.error("Failed to create quiz:", error);
         res.status(500).json({ message: "Failed to create quiz" });
       }
     }
@@ -112,19 +91,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all quizzes (for testing)
   app.get("/api/quizzes", async (req, res) => {
     try {
-      // We'll just return the first 100 quizzes for testing purposes
-      // This will work with both MemStorage and DatabaseStorage
-      const quizzes: Quiz[] = [];
-      
-      // Get first 100 quizzes by iterating through IDs
-      for (let i = 1; i <= 100; i++) {
-        const quiz = await storage.getQuiz(i);
-        if (quiz) {
-          quizzes.push(quiz);
-        }
-      }
-      
-      res.json(quizzes);
+      // Get all quizzes from the storage
+      const allQuizzes = Array.from(storage["quizzes"].values());
+      res.json(allQuizzes);
     } catch (error) {
       console.error("Error fetching all quizzes:", error);
       res.status(500).json({ message: "Failed to fetch quizzes" });
@@ -154,11 +123,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // First, try exact match
       let quiz = await storage.getQuizByUrlSlug(urlSlug);
       
-      // We actually don't need additional logic here anymore
-      // The storage.getQuizByUrlSlug method already implements all the matching strategies
+      // If no exact match, try checking if the slug uses a different casing
       if (!quiz) {
-        console.log(`No quiz found with URL slug: "${urlSlug}" after trying all matching strategies`);
-        return res.status(404).json({ message: "Quiz not found" });
+        const allQuizzes = Array.from(storage["quizzes"].values());
+        const slugMatch = allQuizzes.find(q => 
+          q.urlSlug.toLowerCase() === urlSlug.toLowerCase()
+        );
+        
+        if (slugMatch) {
+          quiz = slugMatch;
+          console.log(`Found quiz with case-insensitive match: ${slugMatch.urlSlug}`);
+        } else {
+          console.log(`No quiz found with URL slug: "${urlSlug}"`);
+          return res.status(404).json({ message: "Quiz not found" });
+        }
       }
       
       res.json(quiz);
@@ -224,19 +202,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Quiz attempt routes
   app.post("/api/quiz-attempts", async (req, res) => {
     try {
-      console.log("Creating new quiz attempt with data:", req.body);
       const attemptData = insertQuizAttemptSchema.parse(req.body);
-      
       const attempt = await storage.createQuizAttempt(attemptData);
-      console.log("Successfully created quiz attempt:", attempt);
-      
       res.status(201).json(attempt);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.error("Invalid quiz attempt data:", error.message);
-        res.status(400).json({ message: "Invalid attempt data", error: error.message });
+        res.status(400).json({ message: "Invalid attempt data", error: (error as z.ZodError).message });
       } else {
-        console.error("Failed to create quiz attempt:", error);
         res.status(500).json({ message: "Failed to create quiz attempt" });
       }
     }
@@ -266,29 +238,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid attempt ID" });
       }
       
-      // Get attempt using the proper storage interface method
-      // We need to get all attempts for the quiz first, then find the specific one
-      // Since we don't have a direct getAttemptById method in the interface
-      const quizzes = await storage.getQuiz(1); // Just get any quiz to find all attempts
-      if (!quizzes) {
-        return res.status(404).json({ message: "No quizzes found" });
-      }
-      
-      // Get all attempts and find the specific one
-      const allAttempts = await Promise.all(
-        [1, 2, 3, 4, 5].map(async (qid) => {
-          try {
-            const attempts = await storage.getQuizAttempts(qid);
-            return attempts;
-          } catch (err) {
-            return [];
-          }
-        })
-      );
-      
-      // Flatten the array of arrays
-      const flattenedAttempts = allAttempts.flat();
-      const attempt = flattenedAttempts.find(a => a.id === attemptId);
+      // Find the attempt in all attempts
+      const allAttempts = Array.from(storage["quizAttempts"].values());
+      const attempt = allAttempts.find(a => a.id === attemptId);
       
       if (!attempt) {
         return res.status(404).json({ message: "Quiz attempt not found" });
@@ -315,21 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         answer: z.union([z.string(), z.array(z.string())])
       }).parse(req.body);
       
-      // Find the quiz for this question first (we'll need to search through all quizzes)
-      // This is a temporary solution until we add a getQuestionById method to the storage interface
-      const allQuestions = await Promise.all(
-        [1, 2, 3, 4, 5].map(async (qid) => {
-          try {
-            const questions = await storage.getQuestionsByQuizId(qid);
-            return questions;
-          } catch (err) {
-            return [];
-          }
-        })
-      );
-      
-      // Flatten and find the specific question
-      const questions = allQuestions.flat();
+      const questions = Array.from(storage["questions"].values());
       const question = questions.find(q => q.id === questionId);
       
       if (!question) {
@@ -364,30 +302,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Image upload endpoint
   app.post("/api/upload-image", upload.single('image'), (req, res) => {
     try {
-      // Type check req.file
-      if (!req.file || !req.file.filename) {
-        return res.status(400).json({ message: "No file uploaded or invalid file" });
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
       }
       
-      const filename = req.file.filename;
+      // Return the file path that can be used to retrieve the image
+      const fileUrl = `/uploads/${req.file.filename}`;
       
-      // Ensure the file was saved correctly
-      const filePath = path.join(uploadDir, filename);
-      fs.access(filePath, fs.constants.F_OK, (err) => {
-        if (err) {
-          console.error("Failed to verify uploaded file:", err);
-          return res.status(500).json({ message: "Failed to save uploaded file" });
-        }
-        
-        // Return the file path that can be used to retrieve the image
-        const fileUrl = `/uploads/${filename}`;
-        
-        console.log(`Image uploaded successfully: ${fileUrl}`);
-        
-        res.status(201).json({ 
-          imageUrl: fileUrl,
-          message: "Image uploaded successfully" 
-        });
+      res.status(201).json({ 
+        imageUrl: fileUrl,
+        message: "Image uploaded successfully" 
       });
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -395,39 +319,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Serve uploaded files - improved with better error handling
+  // Serve uploaded files
   app.use('/uploads', (req, res, next) => {
-    // Get the filename from the request path and sanitize it
-    const fileName = path.basename(req.path);
-    if (!fileName || fileName.includes('..')) {
-      return res.status(400).send('Invalid file path');
-    }
-    
-    const filePath = path.join(uploadDir, fileName);
-    
-    // Check if file exists
+    const filePath = path.join(uploadDir, path.basename(req.path));
     fs.access(filePath, fs.constants.F_OK, (err) => {
       if (err) {
-        console.error(`File not found: ${filePath}`, err);
-        return res.status(404).send('File not found');
+        res.status(404).send('File not found');
       } else {
         next();
       }
     });
   }, (req, res) => {
-    const fileName = path.basename(req.path);
-    const filePath = path.join(uploadDir, fileName);
-    
-    // Send the file with explicit content-type
-    const ext = path.extname(fileName).toLowerCase();
-    const contentType = 
-      ext === '.png' ? 'image/png' :
-      ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' :
-      ext === '.gif' ? 'image/gif' :
-      'application/octet-stream';
-    
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    const filePath = path.join(uploadDir, path.basename(req.path));
     res.sendFile(filePath);
   });
 
