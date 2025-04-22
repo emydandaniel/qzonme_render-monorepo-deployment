@@ -77,12 +77,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/quizzes", async (req, res) => {
     try {
       const quizData = insertQuizSchema.parse(req.body);
+      
+      // Check if the URL slug already exists to ensure uniqueness
+      // This is a critical check to prevent overwriting existing quizzes
+      const existingQuiz = await storage.getQuizByUrlSlug(quizData.urlSlug);
+      
+      if (existingQuiz) {
+        console.log(`URL slug collision detected: ${quizData.urlSlug}`);
+        
+        // Generate a new unique URL slug by adding additional entropy
+        const timestamp = Date.now().toString(36);
+        const extraRandomness = Math.random().toString(36).substring(2, 6);
+        quizData.urlSlug = `${quizData.urlSlug}-${timestamp}${extraRandomness}`;
+        
+        console.log(`Generated new unique URL slug: ${quizData.urlSlug}`);
+      }
+      
+      // Now create the quiz with the verified unique slug
       const quiz = await storage.createQuiz(quizData);
+      
+      console.log(`Successfully created quiz with id ${quiz.id} and URL slug ${quiz.urlSlug}`);
       res.status(201).json(quiz);
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid quiz data", error: (error as z.ZodError).message });
       } else {
+        console.error("Failed to create quiz:", error);
         res.status(500).json({ message: "Failed to create quiz" });
       }
     }

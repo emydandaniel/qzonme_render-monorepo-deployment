@@ -89,14 +89,29 @@ export class MemStorage implements IStorage {
   }
   
   async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
+    // Case-insensitive search for URL slug
+    console.log(`Searching for quiz with URL slug: "${urlSlug}" (case-insensitive)`);
+    
+    // We need to be careful with case handling in slugs to ensure uniqueness
     const quiz = Array.from(this.quizzes.values()).find(
       (quiz) => quiz.urlSlug.toLowerCase() === urlSlug.toLowerCase()
     );
-    if (quiz && this.isQuizExpired(quiz)) {
-      await this.cleanupExpiredQuizzes();
-      return undefined;
+    
+    if (quiz) {
+      console.log(`Found quiz with URL slug: ${quiz.urlSlug}, created by: ${quiz.creatorName}`);
+      
+      // Check if the quiz has expired
+      if (this.isQuizExpired(quiz)) {
+        console.log(`Quiz found but it has expired: ${quiz.urlSlug}`);
+        await this.cleanupExpiredQuizzes();
+        return undefined;
+      }
+      
+      return quiz;
     }
-    return quiz;
+    
+    console.log(`No quiz found with URL slug: "${urlSlug}"`);
+    return undefined;
   }
   
   isQuizExpired(quiz: Quiz): boolean {
@@ -291,6 +306,8 @@ export class DatabaseStorage implements IStorage {
     }
     
     try {
+      console.log(`[DB] Searching for quiz with URL slug: "${urlSlug}"`);
+      
       // Try an exact match first
       let [quiz] = await db.select()
         .from(quizzes)
@@ -298,21 +315,36 @@ export class DatabaseStorage implements IStorage {
       
       // If no match, try case-insensitive comparison
       if (!quiz) {
+        console.log(`[DB] No exact match found, trying case-insensitive search for: "${urlSlug}"`);
+        
         const allQuizzes = await db.select().from(quizzes);
-        const matchedQuiz = allQuizzes.find((q: Quiz) => q.urlSlug.toLowerCase() === urlSlug.toLowerCase());
+        const matchedQuiz = allQuizzes.find((q: Quiz) => 
+          q.urlSlug.toLowerCase() === urlSlug.toLowerCase()
+        );
+        
         if (matchedQuiz) {
           quiz = matchedQuiz;
+          console.log(`[DB] Found quiz with case-insensitive match: ${matchedQuiz.urlSlug}`);
         }
+      } else {
+        console.log(`[DB] Found quiz with exact match: ${quiz.urlSlug}`);
       }
       
       if (quiz && this.isQuizExpired(quiz)) {
+        console.log(`[DB] Quiz found but it has expired: ${quiz.urlSlug}`);
         await this.cleanupExpiredQuizzes();
         return undefined;
       }
       
+      if (quiz) {
+        console.log(`[DB] Returning quiz with URL slug: ${quiz.urlSlug}, created by: ${quiz.creatorName}`);
+      } else {
+        console.log(`[DB] No quiz found with URL slug (case-insensitive): "${urlSlug}"`);
+      }
+      
       return quiz;
     } catch (error) {
-      console.error("Database error in getQuizByUrlSlug:", error);
+      console.error("[DB] Database error in getQuizByUrlSlug:", error);
       return this.fallbackStorage.getQuizByUrlSlug(urlSlug);
     }
   }
@@ -386,10 +418,26 @@ export class DatabaseStorage implements IStorage {
       // Generate a unique access code if not provided
       const accessCode = insertQuiz.accessCode || nanoid(8);
       
-      // Generate a URL slug based on creator name
-      const urlSlug = insertQuiz.urlSlug || 
-        `${insertQuiz.creatorName.toLowerCase().replace(/\s+/g, '-')}-${nanoid(6)}`;
+      // Start with the provided URL slug or generate one based on creator name
+      let urlSlug = insertQuiz.urlSlug || 
+        `${insertQuiz.creatorName.toLowerCase().replace(/\s+/g, '-')}-${Date.now().toString(16)}${nanoid(6)}`;
       
+      // Check if the URL slug already exists
+      const existingQuiz = await this.getQuizByUrlSlug(urlSlug);
+      
+      // If it exists, generate a new unique slug
+      if (existingQuiz) {
+        console.log(`[DB] URL slug collision detected: ${urlSlug}`);
+        
+        // Add timestamp and more random characters to make it unique
+        const timestamp = Date.now().toString(16);
+        const extraRandomness = nanoid(8); // Use nanoid for better randomness
+        urlSlug = `${urlSlug}-${timestamp}${extraRandomness.substring(0, 4)}`;
+        
+        console.log(`[DB] Generated new unique URL slug: ${urlSlug}`);
+      }
+      
+      // Now insert with the verified unique slug
       const [quiz] = await db.insert(quizzes)
         .values({
           ...insertQuiz,
@@ -397,10 +445,11 @@ export class DatabaseStorage implements IStorage {
           urlSlug,
         })
         .returning();
-        
+      
+      console.log(`[DB] Successfully created quiz id ${quiz.id} with URL slug ${quiz.urlSlug}`);
       return quiz;
     } catch (error) {
-      console.error("Database error in createQuiz:", error);
+      console.error("[DB] Database error in createQuiz:", error);
       return this.fallbackStorage.createQuiz(insertQuiz);
     }
   }

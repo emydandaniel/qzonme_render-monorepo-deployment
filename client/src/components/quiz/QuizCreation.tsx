@@ -55,14 +55,20 @@ const QuizCreation: React.FC = () => {
 
   const createQuizMutation = useMutation({
     mutationFn: async () => {
-      // Create the quiz
+      // Generate a truly unique URL slug with enhanced uniqueness guarantees
+      const uniqueSlug = generateUrlSlug(userName);
+      console.log(`Generated unique slug for quiz: ${uniqueSlug}`);
+      
+      // Create the quiz with this unique slug
       const quizResponse = await apiRequest("POST", "/api/quizzes", {
         creatorId: userId,
         creatorName: userName,
         accessCode: generateAccessCode(),
-        urlSlug: generateUrlSlug(userName)
+        urlSlug: uniqueSlug
       });
       const quiz = await quizResponse.json();
+      
+      console.log(`Quiz created with ID ${quiz.id} and URL slug ${quiz.urlSlug}`);
       
       // Create all questions for the quiz
       const questionPromises = questions.map((question, index) =>
