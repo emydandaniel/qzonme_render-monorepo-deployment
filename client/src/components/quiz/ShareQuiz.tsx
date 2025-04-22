@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Copy, BarChart } from "lucide-react";
+import { Check, Copy, BarChart, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "../common/Layout";
 
@@ -64,6 +64,16 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               Let's see if you really know me 👇<br/>
               <span className="text-blue-500 truncate block">{quizLink}</span>
             </div>
+            
+            {/* Expiration notification */}
+            <div className="bg-gray-100 p-3 rounded border border-gray-200 text-sm mb-3 text-left flex items-start">
+              <Clock className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
+              <span className="text-gray-600">
+                <strong>Note:</strong> This quiz will remain online for 30 days from the date of creation. 
+                After that, the quiz will be automatically deleted and the link will no longer work.
+              </span>
+            </div>
+            
             <Button 
               type="button" 
               className="w-full" 
