@@ -64,6 +64,7 @@ export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({
 // Question Answer schema for validation
 export const questionAnswerSchema = z.object({
   questionId: z.number(),
+  quizId: z.number().optional(), // Add optional quizId to track which quiz this answer belongs to
   userAnswer: z.union([z.string(), z.array(z.string())]),
   isCorrect: z.boolean().optional(),
 });
