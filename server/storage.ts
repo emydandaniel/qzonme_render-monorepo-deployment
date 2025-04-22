@@ -313,18 +313,52 @@ export class DatabaseStorage implements IStorage {
         .from(quizzes)
         .where(eq(quizzes.urlSlug, urlSlug));
       
-      // If no match, try case-insensitive comparison
+      // If no match, try progressive matching strategies
       if (!quiz) {
-        console.log(`[DB] No exact match found, trying case-insensitive search for: "${urlSlug}"`);
+        console.log(`[DB] No exact match found, trying alternative matches for: "${urlSlug}"`);
         
         const allQuizzes = await db.select().from(quizzes);
-        const matchedQuiz = allQuizzes.find((q: Quiz) => 
+        
+        // Strategy 1: Case-insensitive exact match
+        let matchedQuiz = allQuizzes.find((q: Quiz) => 
           q.urlSlug.toLowerCase() === urlSlug.toLowerCase()
         );
         
+        // Strategy 2: If still no match, check if the passed slug is a prefix of a real slug
+        // This helps with truncated URLs
+        if (!matchedQuiz && urlSlug.length >= 6) {
+          matchedQuiz = allQuizzes.find((q: Quiz) => 
+            q.urlSlug.toLowerCase().startsWith(urlSlug.toLowerCase())
+          );
+          
+          if (matchedQuiz) {
+            console.log(`[DB] Found quiz with prefix match: ${matchedQuiz.urlSlug}`);
+          }
+        }
+        
+        // Strategy 3: Check if the slug prefix before '-' matches
+        // For URLs like "daniel-tkgx" that should match "daniel-1234abcd"
+        if (!matchedQuiz && urlSlug.includes('-')) {
+          const slugPrefix = urlSlug.split('-')[0].toLowerCase();
+          const matchingQuizzes = allQuizzes.filter((q: Quiz) => 
+            q.urlSlug.toLowerCase().startsWith(slugPrefix + '-')
+          );
+          
+          // If we got a match, use the most recent one
+          if (matchingQuizzes.length > 0) {
+            // Sort by creation date (newest first)
+            matchingQuizzes.sort((a, b) => 
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            matchedQuiz = matchingQuizzes[0];
+            console.log(`[DB] Found quiz with creator name match: ${matchedQuiz.urlSlug}`);
+          }
+        }
+        
         if (matchedQuiz) {
           quiz = matchedQuiz;
-          console.log(`[DB] Found quiz with case-insensitive match: ${matchedQuiz.urlSlug}`);
+        } else {
+          console.log(`[DB] No quiz found with URL slug (case-insensitive): "${urlSlug}"`);
         }
       } else {
         console.log(`[DB] Found quiz with exact match: ${quiz.urlSlug}`);
