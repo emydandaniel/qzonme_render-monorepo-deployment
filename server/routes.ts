@@ -202,13 +202,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Quiz attempt routes
   app.post("/api/quiz-attempts", async (req, res) => {
     try {
+      console.log("Creating new quiz attempt with data:", req.body);
       const attemptData = insertQuizAttemptSchema.parse(req.body);
+      
       const attempt = await storage.createQuizAttempt(attemptData);
+      console.log("Successfully created quiz attempt:", attempt);
+      
       res.status(201).json(attempt);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid attempt data", error: (error as z.ZodError).message });
+        console.error("Invalid quiz attempt data:", error.message);
+        res.status(400).json({ message: "Invalid attempt data", error: error.message });
       } else {
+        console.error("Failed to create quiz attempt:", error);
         res.status(500).json({ message: "Failed to create quiz attempt" });
       }
     }
@@ -306,12 +312,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
-      // Return the file path that can be used to retrieve the image
-      const fileUrl = `/uploads/${req.file.filename}`;
-      
-      res.status(201).json({ 
-        imageUrl: fileUrl,
-        message: "Image uploaded successfully" 
+      // Ensure the file was saved correctly
+      const filePath = path.join(uploadDir, req.file.filename);
+      fs.access(filePath, fs.constants.F_OK, (err) => {
+        if (err) {
+          console.error("Failed to verify uploaded file:", err);
+          return res.status(500).json({ message: "Failed to save uploaded file" });
+        }
+        
+        // Return the file path that can be used to retrieve the image
+        const fileUrl = `/uploads/${req.file.filename}`;
+        
+        console.log(`Image uploaded successfully: ${fileUrl}`);
+        
+        res.status(201).json({ 
+          imageUrl: fileUrl,
+          message: "Image uploaded successfully" 
+        });
       });
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -319,18 +336,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Serve uploaded files
+  // Serve uploaded files - improved with better error handling
   app.use('/uploads', (req, res, next) => {
-    const filePath = path.join(uploadDir, path.basename(req.path));
+    // Get the filename from the request path and sanitize it
+    const fileName = path.basename(req.path);
+    if (!fileName || fileName.includes('..')) {
+      return res.status(400).send('Invalid file path');
+    }
+    
+    const filePath = path.join(uploadDir, fileName);
+    
+    // Check if file exists
     fs.access(filePath, fs.constants.F_OK, (err) => {
       if (err) {
-        res.status(404).send('File not found');
+        console.error(`File not found: ${filePath}`, err);
+        return res.status(404).send('File not found');
       } else {
         next();
       }
     });
   }, (req, res) => {
-    const filePath = path.join(uploadDir, path.basename(req.path));
+    const fileName = path.basename(req.path);
+    const filePath = path.join(uploadDir, fileName);
+    
+    // Send the file with explicit content-type
+    const ext = path.extname(fileName).toLowerCase();
+    const contentType = 
+      ext === '.png' ? 'image/png' :
+      ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' :
+      ext === '.gif' ? 'image/gif' :
+      'application/octet-stream';
+    
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
     res.sendFile(filePath);
   });
 

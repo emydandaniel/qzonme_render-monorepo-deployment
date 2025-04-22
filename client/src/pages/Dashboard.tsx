@@ -1,5 +1,5 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DashboardView from "@/components/quiz/Dashboard";
 import ShareQuiz from "@/components/quiz/ShareQuiz";
 import { Question, QuizAttempt, Quiz } from "@shared/schema";
@@ -13,12 +13,27 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ params }) => {
   const quizId = parseInt(params.quizId);
   const [showShareView, setShowShareView] = React.useState(false);
+  const queryClient = useQueryClient();
 
   // We no longer want to show the share view when coming to dashboard
   // The share view is only shown after quiz creation
   React.useEffect(() => {
     setShowShareView(false);
   }, [params.quizId]);
+  
+  // Setup auto-refresh for attempts data
+  useEffect(() => {
+    // Force an immediate refresh of attempts data
+    queryClient.invalidateQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
+    
+    // Set up polling to regularly check for new attempts
+    const intervalId = setInterval(() => {
+      console.log("Refreshing dashboard attempts data...");
+      queryClient.invalidateQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
+    }, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(intervalId); // Clean up interval on unmount
+  }, [quizId, queryClient]);
 
   // Fetch quiz
   const { data: quiz, isLoading: isLoadingQuiz } = useQuery<Quiz>({
@@ -31,10 +46,14 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
     enabled: !!quizId,
   });
 
-  // Fetch quiz attempts
+  // Fetch quiz attempts with more aggressive refresh settings
   const { data: attempts = [], isLoading: isLoadingAttempts } = useQuery<QuizAttempt[]>({
     queryKey: [`/api/quizzes/${quizId}/attempts`],
     enabled: !!quizId,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 0, // Consider data always stale, forcing refetch
   });
 
   if (isLoadingQuiz || isLoadingQuestions || isLoadingAttempts) {
