@@ -20,13 +20,11 @@ export const quizzes = pgTable("quizzes", {
   accessCode: text("access_code").notNull().unique(),
   urlSlug: text("url_slug").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  expiresAt: timestamp("expires_at"),
 });
 
 export const insertQuizSchema = createInsertSchema(quizzes).omit({
   id: true,
   createdAt: true,
-  expiresAt: true,
 });
 
 // Question schema
