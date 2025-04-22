@@ -2,7 +2,7 @@ import {
   users, type User, type InsertUser,
   quizzes, type Quiz, type InsertQuiz,
   questions, type Question, type InsertQuestion,
-  quizAttempts, type QuizAttempt, type InsertQuizAttempt
+  quizAttempts as quizAttemptsTable, type QuizAttempt, type InsertQuizAttempt
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, lt, and, desc } from "drizzle-orm";
@@ -248,7 +248,10 @@ export class DatabaseStorage implements IStorage {
     // If no match, try case-insensitive comparison
     if (!quiz) {
       const allQuizzes = await db.select().from(quizzes);
-      quiz = allQuizzes.find(q => q.urlSlug.toLowerCase() === urlSlug.toLowerCase());
+      const matchedQuiz = allQuizzes.find(q => q.urlSlug.toLowerCase() === urlSlug.toLowerCase());
+      if (matchedQuiz) {
+        quiz = matchedQuiz;
+      }
     }
     
     if (quiz && this.isQuizExpired(quiz)) {
@@ -256,7 +259,7 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
     
-    return quiz || undefined;
+    return quiz;
   }
   
   isQuizExpired(quiz: Quiz): boolean {
@@ -287,14 +290,14 @@ export class DatabaseStorage implements IStorage {
           .where(eq(questions.quizId, quiz.id));
           
         // Get related attempts
-        const quizAttempts = await db.select()
-          .from(quizAttempts)
-          .where(eq(quizAttempts.quizId, quiz.id));
+        const attemptsList = await db.select()
+          .from(quizAttemptsTable)
+          .where(eq(quizAttemptsTable.quizId, quiz.id));
           
         // Delete attempts
-        if (quizAttempts.length > 0) {
-          await db.delete(quizAttempts)
-            .where(eq(quizAttempts.quizId, quiz.id));
+        if (attemptsList.length > 0) {
+          await db.delete(quizAttemptsTable)
+            .where(eq(quizAttemptsTable.quizId, quiz.id));
         }
         
         // Delete questions
@@ -358,15 +361,15 @@ export class DatabaseStorage implements IStorage {
   // Quiz Attempt methods
   async getQuizAttempts(quizId: number): Promise<QuizAttempt[]> {
     const attempts = await db.select()
-      .from(quizAttempts)
-      .where(eq(quizAttempts.quizId, quizId))
-      .orderBy(desc(quizAttempts.score));
+      .from(quizAttemptsTable)
+      .where(eq(quizAttemptsTable.quizId, quizId))
+      .orderBy(desc(quizAttemptsTable.score));
       
     return attempts;
   }
   
   async createQuizAttempt(insertAttempt: InsertQuizAttempt): Promise<QuizAttempt> {
-    const [attempt] = await db.insert(quizAttempts)
+    const [attempt] = await db.insert(quizAttemptsTable)
       .values(insertAttempt)
       .returning();
       

@@ -146,6 +146,18 @@ const HomePage: React.FC = () => {
       });
     }
   };
+  
+  const handleViewDashboard = () => {
+    if (savedQuiz) {
+      // Store user name in session if entered
+      if (userName.trim()) {
+        sessionStorage.setItem("userName", userName);
+      }
+      
+      // Navigate to the dashboard
+      navigate(`/dashboard/${savedQuiz.quizId}`);
+    }
+  };
 
   return (
     <Layout>
@@ -201,6 +213,25 @@ const HomePage: React.FC = () => {
                   {pendingQuiz ? "Answer This Quiz" : "Answer a Quiz"}
                 </Button>
               </div>
+              
+              {/* Show Dashboard button if user has a saved quiz */}
+              {savedQuiz && (
+                <div className="mt-4">
+                  <Button
+                    type="button"
+                    className="w-full flex items-center justify-center"
+                    variant="outline"
+                    onClick={handleViewDashboard}
+                  >
+                    <BarChart className="mr-2 h-4 w-4" />
+                    View Your Quiz Dashboard
+                    {savedQuiz.creatorName && <span className="ml-1 opacity-80">({savedQuiz.creatorName})</span>}
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    You have a saved quiz. Check your dashboard to view stats and share it again.
+                  </p>
+                </div>
+              )}
             </form>
           </div>
           
