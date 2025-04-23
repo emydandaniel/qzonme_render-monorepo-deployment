@@ -104,6 +104,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Quiz not found" });
       }
       
+      // Check if the quiz is expired (older than 30 days)
+      const isExpired = storage.isQuizExpired(quiz);
+      if (isExpired) {
+        return res.status(410).json({ 
+          message: "Quiz expired", 
+          expired: true,
+          detail: "This quiz has expired. Quizzes are available for 30 days after creation."
+        });
+      }
+      
       res.json(quiz);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch quiz" });
@@ -134,6 +144,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Check if the quiz is expired (older than 30 days)
+      const isExpired = storage.isQuizExpired(quiz);
+      if (isExpired) {
+        return res.status(410).json({ 
+          message: "Quiz expired", 
+          expired: true,
+          detail: "This quiz has expired. Quizzes are available for 30 days after creation."
+        });
+      }
+      
       res.json(quiz);
     } catch (error) {
       console.error(`Error fetching quiz by slug "${req.params.urlSlug}":`, error);
@@ -154,6 +174,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!quiz) {
         return res.status(404).json({ message: "Quiz not found" });
+      }
+      
+      // Check if the quiz is expired (older than 30 days)
+      const isExpired = storage.isQuizExpired(quiz);
+      if (isExpired) {
+        return res.status(410).json({ 
+          message: "Quiz expired", 
+          expired: true,
+          detail: "This quiz has expired. Quizzes are available for 30 days after creation."
+        });
       }
       
       console.log(`GET /api/quizzes/${quizId} response:`, quiz);
