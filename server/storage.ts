@@ -16,6 +16,7 @@ export interface IStorage {
   getQuiz(id: number): Promise<Quiz | undefined>;
   getQuizByAccessCode(accessCode: string): Promise<Quiz | undefined>;
   getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined>;
+  getQuizByDashboardToken(token: string): Promise<Quiz | undefined>;
   createQuiz(quiz: InsertQuiz): Promise<Quiz>;
   
   // Question operations
@@ -83,6 +84,12 @@ export class MemStorage implements IStorage {
     );
   }
   
+  async getQuizByDashboardToken(token: string): Promise<Quiz | undefined> {
+    return Array.from(this.quizzes.values()).find(
+      (quiz) => quiz.dashboardToken === token
+    );
+  }
+  
   async createQuiz(insertQuiz: InsertQuiz): Promise<Quiz> {
     const id = this.quizId++;
     const createdAt = new Date();
@@ -93,11 +100,15 @@ export class MemStorage implements IStorage {
     // Generate a URL slug based on creator name
     const urlSlug = insertQuiz.urlSlug || `${insertQuiz.creatorName.toLowerCase().replace(/\s+/g, '-')}-${nanoid(6)}`;
     
+    // Generate a dashboard token if not provided
+    const dashboardToken = insertQuiz.dashboardToken || nanoid(36);
+    
     const quiz: Quiz = { 
       id, 
       ...insertQuiz,
       accessCode,
       urlSlug,
+      dashboardToken,
       createdAt
     };
     

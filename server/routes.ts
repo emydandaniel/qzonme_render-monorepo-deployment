@@ -161,6 +161,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get quiz by dashboard token
+  app.get("/api/quizzes/dashboard/:token", async (req, res) => {
+    try {
+      const dashboardToken = req.params.token;
+      console.log(`Looking up quiz with dashboard token: "${dashboardToken}"`);
+      
+      // Find the quiz with the given dashboard token
+      const allQuizzes = Array.from(storage["quizzes"].values());
+      const quiz = allQuizzes.find(q => q.dashboardToken === dashboardToken);
+      
+      if (!quiz) {
+        console.log(`No quiz found with dashboard token: "${dashboardToken}"`);
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      
+      // Check if the quiz is expired (older than 30 days)
+      const isExpired = storage.isQuizExpired(quiz);
+      if (isExpired) {
+        return res.status(410).json({ 
+          message: "Quiz expired", 
+          expired: true,
+          detail: "This quiz has expired. Quizzes are available for 30 days after creation."
+        });
+      }
+      
+      res.json(quiz);
+    } catch (error) {
+      console.error(`Error fetching quiz by dashboard token "${req.params.token}":`, error);
+      res.status(500).json({ message: "Failed to fetch quiz" });
+    }
+  });
+  
   // Get quiz by ID
   app.get("/api/quizzes/:quizId", async (req, res) => {
     try {
