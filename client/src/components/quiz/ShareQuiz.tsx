@@ -158,10 +158,11 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               <strong>Important:</strong> This is your unique dashboard link. Please bookmark or save it as it won't be stored in your browser.
             </p>
             
-            {!isLoading && quiz?.dashboardToken ? (
+            {/* Display dashboard link from either API response or sessionStorage fallback */}
+            {dashboardToken ? (
               <div className="flex space-x-2 mb-3">
                 <Input 
-                  value={`${customDomain}/dashboard/${quiz.dashboardToken}`}
+                  value={`${customDomain}/dashboard/${dashboardToken}`}
                   readOnly
                   className="bg-white"
                 />
@@ -181,13 +182,9 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               <div className="bg-red-50 p-3 rounded border border-red-200 text-sm text-red-700 mb-3 text-center">
                 Error loading dashboard link. Please refresh the page.
               </div>
-            ) : !quiz?.dashboardToken ? (
-              <div className="bg-orange-50 p-3 rounded border border-orange-200 text-sm text-orange-700 mb-3 text-center">
-                Dashboard token not found. Please contact support.
-              </div>
             ) : (
-              <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3 text-center">
-                Loading dashboard link...
+              <div className="bg-orange-50 p-3 rounded border border-orange-200 text-sm text-orange-700 mb-3 text-center">
+                Dashboard token not found. Please try creating another quiz.
               </div>
             )}
             
@@ -195,7 +192,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               type="button" 
               className="w-full" 
               onClick={handleViewDashboard}
-              disabled={isLoading || !quiz?.dashboardToken}
+              disabled={isLoading || (!dashboardToken)}
             >
               <BarChart className="h-4 w-4 mr-2" /> View My Dashboard
             </Button>
