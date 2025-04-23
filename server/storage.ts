@@ -25,6 +25,9 @@ export interface IStorage {
   // Quiz Attempt operations
   getQuizAttempts(quizId: number): Promise<QuizAttempt[]>;
   createQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt>;
+  
+  // Quiz expiration check
+  isQuizExpired(quiz: Quiz): boolean;
 }
 
 // In-memory storage implementation
@@ -140,6 +143,18 @@ export class MemStorage implements IStorage {
     
     this.quizAttempts.set(id, attempt);
     return attempt;
+  }
+  
+  // Check if a quiz is expired (older than 30 days)
+  isQuizExpired(quiz: Quiz): boolean {
+    if (!quiz || !quiz.createdAt) return true;
+    
+    const now = new Date();
+    const createdAt = new Date(quiz.createdAt);
+    const diffInMs = now.getTime() - createdAt.getTime();
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    
+    return diffInDays > 30;
   }
 }
 
