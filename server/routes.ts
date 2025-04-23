@@ -72,6 +72,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/quizzes", async (req, res) => {
     try {
       const quizData = insertQuizSchema.parse(req.body);
+      
+      // Additional server-side validation for creator name to prevent the bug
+      if (!quizData.creatorName || quizData.creatorName.trim() === '') {
+        return res.status(400).json({ 
+          message: "Creator name cannot be empty",
+          error: "EMPTY_CREATOR_NAME" 
+        });
+      }
+      
+      // Extra validation to catch any instance of the known default value
+      if (quizData.creatorName.toLowerCase() === 'emydan') {
+        console.error("CRITICAL BUG DETECTED: Default name 'emydan' was submitted");
+        return res.status(400).json({ 
+          message: "Cannot use default creator name. Please enter your own name.",
+          error: "DEFAULT_CREATOR_NAME_USED"
+        });
+      }
+      
+      console.log(`Creating quiz with creator name: "${quizData.creatorName}"`);
+      
       const quiz = await storage.createQuiz(quizData);
       res.status(201).json(quiz);
     } catch (error) {

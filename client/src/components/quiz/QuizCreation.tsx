@@ -19,7 +19,8 @@ import { validateQuiz } from "@/lib/quizUtils";
 const QuizCreation: React.FC = () => {
   // Force component to completely rebuild on each mount with key
   // This ensures no stale state persists between navigations
-  const mountId = React.useId();
+  // Add additional entropy (timestamp + random) to React's useId to guarantee uniqueness
+  const mountId = React.useId() + "-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now();
   
   // Creator name - directly entered in this form, NEVER retrieved from storage
   // This is a controlled component with no default value to ensure user must enter name each time
