@@ -1,0 +1,59 @@
+There are still critical bugs that weren’t fully fixed in the last update. Please read carefully:
+
+---
+
+🚨 ISSUE 1: QUIZ LINK GENERATES WITH OLD CREATOR NAME
+
+Even after moving to token-based dashboards and supposedly removing localStorage usage, quiz creation is still generating links using **previous creator names** (e.g., “emydan”, “amarachi”) instead of the **name just entered** (e.g., “daniel”). This behavior happens even on new browsers and devices that were previously used during the local database version of the app.
+
+This suggests one of the following is still happening:
+- The quiz creation logic is referencing a cached in-memory value
+- Or it’s still using values stored in an earlier version of local database or localStorage
+- A fallback or default creator name is hardcoded or persistently stored and reused
+
+✅ Please fix this by:
+- Clearing or resetting all in-memory quiz creator references at the beginning of every new quiz creation
+- Ensuring the app ONLY uses the name input entered at that moment to generate the quiz link
+- Removing any fallback logic or default values tied to past stored names or data
+- Deleting any hidden or leftover client-local or server-local database keys that may be causing name reuse
+
+---
+
+🚨 ISSUE 2: DASHBOARD LINK NEVER LOADS (“Loading dashboard link...”)
+
+After a quiz is created, the “share link” page shows “Loading dashboard link...” but **never shows the actual dashboard link**. This happens even after multiple deployments and appears across multiple browsers and devices.
+
+This issue may be caused by one of two things:
+- The dashboard token is **not being generated properly**
+- Or, the code is **still trying to fetch dashboard info based on the old quiz creator name or old quiz ID**, instead of using the new token-based system
+
+✅ Please fix this by:
+- Ensuring the dashboard token is generated **immediately after quiz creation** and saved to the database
+- Updating the share page to fetch the dashboard token directly and render it immediately
+- Making sure that the logic to load dashboard links does **not rely on quiz creator names or legacy IDs**
+- Show a clear error message if token fetching fails
+
+---
+
+🚨 EXTRA CLEANUP: REMOVE ALL LOCAL DATABASE DEPENDENCIES
+
+Please remove all remaining logic related to:
+- Old local database or localStorage storage for quiz creation or dashboard access
+- Any hardcoded fallback name, slug, or ID stored on the client or server
+- Any legacy function that still tries to use quiz creator names to fetch dashboard data
+
+The system should now be fully token-based:
+- Dashboard access should be via `/dashboard/<token>`
+- Quiz creation should rely **only on the name entered**, not stored values
+- All expiration, leaderboard loading, and sharing should be based on the latest created data
+
+---
+
+✅ Confirmation Checklist:
+- New quizzes generate unique links based only on the current name entered
+- “Loading dashboard link...” is replaced with a working `/dashboard/<token>` link
+- Old names (like “emydan” or “amarachi”) never show unless typed again
+- Dashboard link generation and quiz link generation work correctly across all browsers and devices
+- No references to localStorage, fallback memory, or old local database data remain
+
+This bug is critical. It’s making quiz creation and dashboard access impossible to trust for users. Please fix all of this cleanly and confirm each fix.

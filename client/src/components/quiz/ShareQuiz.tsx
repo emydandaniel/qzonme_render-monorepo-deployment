@@ -21,18 +21,29 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   const [copied, setCopied] = useState(false);
   const [copiedDashboard, setCopiedDashboard] = useState(false);
   
-  // Fetch quiz data to get the dashboard token
-  const { data: quiz, isLoading } = useQuery<any>({
+  // Custom query to get the quiz with dashboard token
+  // Explicitly disable cache, set immediate as high priority
+  const { data: quiz, isLoading, error } = useQuery<any>({
     queryKey: [`/api/quizzes/${quizId}`],
-    // Disable caching to ensure we always get fresh data
-    staleTime: 0,
-    refetchOnMount: true
+    staleTime: 0, // Always consider data stale
+    refetchOnMount: "always", // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: 1000, // Wait 1 second between retries
+    refetchInterval: false, // Don't automatically refetch at intervals
+    networkMode: "always" // Always try to fetch, even if network may be down
   });
+  
+  // Get the dashboard token from the API response or from sessionStorage as a fallback
+  const dashboardToken = quiz?.dashboardToken || sessionStorage.getItem("currentQuizDashboardToken");
+  console.log("Dashboard token from API:", quiz?.dashboardToken);
+  console.log("Dashboard token from sessionStorage:", sessionStorage.getItem("currentQuizDashboardToken"));
   
   // Use the custom domain for sharing as requested
   const customDomain = "https://qzonme.com";
   const quizLink = `${customDomain}/quiz/${urlSlug}`;
   const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}`;
+  const dashboardLink = dashboardToken ? `${customDomain}/dashboard/${dashboardToken}` : null;
   
   // Format expiration date (30 days from today)
   const expirationDate = new Date();
@@ -55,10 +66,18 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   };
   
   const handleCopyDashboardLink = () => {
-    if (!quiz?.dashboardToken) return;
+    // Use either the API response or the fallback from sessionStorage
+    if (!dashboardToken) {
+      toast({
+        title: "Error",
+        description: "Could not find dashboard token. Please try refreshing the page.",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    const dashboardLink = `${customDomain}/dashboard/${quiz.dashboardToken}`;
-    navigator.clipboard.writeText(dashboardLink);
+    // Use the dashboard link we prepared above
+    navigator.clipboard.writeText(dashboardLink || "");
     setCopiedDashboard(true);
     toast({
       title: "Dashboard link copied!",
@@ -69,9 +88,16 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   };
   
   const handleViewDashboard = () => {
-    // Navigate to the dashboard with the dashboard token
-    if (quiz?.dashboardToken) {
-      navigate(`/dashboard/${quiz.dashboardToken}`);
+    // Use either the API response or the fallback from sessionStorage
+    if (dashboardToken) {
+      console.log("Navigating to dashboard with token:", dashboardToken);
+      navigate(`/dashboard/${dashboardToken}`);
+    } else {
+      toast({
+        title: "Error",
+        description: "Dashboard access not available. Please try refreshing the page.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -146,6 +172,18 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
                 >
                   {copiedDashboard ? "Copied!" : <Copy className="h-4 w-4" />}
                 </Button>
+              </div>
+            ) : isLoading ? (
+              <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3 text-center">
+                Loading dashboard link...
+              </div>
+            ) : error ? (
+              <div className="bg-red-50 p-3 rounded border border-red-200 text-sm text-red-700 mb-3 text-center">
+                Error loading dashboard link. Please refresh the page.
+              </div>
+            ) : !quiz?.dashboardToken ? (
+              <div className="bg-orange-50 p-3 rounded border border-orange-200 text-sm text-orange-700 mb-3 text-center">
+                Dashboard token not found. Please contact support.
               </div>
             ) : (
               <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3 text-center">

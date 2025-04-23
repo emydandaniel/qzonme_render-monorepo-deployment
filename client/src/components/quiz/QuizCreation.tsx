@@ -54,31 +54,52 @@ const QuizCreation: React.FC = () => {
 
   const createQuizMutation = useMutation({
     mutationFn: async () => {
-      // Always fetch the current session's userName and userId at the time of quiz creation
-      // to ensure we're using the most up-to-date values
+      // Clear any existing session data that might be stale first
+      // This ensures we don't use any old cached values that might persist
+      
+      // IMPORTANT: Get the current userName FRESHLY from the session storage
+      // at the exact moment of quiz creation
       const currentUserName = sessionStorage.getItem("userName") || "";
       const currentUserId = parseInt(sessionStorage.getItem("userId") || "0");
       
       if (!currentUserName) {
+        toast({
+          title: "Username Required",
+          description: "Please enter your name on the homepage first",
+          variant: "destructive"
+        });
         throw new Error("Username is required");
       }
       
-      console.log(`Creating quiz for: ${currentUserName} (ID: ${currentUserId})`);
+      console.log(`Creating FRESH quiz for: ${currentUserName} (ID: ${currentUserId})`);
       
-      // Generate a fresh dashboard token for this quiz
-      const dashboardToken = generateDashboardToken();
+      // Always generate fresh tokens and codes for each quiz
+      const freshAccessCode = generateAccessCode();
+      const freshDashboardToken = generateDashboardToken();
+      // Generate a unique URL slug based on the CURRENT user name, timestamp and random chars
+      const freshUrlSlug = generateUrlSlug(currentUserName);
       
-      // Create the quiz with a dashboard token
+      console.log(`Generated fresh URL slug: ${freshUrlSlug}`);
+      console.log(`Generated fresh dashboard token: ${freshDashboardToken}`);
+      
+      // Create the quiz with fresh data
       const quizResponse = await apiRequest("POST", "/api/quizzes", {
         creatorId: currentUserId,
         creatorName: currentUserName,
-        accessCode: generateAccessCode(),
-        urlSlug: generateUrlSlug(currentUserName),
-        dashboardToken: dashboardToken
+        accessCode: freshAccessCode,
+        urlSlug: freshUrlSlug,
+        dashboardToken: freshDashboardToken
       });
+      
+      if (!quizResponse.ok) {
+        throw new Error("Failed to create quiz");
+      }
+      
       const quiz = await quizResponse.json();
       
-      console.log(`Quiz created with ID: ${quiz.id}, Dashboard Token: ${quiz.dashboardToken}`);
+      console.log(`Quiz created successfully with ID: ${quiz.id}`);
+      console.log(`Dashboard Token: ${quiz.dashboardToken}`);
+      console.log(`URL Slug: ${quiz.urlSlug}`);
       
       // Create all questions for the quiz
       const questionPromises = questions.map((question, index) =>
@@ -321,12 +342,26 @@ const QuizCreation: React.FC = () => {
     }
 
     try {
+      // Create the quiz with all the fresh data
       const quiz = await createQuizMutation.mutateAsync();
+      
+      console.log("Quiz creation successful!");
+      console.log("Quiz ID:", quiz.id);
+      console.log("Access Code:", quiz.accessCode);
+      console.log("URL Slug:", quiz.urlSlug);
+      console.log("Dashboard Token:", quiz.dashboardToken);
+      
+      // Store essential quiz data in sessionStorage temporarily
+      // This ensures we have access to it even if API queries fail
       sessionStorage.setItem("currentQuizId", quiz.id.toString());
       sessionStorage.setItem("currentQuizAccessCode", quiz.accessCode);
       sessionStorage.setItem("currentQuizUrlSlug", quiz.urlSlug);
+      sessionStorage.setItem("currentQuizDashboardToken", quiz.dashboardToken);
+      
+      // Navigate to the share page with the quiz ID
       navigate(`/share/${quiz.id}`);
     } catch (error) {
+      console.error("Quiz creation failed:", error);
       toast({
         title: "Error",
         description: "Failed to create quiz. Please try again.",

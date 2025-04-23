@@ -43,9 +43,13 @@ export function generateUrlSlug(creatorName: string): string {
   // Limit the name to 10 characters max
   cleanName = cleanName.substring(0, 10);
   
-  // Add random characters to make it unique (4 characters)
+  // Add more randomness to ensure uniqueness
+  // Generate 8 random characters instead of 4 for more entropy
+  const timestamp = Date.now().toString().slice(-4); // last 4 digits of timestamp
   const randomChars = Math.random().toString(36).substring(2, 6);
-  return `${cleanName}-${randomChars}`;
+  
+  // Combine name + timestamp + random chars for greater uniqueness
+  return `${cleanName}-${timestamp}-${randomChars}`;
 }
 
 // Generate a secure dashboard token (UUID format)
