@@ -27,24 +27,14 @@ const HomePage: React.FC = () => {
 
   // Check if there's a pending quiz to answer
   const [pendingQuiz, setPendingQuiz] = useState<{
-    type: 'code' | 'slug' | 'id';
+    type: 'code' | 'slug';
     value: string;
   } | null>(null);
   
-  // Load ONLY user's created quizzes from localStorage
+  // Load user's created quizzes from localStorage
   useEffect(() => {
-    // Check if there is a user session first
-    const sessionUserName = sessionStorage.getItem("userName");
-    const sessionUserId = sessionStorage.getItem("userId");
-    
-    // Load the user's created quizzes (not other quizzes) from localStorage
-    const savedQuizzes: SavedQuiz[] = JSON.parse(localStorage.getItem('myCreatedQuizzes') || '[]');
-    
-    // Only show created quizzes if there's an active user session
-    if (!sessionUserName || !sessionUserId) {
-      setMyQuizzes([]);
-      return;
-    }
+    // Load the user's quizzes from localStorage
+    const savedQuizzes: SavedQuiz[] = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
     
     // Filter out expired quizzes (older than 30 days)
     const now = new Date();
@@ -55,22 +45,18 @@ const HomePage: React.FC = () => {
     
     // If we filtered out any expired quizzes, update localStorage
     if (validQuizzes.length !== savedQuizzes.length) {
-      localStorage.setItem('myCreatedQuizzes', JSON.stringify(validQuizzes));
+      localStorage.setItem('myQuizzes', JSON.stringify(validQuizzes));
     }
     
     setMyQuizzes(validQuizzes);
     
-    // Check if there's a pending quiz code, ID or slug in session storage
+    // Check if there's a pending quiz code or slug in session storage
     const pendingQuizCode = sessionStorage.getItem("pendingQuizCode");
-    const pendingQuizId = sessionStorage.getItem("pendingQuizId");
     const pendingQuizSlug = sessionStorage.getItem("pendingQuizSlug");
     
     if (pendingQuizCode) {
       setPendingQuiz({ type: 'code', value: pendingQuizCode });
       sessionStorage.removeItem("pendingQuizCode");
-    } else if (pendingQuizId) {
-      setPendingQuiz({ type: 'id', value: pendingQuizId });
-      sessionStorage.removeItem("pendingQuizId");
     } else if (pendingQuizSlug) {
       setPendingQuiz({ type: 'slug', value: pendingQuizSlug });
       sessionStorage.removeItem("pendingQuizSlug");
@@ -135,8 +121,6 @@ const HomePage: React.FC = () => {
       if (pendingQuiz) {
         if (pendingQuiz.type === 'code') {
           navigate(`/quiz/code/${pendingQuiz.value}`);
-        } else if (pendingQuiz.type === 'id') {
-          navigate(`/quiz/id/${pendingQuiz.value}`);
         } else {
           navigate(`/quiz/${pendingQuiz.value}`);
         }

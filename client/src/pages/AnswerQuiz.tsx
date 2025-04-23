@@ -14,34 +14,22 @@ interface AnswerQuizProps {
   params: {
     accessCode?: string;
     creatorSlug?: string;
-    quizId?: string;
   };
 }
 
 const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
-  const { accessCode, creatorSlug, quizId } = params;
+  const { accessCode, creatorSlug } = params;
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const userName = sessionStorage.getItem("userName") || "";
   const userId = parseInt(sessionStorage.getItem("userId") || "0");
 
   // Check if user is logged in, if not, save the quiz info and redirect to home
-  // We use session storage to temporarily store the original URL parameters
-  // This does NOT affect which quiz data is loaded - it only ensures the user returns to the right quiz
   React.useEffect(() => {
     if (!userName || !userId) {
-      console.log("User not logged in, saving quiz params to session storage");
-      
-      // Clear any existing pending quiz data to prevent conflicts
-      sessionStorage.removeItem("pendingQuizCode");
-      sessionStorage.removeItem("pendingQuizSlug");
-      sessionStorage.removeItem("pendingQuizId");
-      
-      // Save the current quiz params to session storage
+      // Save the quiz params to session storage
       if (accessCode) {
         sessionStorage.setItem("pendingQuizCode", accessCode);
-      } else if (quizId) {
-        sessionStorage.setItem("pendingQuizId", quizId);
       } else if (creatorSlug) {
         sessionStorage.setItem("pendingQuizSlug", creatorSlug);
       }
@@ -50,24 +38,17 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
       navigate("/");
       return;
     }
-    
-    console.log(`Logged in user ${userName} loading quiz with params:`, { accessCode, creatorSlug, quizId });
-  }, [accessCode, creatorSlug, quizId, navigate, userName, userId]);
+  }, [accessCode, creatorSlug, navigate, userName, userId]);
 
-  // Determine which endpoint to use based on the parameters
-  let endpoint = '';
-  if (accessCode) {
-    endpoint = `/api/quizzes/code/${accessCode}`;
-  } else if (quizId) {
-    endpoint = `/api/quizzes/id/${quizId}`;
-  } else if (creatorSlug) {
-    endpoint = `/api/quizzes/slug/${creatorSlug}`;
-  }
+  // Determine if we're using access code or creator slug
+  const isUsingAccessCode = !!accessCode && !creatorSlug;
+  const identifier = isUsingAccessCode ? accessCode : creatorSlug;
+  const endpoint = isUsingAccessCode ? `/api/quizzes/code/${identifier}` : `/api/quizzes/slug/${identifier}`;
 
-  // Fetch quiz based on the determined endpoint
+  // Fetch quiz by access code or URL slug
   const { data: quiz, isLoading: isLoadingQuiz, error: quizError } = useQuery<Quiz>({
     queryKey: [endpoint],
-    enabled: !!endpoint && !!userName && !!userId,
+    enabled: !!identifier && !!userName && !!userId,
     retry: 3, // Retry failed requests up to 3 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
     staleTime: 0, // Don't use stale data
@@ -159,8 +140,8 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
           <CardContent className="pt-6">
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-red-500 mb-4">Error Loading Quiz</h2>
-              <p className="mb-4">There was a problem loading the quiz: <br />
-                <code className="bg-gray-100 p-1 rounded">{accessCode || quizId || creatorSlug}</code>
+              <p className="mb-4">There was a problem loading the quiz with identifier: <br />
+                <code className="bg-gray-100 p-1 rounded">{identifier}</code>
               </p>
               <p className="text-sm text-gray-600 mb-6">
                 Please check that the URL is correct and try again.
@@ -184,8 +165,8 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
           <CardContent className="pt-6">
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-orange-500 mb-4">Quiz Not Found</h2>
-              <p className="mb-4">We couldn't find a quiz with the given identifier: <br />
-                <code className="bg-gray-100 p-1 rounded">{accessCode || quizId || creatorSlug}</code>
+              <p className="mb-4">We couldn't find a quiz with the identifier: <br />
+                <code className="bg-gray-100 p-1 rounded">{identifier}</code>
               </p>
               <p className="text-sm text-gray-600 mb-6">
                 This quiz may have been removed or the link is incorrect.

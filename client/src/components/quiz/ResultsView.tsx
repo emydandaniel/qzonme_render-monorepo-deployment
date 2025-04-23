@@ -37,20 +37,9 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   };
   
   const handleTryAgain = () => {
-    // Extract the quiz ID from the URL path 
-    // Results URL format is /results/{quizId}/{attemptId}
-    const pathParts = window.location.pathname.split("/");
-    const quizId = pathParts.length > 2 ? pathParts[2] : "";
-    
-    // Navigate directly to the quiz using the ID from URL
-    if (quizId) {
-      // We're navigating to the slug-based endpoint for the quiz
-      // The API will resolve this to the correct quiz
-      navigate(`/quiz/id/${quizId}`);
-    } else {
-      // If we can't find the quiz ID for some reason, go to homepage
-      navigate("/");
-    }
+    // Get the quiz access code from the URL or session storage
+    const accessCode = window.location.pathname.split("/").pop() || "";
+    navigate(`/quiz/${accessCode}`);
   };
   
   // Match questions with answers for display
