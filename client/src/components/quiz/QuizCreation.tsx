@@ -370,11 +370,21 @@ const QuizCreation: React.FC = () => {
   };
 
   const handleFinishQuiz = async () => {
-    // First validate the creator name is present
+    // First validate the creator name is present and was entered by user
     if (!creatorName.trim()) {
       toast({
         title: "Creator Name Required",
         description: "Please enter your name at the top of the form",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Force user to type their name - in case they're using browser autofill
+    if (!hasUserEnteredName.current) {
+      toast({
+        title: "Please enter your name manually",
+        description: "For security reasons, please type your name in the field at the top",
         variant: "destructive"
       });
       return;

@@ -36,6 +36,12 @@ export function showAdInterstitial() {
 export function generateUrlSlug(creatorName: string): string {
   console.log(`➡️ Generating FRESH URL SLUG for name: "${creatorName}"`);
   
+  // Defensive programming - if empty name somehow passed, use "quiz"
+  if (!creatorName || !creatorName.trim()) {
+    creatorName = "quiz" + Math.random().toString(36).substring(2, 6);
+    console.warn("⚠️ Empty creator name provided, using fallback:", creatorName);
+  }
+  
   // Convert to lowercase and clean the name (no special chars)
   let cleanName = creatorName
     .toLowerCase()
@@ -47,15 +53,26 @@ export function generateUrlSlug(creatorName: string): string {
   
   // Add extensive randomness to ensure absolute uniqueness
   // Generate multiple random elements combined:
-  const timestamp = Date.now().toString(); // Full timestamp (not just last 4)
+  const timestamp = Date.now().toString(); // Full timestamp
   const randomString1 = Math.random().toString(36).substring(2, 8); // 6 chars
   const randomString2 = Math.random().toString(36).substring(2, 8); // 6 more chars
   const randomNum = Math.floor(Math.random() * 10000); // Random 0-9999
   
+  // Get another random character set with different algorithm
+  const randomChars = Array.from({length: 4}, () => 
+    'abcdefghijklmnopqrstuvwxyz0123456789'.charAt(
+      Math.floor(Math.random() * 36)
+    )
+  ).join('');
+  
   // Combine name + full timestamp + multiple random elements for guaranteed uniqueness
-  const slug = `${cleanName}-${timestamp.slice(-6)}-${randomString1}-${randomNum}`;
+  // Format: name-timestamp-randomString-randomNum-randomChars
+  const slug = `${cleanName}-${timestamp.slice(-6)}-${randomString1}-${randomNum}-${randomChars}`;
   
   console.log(`✅ Generated absolutely unique slug: ${slug}`);
+  console.log(`Timestamp component: ${timestamp.slice(-6)}`);
+  console.log(`Random components: ${randomString1}, ${randomNum}, ${randomChars}`);
+  
   return slug;
 }
 
