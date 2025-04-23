@@ -22,7 +22,7 @@ function Router() {
       <Route path="/quiz/code/:accessCode" component={AnswerQuiz} />
       <Route path="/quiz/:creatorSlug" component={AnswerQuiz} />
       <Route path="/results/:quizId/:attemptId" component={Results} />
-      <Route path="/dashboard/:quizId" component={Dashboard} />
+      <Route path="/dashboard/:token" component={Dashboard} />
       <Route path="/share/:quizId" component={ShareQuizPage} />
       <Route path="/test-quiz-lookup" component={TestQuizLookup} />
       <Route path="/privacy" component={Privacy} />

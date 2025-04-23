@@ -9,21 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BarChart, ArrowRight, Plus } from "lucide-react";
-
-// Interface for saved quizzes in localStorage
-interface SavedQuiz {
-  id: number;
-  urlSlug: string;
-  creatorName: string;
-  expiresAt: string; // ISO date string
-}
+import { ArrowRight, Plus } from "lucide-react";
 
 const HomePage: React.FC = () => {
   const [userName, setUserName] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [myQuizzes, setMyQuizzes] = useState<SavedQuiz[]>([]);
 
   // Check if there's a pending quiz to answer
   const [pendingQuiz, setPendingQuiz] = useState<{
@@ -31,25 +22,8 @@ const HomePage: React.FC = () => {
     value: string;
   } | null>(null);
   
-  // Load user's created quizzes from localStorage
+  // Only check for pending quiz in session storage
   useEffect(() => {
-    // Load the user's quizzes from localStorage
-    const savedQuizzes: SavedQuiz[] = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
-    
-    // Filter out expired quizzes (older than 30 days)
-    const now = new Date();
-    const validQuizzes = savedQuizzes.filter(quiz => {
-      const expiryDate = new Date(quiz.expiresAt);
-      return expiryDate > now;
-    });
-    
-    // If we filtered out any expired quizzes, update localStorage
-    if (validQuizzes.length !== savedQuizzes.length) {
-      localStorage.setItem('myQuizzes', JSON.stringify(validQuizzes));
-    }
-    
-    setMyQuizzes(validQuizzes);
-    
     // Check if there's a pending quiz code or slug in session storage
     const pendingQuizCode = sessionStorage.getItem("pendingQuizCode");
     const pendingQuizSlug = sessionStorage.getItem("pendingQuizSlug");
@@ -159,41 +133,9 @@ const HomePage: React.FC = () => {
       });
     }
   };
-  
-  const handleViewMyQuiz = (quizId: number) => {
-    navigate(`/dashboard/${quizId}`);
-  };
 
   return (
     <Layout>
-      {/* My Quizzes Card - Show if user has created quizzes */}
-      {myQuizzes.length > 0 && (
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <h3 className="text-xl font-bold mb-4 font-poppins">My Quizzes</h3>
-            <div className="space-y-3">
-              {myQuizzes.map((quiz) => (
-                <div key={quiz.id} className="flex justify-between items-center p-3 border rounded-md">
-                  <div>
-                    <p className="font-medium">{quiz.creatorName}'s Quiz</p>
-                    <p className="text-sm text-muted-foreground">
-                      Expires: {new Date(quiz.expiresAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleViewMyQuiz(quiz.id)}
-                  >
-                    <BarChart className="h-4 w-4 mr-2" /> View Dashboard
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
       {/* Main Homepage Card */}
       <Card>
         <CardContent className="pt-6">

@@ -45,6 +45,15 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   const identifier = isUsingAccessCode ? accessCode : creatorSlug;
   const endpoint = isUsingAccessCode ? `/api/quizzes/code/${identifier}` : `/api/quizzes/slug/${identifier}`;
 
+  // Helper function to check if a quiz has expired
+  const isQuizExpired = (createdAtString: string | Date) => {
+    const createdAt = new Date(createdAtString);
+    const expirationDate = new Date(createdAt);
+    expirationDate.setDate(expirationDate.getDate() + 30);
+    
+    return new Date() > expirationDate;
+  };
+
   // Fetch quiz by access code or URL slug
   const { data: quiz, isLoading: isLoadingQuiz, error: quizError } = useQuery<Quiz>({
     queryKey: [endpoint],
