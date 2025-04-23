@@ -17,18 +17,39 @@ import { Question } from "@shared/schema";
 import { validateQuiz } from "@/lib/quizUtils";
 
 const QuizCreation: React.FC = () => {
+  // Creator name - directly entered in this form, not retrieved from storage
+  const [creatorName, setCreatorName] = useState("");
+
+  // Question state
   const [questionText, setQuestionText] = useState("");
   const [questionType] = useState<"multiple-choice">("multiple-choice");
   const [options, setOptions] = useState<string[]>(["", "", "", ""]);
   const [correctOption, setCorrectOption] = useState<number>(0);
-  // Image handling for questions (to be implemented)
+  
+  // Image handling for questions
   const [questionImage, setQuestionImage] = useState<File | null>(null);
   const [questionImagePreview, setQuestionImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Questions collection
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  
+  // When component mounts, clear any stored data related to quiz creation
+  // to prevent old values from being reused
+  React.useEffect(() => {
+    // Clear any previous quiz creation data
+    sessionStorage.removeItem("currentQuizId");
+    sessionStorage.removeItem("currentQuizAccessCode");
+    sessionStorage.removeItem("currentQuizUrlSlug");
+    sessionStorage.removeItem("currentQuizDashboardToken");
+    sessionStorage.removeItem("currentEditingImageUrl");
+    
+    console.log("QuizCreation: Cleared all session storage for fresh start");
+  }, []);
 
   // We will fetch these values at the time of quiz creation, not component load time
   // to ensure we're always using the most current values
@@ -54,38 +75,39 @@ const QuizCreation: React.FC = () => {
 
   const createQuizMutation = useMutation({
     mutationFn: async () => {
-      // Clear any existing session data that might be stale first
-      // This ensures we don't use any old cached values that might persist
+      // CRITICAL: We now use the directly entered creator name from our form
+      // NOT from sessionStorage, to ensure absolute freshness
       
-      // IMPORTANT: Get the current userName FRESHLY from the session storage
-      // at the exact moment of quiz creation
-      const currentUserName = sessionStorage.getItem("userName") || "";
-      const currentUserId = parseInt(sessionStorage.getItem("userId") || "0");
-      
-      if (!currentUserName) {
+      if (!creatorName.trim()) {
         toast({
-          title: "Username Required",
-          description: "Please enter your name on the homepage first",
+          title: "Creator Name Required",
+          description: "Please enter your name at the top of the form",
           variant: "destructive"
         });
-        throw new Error("Username is required");
+        throw new Error("Creator name is required");
       }
       
-      console.log(`Creating FRESH quiz for: ${currentUserName} (ID: ${currentUserId})`);
+      // Get user ID from session, but name directly from input field
+      const currentUserId = parseInt(sessionStorage.getItem("userId") || "0");
+      
+      console.log(`Creating FRESH quiz for creator name: "${creatorName}" (typed directly in form)`);
+      console.log(`User ID for database reference only: ${currentUserId}`);
       
       // Always generate fresh tokens and codes for each quiz
       const freshAccessCode = generateAccessCode();
       const freshDashboardToken = generateDashboardToken();
-      // Generate a unique URL slug based on the CURRENT user name, timestamp and random chars
-      const freshUrlSlug = generateUrlSlug(currentUserName);
       
-      console.log(`Generated fresh URL slug: ${freshUrlSlug}`);
+      // IMPORTANT: Generate URL slug from the FRESH creator name input in the form
+      // Plus timestamp and random chars for absolute uniqueness
+      const freshUrlSlug = generateUrlSlug(creatorName);
+      
+      console.log(`Generated fresh URL slug: ${freshUrlSlug} from creator name: ${creatorName}`);
       console.log(`Generated fresh dashboard token: ${freshDashboardToken}`);
       
-      // Create the quiz with fresh data
+      // Create the quiz with fresh data, using form input for creator name
       const quizResponse = await apiRequest("POST", "/api/quizzes", {
         creatorId: currentUserId,
-        creatorName: currentUserName,
+        creatorName: creatorName.trim(), // Direct from form
         accessCode: freshAccessCode,
         urlSlug: freshUrlSlug,
         dashboardToken: freshDashboardToken
@@ -332,6 +354,17 @@ const QuizCreation: React.FC = () => {
   };
 
   const handleFinishQuiz = async () => {
+    // First validate the creator name is present
+    if (!creatorName.trim()) {
+      toast({
+        title: "Creator Name Required",
+        description: "Please enter your name at the top of the form",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Then validate the quiz has enough questions
     if (!validateQuiz(questions)) {
       toast({
         title: "More questions needed",
@@ -342,13 +375,22 @@ const QuizCreation: React.FC = () => {
     }
 
     try {
-      // Create the quiz with all the fresh data
+      // First, clear all quiz-related session data to ensure no stale data is used
+      sessionStorage.removeItem("currentQuizId");
+      sessionStorage.removeItem("currentQuizAccessCode");
+      sessionStorage.removeItem("currentQuizUrlSlug");
+      sessionStorage.removeItem("currentQuizDashboardToken");
+      
+      console.log("Starting quiz creation with fresh data...");
+      console.log(`Creator name (directly from form input): "${creatorName}"`);
+      
+      // Create the quiz with fresh creator name from form
       const quiz = await createQuizMutation.mutateAsync();
       
       console.log("Quiz creation successful!");
       console.log("Quiz ID:", quiz.id);
       console.log("Access Code:", quiz.accessCode);
-      console.log("URL Slug:", quiz.urlSlug);
+      console.log("URL Slug:", quiz.urlSlug, "- Generated from name:", creatorName);
       console.log("Dashboard Token:", quiz.dashboardToken);
       
       // Store essential quiz data in sessionStorage temporarily
@@ -357,6 +399,8 @@ const QuizCreation: React.FC = () => {
       sessionStorage.setItem("currentQuizAccessCode", quiz.accessCode);
       sessionStorage.setItem("currentQuizUrlSlug", quiz.urlSlug);
       sessionStorage.setItem("currentQuizDashboardToken", quiz.dashboardToken);
+      // Also update the sessionStorage userName to the latest value
+      sessionStorage.setItem("userName", creatorName);
       
       // Navigate to the share page with the quiz ID
       navigate(`/share/${quiz.id}`);
@@ -382,6 +426,25 @@ const QuizCreation: React.FC = () => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold font-poppins">Create Your Quiz</h2>
             <span className="text-sm text-muted-foreground">Min. 5 questions</span>
+          </div>
+          
+          {/* IMPORTANT: Creator name input - directly entered, not from session storage */}
+          <div className="mb-4 border-b border-gray-200 pb-4">
+            <Label htmlFor="creator-name" className="block text-sm font-medium mb-1">
+              Your Name <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              type="text"
+              id="creator-name"
+              className="input-field"
+              placeholder="Enter your name"
+              value={creatorName}
+              onChange={(e) => setCreatorName(e.target.value)}
+              required
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              This name will be used to create your unique quiz link. Enter it exactly as you want it to appear.
+            </p>
           </div>
           
           {/* Progress indicator */}
