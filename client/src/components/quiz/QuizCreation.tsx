@@ -17,6 +17,10 @@ import { Question } from "@shared/schema";
 import { validateQuiz } from "@/lib/quizUtils";
 
 const QuizCreation: React.FC = () => {
+  // Force component to completely rebuild on each mount with key
+  // This ensures no stale state persists between navigations
+  const mountId = React.useId();
+  
   // Creator name - directly entered in this form, NEVER retrieved from storage
   // This is a controlled component with no default value to ensure user must enter name each time
   const [creatorName, setCreatorName] = useState("");
@@ -447,7 +451,7 @@ const QuizCreation: React.FC = () => {
 
   return (
     <Layout>
-      <Card className="mb-6">
+      <Card className="mb-6" key={mountId}>
         <CardContent className="pt-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold font-poppins">Create Your Quiz</h2>

@@ -94,23 +94,39 @@ export class MemStorage implements IStorage {
     const id = this.quizId++;
     const createdAt = new Date();
     
-    // Generate a unique access code if not provided
-    const accessCode = insertQuiz.accessCode || nanoid(8);
+    // Critical bug fix: Explicitly check quiz inputs for fresh data
+    if (!insertQuiz.creatorName || !insertQuiz.creatorName.trim()) {
+      console.error("SERVER ERROR: Empty creator name received");
+      throw new Error("Creator name is required");
+    }
     
-    // Generate a URL slug based on creator name
-    const urlSlug = insertQuiz.urlSlug || `${insertQuiz.creatorName.toLowerCase().replace(/\s+/g, '-')}-${nanoid(6)}`;
+    // Log the creator name from the browser
+    console.log(`[SERVER] Received quiz creation with creator name: "${insertQuiz.creatorName}"`);
     
-    // Generate a dashboard token if not provided
-    const dashboardToken = insertQuiz.dashboardToken || nanoid(36);
+    // ALWAYS use the provided values and never use defaults to prevent bugs
+    if (!insertQuiz.accessCode || !insertQuiz.urlSlug || !insertQuiz.dashboardToken) {
+      console.error("Required quiz fields missing", { 
+        hasAccessCode: !!insertQuiz.accessCode, 
+        hasUrlSlug: !!insertQuiz.urlSlug,
+        hasDashboardToken: !!insertQuiz.dashboardToken
+      });
+      throw new Error("Required quiz fields are missing");
+    }
     
+    // Use exactly what's provided from the client for explicit control
     const quiz: Quiz = { 
       id, 
       ...insertQuiz,
-      accessCode,
-      urlSlug,
-      dashboardToken,
+      // Ensure these are exactly as received from the client
+      creatorName: insertQuiz.creatorName.trim(), 
+      accessCode: insertQuiz.accessCode,
+      urlSlug: insertQuiz.urlSlug,
+      dashboardToken: insertQuiz.dashboardToken,
       createdAt
     };
+    
+    console.log(`[SERVER] Creating quiz with URL slug: "${quiz.urlSlug}"`);
+    console.log(`[SERVER] Quiz slug derived from name: "${quiz.creatorName}"`);
     
     this.quizzes.set(id, quiz);
     return quiz;
@@ -118,6 +134,12 @@ export class MemStorage implements IStorage {
   
   // Question methods
   async getQuestionsByQuizId(quizId: number): Promise<Question[]> {
+    // If quizId is -1, return all questions (special case for verification)
+    // This prevents errors when searching for individual questions by ID
+    if (quizId === -1) {
+      return Array.from(this.questions.values());
+    }
+    
     return Array.from(this.questions.values())
       .filter(question => question.quizId === quizId)
       .sort((a, b) => a.order - b.order);

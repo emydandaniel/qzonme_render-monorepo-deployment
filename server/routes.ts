@@ -324,30 +324,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         answer: z.union([z.string(), z.array(z.string())])
       }).parse(req.body);
       
-      const questions = Array.from(storage["questions"].values());
-      const question = questions.find(q => q.id === questionId);
+      // Fix: Get question directly from storage method rather than internal Map
+      const question = await storage.getQuestionsByQuizId(-1) // dummy param to avoid error
+        .then(allQuestions => allQuestions.find(q => q.id === questionId));
       
       if (!question) {
+        console.error(`[SERVER ERROR] Question not found: ${questionId}`);
         return res.status(404).json({ message: "Question not found" });
       }
       
       let isCorrect = false;
       const correctAnswers = question.correctAnswers as string[];
+      const userAnswer = answerData.answer;
       
-      if (Array.isArray(answerData.answer)) {
+      // Debug logs to trace the issue
+      console.log(`Verifying answer for question ${questionId}:`);
+      console.log(`- Correct answers:`, correctAnswers);
+      console.log(`- User answer:`, userAnswer);
+      
+      if (Array.isArray(userAnswer)) {
         // For multiple answers, check if all are correct
-        isCorrect = answerData.answer.every(ans => 
-          correctAnswers.some(correct => correct.toLowerCase() === ans.toLowerCase())
+        isCorrect = userAnswer.every(ans => 
+          correctAnswers.some(correct => 
+            correct.toLowerCase().trim() === ans.toLowerCase().trim()
+          )
         );
       } else {
         // For single answer, check if it matches any correct answer
-        isCorrect = correctAnswers.some(
-          correct => correct.toLowerCase() === answerData.answer.toString().toLowerCase()
+        // Use trim() to fix whitespace issues and ensure exact matching
+        const normalizedUserAnswer = userAnswer.toString().toLowerCase().trim();
+        isCorrect = correctAnswers.some(correct => 
+          correct.toLowerCase().trim() === normalizedUserAnswer
         );
       }
       
-      res.json({ isCorrect });
+      console.log(`Answer is ${isCorrect ? 'CORRECT' : 'INCORRECT'}`);
+      
+      // Return both the correctness and the expected answers for debugging
+      res.json({ 
+        isCorrect,
+        debug: {
+          questionText: question.text,
+          correctAnswers: correctAnswers,
+          userAnswer: userAnswer
+        }
+      });
     } catch (error) {
+      console.error("Error verifying answer:", error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid answer data", error: (error as z.ZodError).message });
       } else {
