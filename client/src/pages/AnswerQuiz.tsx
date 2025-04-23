@@ -25,9 +25,17 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   const userId = parseInt(sessionStorage.getItem("userId") || "0");
 
   // Check if user is logged in, if not, save the quiz info and redirect to home
+  // We use session storage to temporarily store the original URL parameters
+  // This does NOT affect which quiz data is loaded - it only ensures the user returns to the right quiz
   React.useEffect(() => {
     if (!userName || !userId) {
-      // Save the quiz params to session storage
+      console.log("User not logged in, saving quiz params to session storage");
+      
+      // Clear any existing pending quiz data to prevent conflicts
+      sessionStorage.removeItem("pendingQuizCode");
+      sessionStorage.removeItem("pendingQuizSlug");
+      
+      // Save the current quiz params to session storage
       if (accessCode) {
         sessionStorage.setItem("pendingQuizCode", accessCode);
       } else if (creatorSlug) {
@@ -38,6 +46,8 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
       navigate("/");
       return;
     }
+    
+    console.log(`Logged in user ${userName} loading quiz with params:`, { accessCode, creatorSlug });
   }, [accessCode, creatorSlug, navigate, userName, userId]);
 
   // Determine if we're using access code or creator slug

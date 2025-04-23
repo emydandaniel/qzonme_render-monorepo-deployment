@@ -31,10 +31,20 @@ const HomePage: React.FC = () => {
     value: string;
   } | null>(null);
   
-  // Load user's created quizzes from localStorage
+  // Load ONLY user's created quizzes from localStorage
   useEffect(() => {
-    // Load the user's quizzes from localStorage
-    const savedQuizzes: SavedQuiz[] = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
+    // Check if there is a user session first
+    const sessionUserName = sessionStorage.getItem("userName");
+    const sessionUserId = sessionStorage.getItem("userId");
+    
+    // Load the user's created quizzes (not other quizzes) from localStorage
+    const savedQuizzes: SavedQuiz[] = JSON.parse(localStorage.getItem('myCreatedQuizzes') || '[]');
+    
+    // Only show created quizzes if there's an active user session
+    if (!sessionUserName || !sessionUserId) {
+      setMyQuizzes([]);
+      return;
+    }
     
     // Filter out expired quizzes (older than 30 days)
     const now = new Date();
@@ -45,7 +55,7 @@ const HomePage: React.FC = () => {
     
     // If we filtered out any expired quizzes, update localStorage
     if (validQuizzes.length !== savedQuizzes.length) {
-      localStorage.setItem('myQuizzes', JSON.stringify(validQuizzes));
+      localStorage.setItem('myCreatedQuizzes', JSON.stringify(validQuizzes));
     }
     
     setMyQuizzes(validQuizzes);

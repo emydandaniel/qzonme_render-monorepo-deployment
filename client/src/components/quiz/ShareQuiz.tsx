@@ -31,8 +31,15 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   const quizLink = `${customDomain}/quiz/${urlSlug}`;
   const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}`;
   
-  // Save quiz to localStorage when component mounts
+  // Save quiz to localStorage when component mounts ONLY for "View My Dashboard" feature
   useEffect(() => {
+    // Only continue if we have a user ID in session (this is the quiz creator)
+    const userId = sessionStorage.getItem("userId");
+    if (!userId) {
+      console.log('No user ID in session, not saving quiz to localStorage');
+      return;
+    }
+    
     // Get creator name from quiz URL slug (best effort)
     const creatorName = urlSlug.split('-')[0]?.charAt(0).toUpperCase() + urlSlug.split('-')[0]?.slice(1) || 'Your';
     
@@ -40,7 +47,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
     
-    // Create quiz object to save
+    // Create quiz object to save - we use myCreatedQuizzes to distinguish from others
     const quizToSave: SavedQuiz = {
       id: quizId,
       urlSlug,
@@ -49,7 +56,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
     };
     
     // Get existing quizzes or initialize empty array
-    const savedQuizzes: SavedQuiz[] = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
+    const savedQuizzes: SavedQuiz[] = JSON.parse(localStorage.getItem('myCreatedQuizzes') || '[]');
     
     // Check if quiz already exists
     const existingQuizIndex = savedQuizzes.findIndex(q => q.id === quizId);
@@ -63,8 +70,8 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
     }
     
     // Save back to localStorage
-    localStorage.setItem('myQuizzes', JSON.stringify(savedQuizzes));
-    console.log('Saved quiz to localStorage:', quizToSave);
+    localStorage.setItem('myCreatedQuizzes', JSON.stringify(savedQuizzes));
+    console.log('Saved creator\'s quiz to localStorage:', quizToSave);
   }, [quizId, urlSlug]);
   
   const handleCopyLink = () => {
