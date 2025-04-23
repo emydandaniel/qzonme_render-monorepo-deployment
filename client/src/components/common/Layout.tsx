@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "wouter";
+import Footer from "./Footer";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -7,7 +8,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
+    <div className="container mx-auto px-4 py-8 max-w-3xl min-h-screen flex flex-col">
       {/* Logo/Header */}
       <header className="flex justify-center mb-6">
         <Link href="/">
@@ -24,7 +25,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </header>
 
       {/* Main content */}
-      <main>{children}</main>
+      <main className="flex-grow">{children}</main>
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

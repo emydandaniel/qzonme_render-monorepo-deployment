@@ -1,0 +1,57 @@
+i.Can you try and check for any bugs on the website and debug them on your own before adding these features and fixing some of the bugs below
+ii. please upload the html file for google search console verification
+iii. Create and link three pages for my QzonMe website: Privacy Policy, Terms & Conditions, and About Page.
+
+Each page should be accessible via a button or link at the bottom/footer of the homepage. Each page can be a separate route or HTML file depending on the app setup. Use the following content:
+
+---Privacy Policy---
+Privacy Policy for QzonMe
+
+At QzonMe, accessible from https://qzonme.com, your privacy is important to us. This Privacy Policy document outlines the types of information that is collected and recorded by QzonMe and how we use it.
+
+1. Information We Collect  
+We collect only necessary data, such as names entered for quizzes, quiz answers, and browser cookies to improve your experience.
+
+2. How We Use Your Information  
+We use your data to:  
+- Display your quiz results and rankings  
+- Improve user experience  
+- Analyze how the website is used  
+- Serve relevant ads
+
+3. Third-Party Services  
+We use third-party advertising partners such as Ezoic, which may collect cookies and usage data.
+
+4. Data Protection  
+We do not sell, trade, or transfer your data to outside parties.
+
+5. Consent  
+By using our website, you consent to our Privacy Policy.
+
+---Terms & Conditions---
+Terms & Conditions for QzonMe
+
+By using this website, you agree to the following terms:
+
+1. You must be 13 years or older to use this site.  
+2. You are responsible for the content you create or answer.  
+3. The website may use ads to monetize content.  
+4. We are not liable for any user-generated content.  
+5. We reserve the right to ban misuse or spam.
+
+Use this site for fun, share your quiz responsibly, and stay respectful.
+
+---About QzonMe---
+What is QzonMe?
+
+QzonMe is a fun quiz-based website that lets you test how well your friends know you! You can create custom quizzes, challenge your friends, and see who knows you best on the leaderboard.
+
+Built by students, for laughs and good vibes 
+Have fun, and don’t forget to share your quiz!
+
+Make the links open as simple clean pages, matching the current site colors. Each page should include a back/home button too.
+iv.dashboard isn’t updating even after someone has answered or attempted the quiz please fix it
+v. please also the leaderboard section on result page is not updating even after several people has attempted a quiz it just basically shows only the immediate quiz answerers rank without even their name and scores
+vi. I noticed that the quiz or its link don’t work after like a day or somehours,please can you make it that every quiz and quiz link created should still work for only 30days and also add the warning/notification to the website share page where unique creators link are generated  telling the creators that their quiz and their quiz links will only be online/work for only 30days
+vii.will love a sceneario or workflow whereby after a quiz creator has finished creating his/her quiz and generated his/her unique shareable link and close the website/browser that when they return either by the domain or their own generated shareable link that there will be a view my dashboard button  for the creator to access his quiz dashboard and this view dashboard button on homepage should also be available for 30days since the quiz and its links will be removed from website database after 30days.
+
