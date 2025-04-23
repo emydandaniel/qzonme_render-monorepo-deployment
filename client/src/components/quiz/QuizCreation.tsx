@@ -30,8 +30,8 @@ const QuizCreation: React.FC = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const userId = parseInt(sessionStorage.getItem("userId") || "0");
-  const userName = sessionStorage.getItem("userName") || "";
+  // We will fetch these values at the time of quiz creation, not component load time
+  // to ensure we're always using the most current values
 
   // Image upload mutation
   const uploadImageMutation = useMutation({
@@ -54,22 +54,31 @@ const QuizCreation: React.FC = () => {
 
   const createQuizMutation = useMutation({
     mutationFn: async () => {
-      // Always use the current session's userName to ensure a fresh slug and prevent bugs
+      // Always fetch the current session's userName and userId at the time of quiz creation
+      // to ensure we're using the most up-to-date values
       const currentUserName = sessionStorage.getItem("userName") || "";
+      const currentUserId = parseInt(sessionStorage.getItem("userId") || "0");
       
       if (!currentUserName) {
         throw new Error("Username is required");
       }
       
+      console.log(`Creating quiz for: ${currentUserName} (ID: ${currentUserId})`);
+      
+      // Generate a fresh dashboard token for this quiz
+      const dashboardToken = generateDashboardToken();
+      
       // Create the quiz with a dashboard token
       const quizResponse = await apiRequest("POST", "/api/quizzes", {
-        creatorId: userId,
+        creatorId: currentUserId,
         creatorName: currentUserName,
         accessCode: generateAccessCode(),
         urlSlug: generateUrlSlug(currentUserName),
-        dashboardToken: generateDashboardToken()
+        dashboardToken: dashboardToken
       });
       const quiz = await quizResponse.json();
+      
+      console.log(`Quiz created with ID: ${quiz.id}, Dashboard Token: ${quiz.dashboardToken}`);
       
       // Create all questions for the quiz
       const questionPromises = questions.map((question, index) =>

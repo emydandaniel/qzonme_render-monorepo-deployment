@@ -24,6 +24,9 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   // Fetch quiz data to get the dashboard token
   const { data: quiz, isLoading } = useQuery<any>({
     queryKey: [`/api/quizzes/${quizId}`],
+    // Disable caching to ensure we always get fresh data
+    staleTime: 0,
+    refetchOnMount: true
   });
   
   // Use the custom domain for sharing as requested
