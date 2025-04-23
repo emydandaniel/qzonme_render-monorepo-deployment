@@ -27,7 +27,7 @@ const HomePage: React.FC = () => {
 
   // Check if there's a pending quiz to answer
   const [pendingQuiz, setPendingQuiz] = useState<{
-    type: 'code' | 'slug';
+    type: 'code' | 'slug' | 'id';
     value: string;
   } | null>(null);
   
@@ -135,6 +135,8 @@ const HomePage: React.FC = () => {
       if (pendingQuiz) {
         if (pendingQuiz.type === 'code') {
           navigate(`/quiz/code/${pendingQuiz.value}`);
+        } else if (pendingQuiz.type === 'id') {
+          navigate(`/quiz/id/${pendingQuiz.value}`);
         } else {
           navigate(`/quiz/${pendingQuiz.value}`);
         }
