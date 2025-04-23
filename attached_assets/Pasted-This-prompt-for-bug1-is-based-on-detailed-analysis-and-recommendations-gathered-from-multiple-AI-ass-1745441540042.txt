@@ -1,0 +1,32 @@
+This prompt for bug1 is based on detailed analysis and recommendations gathered from multiple AI assistants (including ChatGPT, GitHub Copilot, Gemini, and DeepSeek). Please analyse the prompt and confirm it will fix the issue if yes then treat the prompt for bug 1 as a high-priority bug 1 fix request for my React + Node.js (TypeScript) app on Replit.
+
+---
+
+🚨 BUG 1: Quiz creation still uses the old name (“emydan”) even after entering a new name like “daniel”
+
+✅ Fix Instructions:
+- Ensure the quiz creation input is controlled via `useState`, like:
+  const [quizName, setQuizName] = useState('');
+- When submitting, use that quizName state value directly in the fetch/post body:
+  fetch("/api/create-quiz", { body: JSON.stringify({ name: quizName }) })
+- Reset the input field with `setQuizName("")` after submission
+- Add a `key={Date.now()}` to the quiz form wrapper to force a clean remount
+- On the backend, generate the quiz slug using:
+  `${slugify(name)}-${Date.now()}`
+- Make sure the backend does not reuse global variables or cached request state between quiz creations
+
+🚨 BUG 2: “View Your Answers” incorrectly marks all answers as wrong
+When a user finishes answering a quiz and clicks “View Your Answers”:
+
+- Even when the user selects the correct answer, the answer is still marked as incorrect
+- The score summary may say “1 out of 6” but all the individual answers are shown in red or as failed
+- The actual selected option is not clearly highlighted or is treated as incorrect even if it matches the correct one
+
+Please investigate and fix this logic so that user-selected answers are properly compared against the correct ones and displayed accurately on the result page.
+✅ Final confirmation checklist:
+- Quiz link should reflect **only** the name currently typed by the user (never “emydan” unless retyped)
+- Answer review should accurately show the user’s selected option and correct result
+- Answer highlighting should be clear, intuitive, and not buggy
+- Tested and confirmed working across browsers and devices
+
+Please carefully implement and verify these changes across the full create-answer-result flow. Thanks!
