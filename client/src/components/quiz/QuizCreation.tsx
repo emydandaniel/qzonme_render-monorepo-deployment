@@ -17,8 +17,12 @@ import { Question } from "@shared/schema";
 import { validateQuiz } from "@/lib/quizUtils";
 
 const QuizCreation: React.FC = () => {
-  // Creator name - directly entered in this form, not retrieved from storage
+  // Creator name - directly entered in this form, NEVER retrieved from storage
+  // This is a controlled component with no default value to ensure user must enter name each time
   const [creatorName, setCreatorName] = useState("");
+  
+  // Create a ref to track if the name has been manually entered by the user
+  const hasUserEnteredName = useRef(false);
 
   // Question state
   const [questionText, setQuestionText] = useState("");
@@ -448,11 +452,17 @@ const QuizCreation: React.FC = () => {
             <Input
               type="text"
               id="creator-name"
-              className="input-field"
+              className={`input-field ${hasUserEnteredName.current ? 'border-green-400' : ''}`}
               placeholder="Enter your name"
               value={creatorName}
-              onChange={(e) => setCreatorName(e.target.value)}
+              onChange={(e) => {
+                setCreatorName(e.target.value);
+                if (e.target.value.trim()) {
+                  hasUserEnteredName.current = true;
+                }
+              }}
               required
+              autoFocus
             />
             <p className="mt-1 text-xs text-muted-foreground">
               This name will be used to create your unique quiz link. Enter it exactly as you want it to appear.

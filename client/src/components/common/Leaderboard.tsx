@@ -166,20 +166,22 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
             return (
               <tr 
                 key={`${attempt.id}-${index}`}
-                className={isCurrentUser ? "bg-primary bg-opacity-5" : ""}
+                className={isCurrentUser ? "bg-orange-50 border-l-4 border-orange-400" : ""}
               >
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                   {index + 1}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                   {isCurrentUser ? (
-                    <span className="font-medium text-primary">You ({attempt.userName})</span>
+                    <span className="font-medium text-orange-600">You ({attempt.userName})</span>
                   ) : (
                     attempt.userName || "Anonymous"
                   )}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-primary font-medium">
-                  {formatPercentage(attempt.score, attempt.totalQuestions || 1)}
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
+                  <span className={isCurrentUser ? "text-orange-600" : "text-primary"}>
+                    {formatPercentage(attempt.score, attempt.totalQuestions || 1)}
+                  </span>
                 </td>
               </tr>
             );
