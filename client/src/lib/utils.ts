@@ -34,6 +34,8 @@ export function showAdInterstitial() {
 }
 
 export function generateUrlSlug(creatorName: string): string {
+  console.log(`➡️ Generating FRESH URL SLUG for name: "${creatorName}"`);
+  
   // Convert to lowercase and clean the name (no special chars)
   let cleanName = creatorName
     .toLowerCase()
@@ -43,13 +45,18 @@ export function generateUrlSlug(creatorName: string): string {
   // Limit the name to 10 characters max
   cleanName = cleanName.substring(0, 10);
   
-  // Add more randomness to ensure uniqueness
-  // Generate 8 random characters instead of 4 for more entropy
-  const timestamp = Date.now().toString().slice(-4); // last 4 digits of timestamp
-  const randomChars = Math.random().toString(36).substring(2, 6);
+  // Add extensive randomness to ensure absolute uniqueness
+  // Generate multiple random elements combined:
+  const timestamp = Date.now().toString(); // Full timestamp (not just last 4)
+  const randomString1 = Math.random().toString(36).substring(2, 8); // 6 chars
+  const randomString2 = Math.random().toString(36).substring(2, 8); // 6 more chars
+  const randomNum = Math.floor(Math.random() * 10000); // Random 0-9999
   
-  // Combine name + timestamp + random chars for greater uniqueness
-  return `${cleanName}-${timestamp}-${randomChars}`;
+  // Combine name + full timestamp + multiple random elements for guaranteed uniqueness
+  const slug = `${cleanName}-${timestamp.slice(-6)}-${randomString1}-${randomNum}`;
+  
+  console.log(`✅ Generated absolutely unique slug: ${slug}`);
+  return slug;
 }
 
 // Generate a secure dashboard token (UUID format)

@@ -114,9 +114,11 @@ const ResultsView: React.FC<ResultsViewProps> = ({
                         )}
                       </div>
                       <div className="text-sm text-gray-700 mt-1">
-                        <strong>Your answer:</strong> {Array.isArray(answer?.userAnswer) 
-                          ? answer?.userAnswer.join(", ") 
-                          : answer?.userAnswer?.toString() || "No answer provided"}
+                        <strong>Your answer:</strong> <span className={answer?.isCorrect ? "text-green-600 font-medium" : "text-red-600"}>
+                          {Array.isArray(answer?.userAnswer) 
+                            ? answer?.userAnswer.join(", ") 
+                            : answer?.userAnswer?.toString() || "No answer provided"}
+                        </span>
                       </div>
                       {!answer?.isCorrect && (
                         <div className="text-sm text-red-600 mt-1">

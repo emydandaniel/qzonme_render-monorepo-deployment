@@ -1,0 +1,56 @@
+Even after your previous fix, quiz creation is still defaulting to the very first quiz creator name ever entered (e.g., “emydan”) — even after refreshing, clearing localStorage, and opening in a new session.
+
+This confirms that:
+
+- Some part of the quiz creation logic still stores and reuses the original quiz creator name from memory, global state, or default variables
+- This value is not being cleared when starting a new quiz
+- Even if I manually enter a different name, the link still gets generated with the old name
+
+✅ Please fully disconnect the quiz creation logic from any persistent state or fallback logic.
+
+Do this by:
+
+- Resetting any `useState`, `useEffect`, context, or global variable that holds the quiz creator name
+- Ensuring the name passed into the backend comes only from the current input field, and not from any stored reference
+- Confirming that quiz creation starts clean every time — regardless of browser history or device reuse
+
+---
+
+🚨 ADDITIONAL BUG 1: VIEW ANSWERS NOT WORKING
+
+On the result page, after finishing a quiz, when I click “View Your Answers”:
+
+- The answer review section does not show the options I chose
+- It instead shows a blank or no answer provided, making it look like I failed every question
+- The score calculation shows “1 out of 6,” but the detailed review shows 0 correct
+
+✅ Please:
+
+- Fix the answer review logic to display the actual options the user selected
+- Ensure that correct vs. incorrect answers are shown clearly
+- Highlight which ones were selected and which were correct, with distinct styles
+
+---
+
+🚨 ADDITIONAL BUG 2: LEADERBOARD STYLE VISIBILITY ISSUE
+
+On the result page, the leaderboard section is showing the **current answerer’s name and score hidden** behind an orange overlay or background.
+
+- The orange highlight (which likely indicates “this is you”) is covering the name and score
+- Only the rank number is visible, and the name/score only appears when I try to select the text with my mouse
+
+✅ Please:
+
+- Fix the CSS styling so that the orange highlight does not obscure the user’s name and score
+- Make sure the leaderboard layout is readable and works across all screen sizes
+
+---
+
+📌 Confirm this checklist is working correctly:
+
+- Quiz link generation uses only the current input name — never a reused name like “emydan”
+- Dashboard link is unique and appears correctly
+- Answer review section reflects the user’s actual selected answers
+- Leaderboard highlights the current user without hiding their name/score
+
+These bugs are blocking core user flows and must be fully resolved before launch. Please re-test everything end-to-end after fixing.

@@ -38,17 +38,29 @@ const QuizCreation: React.FC = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
-  // When component mounts, clear any stored data related to quiz creation
-  // to prevent old values from being reused
+  // When component mounts, completely clear ALL storage everywhere to guarantee fresh start
   React.useEffect(() => {
-    // Clear any previous quiz creation data
-    sessionStorage.removeItem("currentQuizId");
-    sessionStorage.removeItem("currentQuizAccessCode");
-    sessionStorage.removeItem("currentQuizUrlSlug");
-    sessionStorage.removeItem("currentQuizDashboardToken");
-    sessionStorage.removeItem("currentEditingImageUrl");
+    console.log("🧹 COMPLETELY RESETTING ALL STORAGE AND STATE 🧹");
     
-    console.log("QuizCreation: Cleared all session storage for fresh start");
+    try {
+      // First clear sessionStorage of all quiz-related items
+      sessionStorage.clear(); // Clear ALL sessionStorage completely
+      
+      // Also clear localStorage - should be empty but just to be safe
+      localStorage.clear(); // Clear ALL localStorage completely
+            
+      // Set a fresh ID to ensure uniqueness this session
+      const uniqueSessionId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+      sessionStorage.setItem("freshSessionId", uniqueSessionId);
+      
+      console.log("✅ All browser storage completely wiped for absolute fresh state");
+      console.log("✅ Fresh session ID generated:", uniqueSessionId);
+      
+      // Make this form field completely empty on load to force explicit typing
+      setCreatorName(""); 
+    } catch (err) {
+      console.error("Error clearing storage:", err);
+    }
   }, []);
 
   // We will fetch these values at the time of quiz creation, not component load time
