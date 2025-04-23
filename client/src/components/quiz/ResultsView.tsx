@@ -113,12 +113,16 @@ const ResultsView: React.FC<ResultsViewProps> = ({
                           <X className="h-5 w-5 text-red-500" />
                         )}
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        You answered: {answer?.userAnswer.toString()}
+                      <div className="text-sm text-gray-700 mt-1">
+                        <strong>Your answer:</strong> {Array.isArray(answer?.userAnswer) 
+                          ? answer?.userAnswer.join(", ") 
+                          : answer?.userAnswer?.toString() || "No answer provided"}
                       </div>
                       {!answer?.isCorrect && (
                         <div className="text-sm text-red-600 mt-1">
-                          Correct answer: {(question.correctAnswers as string[]).join(" or ")}
+                          <strong>Correct answer:</strong> {Array.isArray(question.correctAnswers) 
+                            ? question.correctAnswers.join(" or ") 
+                            : String(question.correctAnswers || "")}
                         </div>
                       )}
                     </li>

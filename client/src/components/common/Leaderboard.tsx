@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { QuizAttempt } from "@shared/schema";
 import { formatPercentage } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 interface LeaderboardProps {
   attempts: QuizAttempt[];
@@ -15,8 +16,27 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   currentUserScore = 0,
   currentUserTotalQuestions = 1
 }) => {
+  // Track when attempts data changes to force refresh
+  const [processedAttempts, setProcessedAttempts] = useState<QuizAttempt[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Force refresh the leaderboard data when attempts change
+  useEffect(() => {
+    console.log("Leaderboard received new attempts data:", { 
+      attemptsCount: attempts?.length, 
+      attempt_ids: attempts?.map(a => a.id)
+    });
+    
+    // Simulate a small delay to show loading indicator
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setProcessedAttempts([...attempts]);
+      setIsRefreshing(false);
+    }, 300);
+  }, [attempts, attempts?.length]);
+  
   console.log("Leaderboard rendering with:", { 
-    attemptsCount: attempts?.length, 
+    attemptsCount: processedAttempts?.length, 
     currentUserName,
     currentUserScore 
   });
@@ -62,11 +82,60 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
     return sortedData;
   };
 
-  // Generate the leaderboard rows
-  const leaderboardData = prepareLeaderboardData();
+  // If refreshing show loading state
+  if (isRefreshing) {
+    return (
+      <div className="overflow-hidden rounded-lg border border-gray-200 p-8 text-center">
+        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+        <p className="text-muted-foreground text-sm">Refreshing leaderboard...</p>
+      </div>
+    );
+  }
+  
+  // Generate the leaderboard rows using the processed attempts
+  const leaderboardData = () => {
+    // Start with sorted processed attempts
+    let sortedData = [...(processedAttempts || [])].sort((a, b) => {
+      const scoreA = (a.score / a.totalQuestions) * 100;
+      const scoreB = (b.score / b.totalQuestions) * 100;
+      return scoreB - scoreA;
+    });
+
+    // Check if current user exists in the attempts data
+    const userExists = currentUserName && sortedData.some(a => a.userName === currentUserName);
+    
+    // If user doesn't exist in the attempts but we have their name and score, add them
+    if (currentUserName && !userExists && currentUserScore !== undefined) {
+      // Create a virtual attempt for the current user
+      const userAttempt = {
+        id: -1, // Use negative ID to indicate it's a virtual entry
+        quizId: 0,
+        userAnswerId: 0,
+        userName: currentUserName,
+        score: currentUserScore,
+        totalQuestions: currentUserTotalQuestions,
+        answers: [],
+        completedAt: new Date()
+      };
+      
+      // Add to sorted array to get correct position
+      sortedData.push(userAttempt);
+      
+      // Resort to ensure it's in the right position
+      sortedData = sortedData.sort((a, b) => {
+        const scoreA = (a.score / (a.totalQuestions || 1)) * 100;
+        const scoreB = (b.score / (b.totalQuestions || 1)) * 100;
+        return scoreB - scoreA;
+      });
+    }
+    
+    return sortedData;
+  };
+  
+  const sortedLeaderboardData = leaderboardData();
   
   // If there's no data at all, show empty state
-  if (leaderboardData.length === 0) {
+  if (sortedLeaderboardData.length === 0) {
     return (
       <div className="overflow-hidden rounded-lg border border-gray-200 p-4 text-center text-gray-500">
         No attempts yet
@@ -91,7 +160,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {leaderboardData.map((attempt, index) => {
+          {sortedLeaderboardData.map((attempt, index) => {
             const isCurrentUser = currentUserName && attempt.userName === currentUserName;
             
             return (
