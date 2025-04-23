@@ -20,6 +20,7 @@ function Router() {
       <Route path="/create" component={CreateQuiz} />
       <Route path="/find-quiz" component={FindQuiz} />
       <Route path="/quiz/code/:accessCode" component={AnswerQuiz} />
+      <Route path="/quiz/id/:quizId" component={AnswerQuiz} />
       <Route path="/quiz/:creatorSlug" component={AnswerQuiz} />
       <Route path="/results/:quizId/:attemptId" component={Results} />
       <Route path="/dashboard/:quizId" component={Dashboard} />

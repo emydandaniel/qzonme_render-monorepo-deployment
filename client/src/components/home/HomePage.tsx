@@ -60,13 +60,17 @@ const HomePage: React.FC = () => {
     
     setMyQuizzes(validQuizzes);
     
-    // Check if there's a pending quiz code or slug in session storage
+    // Check if there's a pending quiz code, ID or slug in session storage
     const pendingQuizCode = sessionStorage.getItem("pendingQuizCode");
+    const pendingQuizId = sessionStorage.getItem("pendingQuizId");
     const pendingQuizSlug = sessionStorage.getItem("pendingQuizSlug");
     
     if (pendingQuizCode) {
       setPendingQuiz({ type: 'code', value: pendingQuizCode });
       sessionStorage.removeItem("pendingQuizCode");
+    } else if (pendingQuizId) {
+      setPendingQuiz({ type: 'id', value: pendingQuizId });
+      sessionStorage.removeItem("pendingQuizId");
     } else if (pendingQuizSlug) {
       setPendingQuiz({ type: 'slug', value: pendingQuizSlug });
       sessionStorage.removeItem("pendingQuizSlug");

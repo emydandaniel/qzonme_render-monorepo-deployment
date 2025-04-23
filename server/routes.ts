@@ -120,6 +120,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get quiz by ID - for "Try Again" feature
+  app.get("/api/quizzes/id/:quizId", async (req, res) => {
+    try {
+      const quizId = parseInt(req.params.quizId);
+      if (isNaN(quizId)) {
+        return res.status(400).json({ message: "Invalid quiz ID format" });
+      }
+      
+      console.log(`Looking up quiz with ID: "${quizId}"`);
+      const quiz = await storage.getQuiz(quizId);
+      
+      if (!quiz) {
+        console.log(`No quiz found with ID: "${quizId}"`);
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      
+      // Check if the quiz is expired (older than 30 days)
+      const isExpired = storage.isQuizExpired(quiz);
+      if (isExpired) {
+        return res.status(410).json({ 
+          message: "Quiz expired", 
+          expired: true,
+          detail: "This quiz has expired. Quizzes are available for 30 days after creation."
+        });
+      }
+      
+      res.json(quiz);
+    } catch (error) {
+      console.error(`Error fetching quiz by ID "${req.params.quizId}":`, error);
+      res.status(500).json({ message: "Failed to fetch quiz" });
+    }
+  });
+
   app.get("/api/quizzes/slug/:urlSlug", async (req, res) => {
     try {
       const urlSlug = req.params.urlSlug;
