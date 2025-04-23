@@ -19,6 +19,7 @@ export const quizzes = pgTable("quizzes", {
   creatorName: text("creator_name").notNull(),
   accessCode: text("access_code").notNull().unique(),
   urlSlug: text("url_slug").notNull().unique(),
+  dashboardToken: text("dashboard_token").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

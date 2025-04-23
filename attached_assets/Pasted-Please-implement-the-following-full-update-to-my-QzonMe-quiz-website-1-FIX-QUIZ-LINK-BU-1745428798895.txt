@@ -1,0 +1,69 @@
+Please implement the following full update to my QzonMe quiz website:
+
+---
+
+1️⃣ FIX QUIZ LINK BUG:
+
+Right now, when I try to create a new quiz and enter a fresh name (e.g., “adam”), the app still generates a quiz link using a previous quiz creator's name (e.g., “wizzy”), even across different browsers and devices. This causes major bugs and confusion.
+
+Fix this by:
+
+- Always using the name entered in the current session during quiz creation to generate the quiz link.
+- Completely ignore any stored or cached quiz creator name from localStorage, React state, or memory.
+- Ensure each new quiz starts with a clean state and generates a fresh, unique link like `/quiz/adam-xxxxx`.
+- Do not reuse previous quiz names or IDs unless manually entered again.
+
+---
+
+2️⃣ IMPLEMENT SECURE DASHBOARD ACCESS USING TOKENS:
+
+We are removing the old localStorage-based system and replacing it with a secure, token-based system for dashboard access.
+
+- After a quiz is created, generate a secure dashboard token (e.g., UUID or unique hash).
+- Store this token in the database with the quiz data.
+- After creation, show the user a unique dashboard link like:  
+  `/dashboard/<dashboard-token>`
+- Do not save this to localStorage. Instead, the user should manually copy or bookmark the link.
+- When a dashboard link is visited, load quiz results and leaderboard based only on the token — not on any stored session.
+
+---
+
+3️⃣ ENFORCE 30-DAY EXPIRATION FOR QUIZZES AND DASHBOARDS:
+
+- All quizzes and dashboard tokens should automatically expire 30 days after their creation.
+- Add a `createdAt` timestamp when each quiz is created and saved.
+- Prevent loading of expired quizzes or dashboards and show a message like “This quiz is no longer available” if it has passed 30 days.
+- Ensure both quiz links and dashboard links respect this expiration window.
+
+---
+
+4️⃣ ADD EXPIRATION WARNING TO USERS:
+
+After a quiz is created, when the shareable link is displayed, also show a message below like:
+
+🕒 **Note:** This quiz and its dashboard will remain active for 30 days from today. After that, the link will expire and no longer be accessible.
+
+Style this with a subtle tooltip or info box so it’s clearly visible but not distracting.
+
+---
+
+5️⃣ REMOVE “VIEW MY DASHBOARD” BUTTON FROM HOMEPAGE:
+
+We are no longer using localStorage to manage dashboard access, so please:
+
+- Remove the “View My Dashboard” button from the homepage
+- Do not check or store any quiz creator ID in localStorage
+- The only way to access the dashboard should now be through the unique `/dashboard/token` link provided after quiz creation
+
+---
+
+Please confirm that:
+
+- New quiz links are generated based only on the name entered
+- Dashboard links are token-based and work across devices
+- No localStorage is used
+- Quizzes and dashboards expire after 30 days
+- Users are notified clearly about the expiration limit
+- The homepage is clean with only “Create Quiz” and “Answer Quiz” buttons
+
+This is the full update to complete the transition to a more stable, secure, and shareable experience for all users.

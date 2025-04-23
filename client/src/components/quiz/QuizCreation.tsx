@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { generateAccessCode, generateUrlSlug } from "@/lib/utils";
+import { generateAccessCode, generateUrlSlug, generateDashboardToken } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -54,12 +54,20 @@ const QuizCreation: React.FC = () => {
 
   const createQuizMutation = useMutation({
     mutationFn: async () => {
-      // Create the quiz
+      // Always use the current session's userName to ensure a fresh slug and prevent bugs
+      const currentUserName = sessionStorage.getItem("userName") || "";
+      
+      if (!currentUserName) {
+        throw new Error("Username is required");
+      }
+      
+      // Create the quiz with a dashboard token
       const quizResponse = await apiRequest("POST", "/api/quizzes", {
         creatorId: userId,
-        creatorName: userName,
+        creatorName: currentUserName,
         accessCode: generateAccessCode(),
-        urlSlug: generateUrlSlug(userName)
+        urlSlug: generateUrlSlug(currentUserName),
+        dashboardToken: generateDashboardToken()
       });
       const quiz = await quizResponse.json();
       

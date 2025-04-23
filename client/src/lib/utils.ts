@@ -48,6 +48,13 @@ export function generateUrlSlug(creatorName: string): string {
   return `${cleanName}-${randomChars}`;
 }
 
+// Generate a secure dashboard token (UUID format)
+export function generateDashboardToken(): string {
+  // Create a reasonably secure token without dependencies
+  const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
+
 export function getRemarkByScore(score: number, total: number): string {
   const percentage = total === 0 ? 0 : (score / total) * 100;
   
