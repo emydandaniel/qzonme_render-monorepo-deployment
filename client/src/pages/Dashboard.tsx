@@ -85,7 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
 
   if (isLoadingQuiz || (quizId && (isLoadingQuestions || isLoadingAttempts))) {
     return (
-      <Layout>
+      <div className="container mx-auto px-4 py-8">
         <Card>
           <CardContent className="flex items-center justify-center p-6 min-h-[200px]">
             <div className="text-center">
@@ -94,13 +94,13 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
             </div>
           </CardContent>
         </Card>
-      </Layout>
+      </div>
     );
   }
 
   if (quizError || !quiz) {
     return (
-      <Layout>
+      <div className="container mx-auto px-4 py-8">
         <Card>
           <CardContent className="p-6">
             <div className="text-center">
@@ -109,14 +109,14 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
             </div>
           </CardContent>
         </Card>
-      </Layout>
+      </div>
     );
   }
 
   // Check if the quiz has expired
   if (isQuizExpired(quiz.createdAt)) {
     return (
-      <Layout>
+      <div className="container mx-auto px-4 py-8">
         <Card>
           <CardContent className="p-6">
             <div className="text-center">
@@ -128,7 +128,7 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
             </div>
           </CardContent>
         </Card>
-      </Layout>
+      </div>
     );
   }
 
@@ -139,26 +139,24 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
   console.log("Dashboard rendering with attempts:", attempts);
 
   return (
-    <>
-      <Layout>
-        {/* Expiration Warning */}
-        <Alert variant="default" className="mb-6 border-amber-500 bg-amber-50 text-amber-700">
-          <Clock className="h-4 w-4 text-amber-600" />
-          <AlertTitle>Quiz Expiration</AlertTitle>
-          <AlertDescription>
-            This quiz will expire on {formatExpirationDate(quiz.createdAt)}. After this date, 
-            the quiz and dashboard will no longer be accessible.
-          </AlertDescription>
-        </Alert>
-        
-        <DashboardView
-          quizId={quiz.id}
-          accessCode={quiz.accessCode}
-          questions={questions}
-          attempts={attempts}
-        />
-      </Layout>
-    </>
+    <div className="container mx-auto px-4 py-8">
+      {/* Expiration Warning */}
+      <Alert variant="default" className="mb-6 border-amber-500 bg-amber-50 text-amber-700">
+        <Clock className="h-4 w-4 text-amber-600" />
+        <AlertTitle>Quiz Expiration</AlertTitle>
+        <AlertDescription>
+          This quiz will expire on {formatExpirationDate(quiz.createdAt)}. After this date, 
+          the quiz and dashboard will no longer be accessible.
+        </AlertDescription>
+      </Alert>
+      
+      <DashboardView
+        quizId={quiz.id}
+        accessCode={quiz.accessCode}
+        questions={questions}
+        attempts={attempts}
+      />
+    </div>
   );
 };
 
