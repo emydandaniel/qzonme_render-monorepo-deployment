@@ -1,11 +1,13 @@
 import React from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Question, QuizAttempt } from "@shared/schema";
 import { formatPercentage } from "@/lib/utils";
 import Layout from "../common/Layout";
-import { Share } from "lucide-react";
+import { Share, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardProps {
   quizId: number;
@@ -21,6 +23,34 @@ const Dashboard: React.FC<DashboardProps> = ({
   attempts 
 }) => {
   const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Invalidate and refetch all relevant queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] }),
+        queryClient.invalidateQueries({ queryKey: [`/api/quizzes/${quizId}/questions`] })
+      ]);
+      
+      toast({
+        title: "Dashboard refreshed",
+        description: "Latest quiz attempt data has been loaded",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh failed",
+        description: "Could not load the latest data. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   
   const totalAttempts = attempts.length;
   const averageScore = attempts.length > 0
@@ -39,9 +69,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Calculate question performance
   const questionPerformance = questions.map(question => {
-    const allAnswersForQuestion = attempts.flatMap(attempt => 
-      attempt.answers.filter(a => a.questionId === question.id)
-    );
+    // Use type assertion to handle the answers property
+    const allAnswersForQuestion = attempts.flatMap(attempt => {
+      const answers = attempt.answers as { questionId: number; isCorrect: boolean; userAnswer: any }[];
+      return answers.filter(a => a.questionId === question.id);
+    });
     
     const correctAnswersCount = allAnswersForQuestion.filter(a => a.isCorrect).length;
     const correctPercentage = allAnswersForQuestion.length > 0
@@ -117,7 +149,20 @@ const Dashboard: React.FC<DashboardProps> = ({
           
           {/* Full Leaderboard */}
           <div className="mb-6">
-            <h3 className="font-poppins font-semibold text-lg mb-3">Leaderboard</h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-poppins font-semibold text-lg">Leaderboard</h3>
+              <Button 
+                type="button" 
+                size="sm"
+                variant="outline" 
+                className="flex items-center h-8" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`mr-2 h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+              </Button>
+            </div>
             <div className="overflow-hidden rounded-lg border border-gray-200">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
