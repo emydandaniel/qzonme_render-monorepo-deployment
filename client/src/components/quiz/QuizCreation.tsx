@@ -52,11 +52,39 @@ const QuizCreation: React.FC = () => {
     console.log("🧹 COMPLETELY RESETTING ALL STORAGE AND STATE 🧹");
     
     try {
+      // CRITICAL FIX: Explicitly force reset the creator name to empty
+      setCreatorName("");
+      hasUserEnteredName.current = false;
+      
+      // Clear all form fields
+      setQuestionText("");
+      setOptions(["", "", "", ""]);
+      setCorrectOption(0);
+      setQuestionImage(null);
+      setQuestionImagePreview(null);
+      setQuestions([]);
+      setCurrentQuestionIndex(0);
+      
       // First clear sessionStorage of all quiz-related items
       sessionStorage.clear(); // Clear ALL sessionStorage completely
       
       // Also clear localStorage - should be empty but just to be safe
       localStorage.clear(); // Clear ALL localStorage completely
+      
+      // Clear DOM storage specifically searching for problematic keys
+      Object.keys(window).forEach(key => {
+        if (key.includes('Storage')) {
+          try {
+            // @ts-ignore - Accessing potentially dynamic storage objects
+            const storage = window[key];
+            if (storage && typeof storage.clear === 'function') {
+              storage.clear();
+            }
+          } catch (e) {
+            // Ignore errors from inaccessible storage
+          }
+        }
+      });
             
       // Set a fresh ID to ensure uniqueness this session
       const uniqueSessionId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
@@ -65,11 +93,18 @@ const QuizCreation: React.FC = () => {
       console.log("✅ All browser storage completely wiped for absolute fresh state");
       console.log("✅ Fresh session ID generated:", uniqueSessionId);
       
-      // Make this form field completely empty on load to force explicit typing
-      setCreatorName(""); 
+      // Force the browser to treat this as a fresh page by setting a reload marker
+      sessionStorage.setItem("componentFreshlyMounted", "true");
     } catch (err) {
       console.error("Error clearing storage:", err);
     }
+    
+    // Return cleanup function to ensure complete reset between mounts
+    return () => {
+      console.log("♻️ Cleaning up QuizCreation component");
+      // Clear any potentially cached values on unmount
+      sessionStorage.removeItem("currentEditingImageUrl");
+    };
   }, []);
 
   // We will fetch these values at the time of quiz creation, not component load time
@@ -459,28 +494,68 @@ const QuizCreation: React.FC = () => {
             <span className="text-sm text-muted-foreground">Min. 5 questions</span>
           </div>
           
-          {/* IMPORTANT: Creator name input - directly entered, not from session storage */}
-          <div className="mb-4 border-b border-gray-200 pb-4">
-            <Label htmlFor="creator-name" className="block text-sm font-medium mb-1">
-              Your Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              type="text"
-              id="creator-name"
-              className={`input-field ${hasUserEnteredName.current ? 'border-green-400' : ''}`}
-              placeholder="Enter your name"
-              value={creatorName}
-              onChange={(e) => {
-                setCreatorName(e.target.value);
-                if (e.target.value.trim()) {
-                  hasUserEnteredName.current = true;
-                }
-              }}
-              required
-              autoFocus
-            />
+          {/* IMPORTANT: Creator name input with confirmation button to lock it in */}
+          <div className="mb-6 border-b border-gray-200 pb-6">
+            <div className="flex justify-between items-center mb-1">
+              <Label htmlFor="creator-name" className="block text-sm font-medium">
+                Your Name <span className="text-red-500">*</span>
+              </Label>
+              {hasUserEnteredName.current && (
+                <span className="text-xs font-medium text-green-600">
+                  ✓ Name confirmed
+                </span>
+              )}
+            </div>
+            
+            <div className="flex gap-2 mb-1">
+              <Input
+                type="text"
+                id="creator-name"
+                className={`input-field flex-1 ${hasUserEnteredName.current ? 'border-green-400 bg-green-50' : ''}`}
+                placeholder="Enter your name"
+                value={creatorName}
+                onChange={(e) => {
+                  setCreatorName(e.target.value);
+                  // If name is changed, unconfirm it
+                  if (hasUserEnteredName.current) {
+                    hasUserEnteredName.current = false;
+                  }
+                }}
+                disabled={hasUserEnteredName.current}
+                required
+              />
+              
+              <Button
+                type="button"
+                onClick={() => {
+                  if (creatorName.trim()) {
+                    hasUserEnteredName.current = true;
+                    toast({
+                      title: "Name confirmed",
+                      description: `Your quiz will be created with the name "${creatorName}"`,
+                    });
+                  } else {
+                    toast({
+                      title: "Name required",
+                      description: "Please enter your name before confirming",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                className={hasUserEnteredName.current ? "bg-green-600 hover:bg-green-700" : ""}
+                disabled={hasUserEnteredName.current}
+              >
+                {hasUserEnteredName.current ? "Confirmed ✓" : "Confirm Name"}
+              </Button>
+            </div>
+            
             <p className="mt-1 text-xs text-muted-foreground">
               This name will be used to create your unique quiz link. Enter it exactly as you want it to appear.
+              {!hasUserEnteredName.current && (
+                <span className="block mt-1 text-amber-600">
+                  You need to confirm your name with the button before continuing.
+                </span>
+              )}
             </p>
           </div>
           
