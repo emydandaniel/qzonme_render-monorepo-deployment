@@ -1,8 +1,8 @@
 import React from "react";
-import QuizCreation from "@/components/quiz/QuizCreation";
+import QuizCreationNew from "@/components/quiz/QuizCreationNew";
 
 const CreateQuiz: React.FC = () => {
-  return <QuizCreation />;
+  return <QuizCreationNew />;
 };
 
 export default CreateQuiz;
