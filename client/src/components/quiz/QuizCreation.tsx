@@ -65,26 +65,18 @@ const QuizCreation: React.FC = () => {
       setQuestions([]);
       setCurrentQuestionIndex(0);
       
-      // First clear sessionStorage of all quiz-related items
-      sessionStorage.clear(); // Clear ALL sessionStorage completely
-      
-      // Also clear localStorage - should be empty but just to be safe
-      localStorage.clear(); // Clear ALL localStorage completely
-      
-      // Clear DOM storage specifically searching for problematic keys
-      Object.keys(window).forEach(key => {
-        if (key.includes('Storage')) {
-          try {
-            // @ts-ignore - Accessing potentially dynamic storage objects
-            const storage = window[key];
-            if (storage && typeof storage.clear === 'function') {
-              storage.clear();
-            }
-          } catch (e) {
-            // Ignore errors from inaccessible storage
-          }
-        }
-      });
+      // Clear all browser storage
+      try {
+        // First clear sessionStorage of all quiz-related items
+        sessionStorage.clear();
+        
+        // Also clear localStorage - should be empty but just to be safe
+        localStorage.clear();
+        
+        console.log("✅ All browser storage successfully cleared");
+      } catch (e) {
+        console.error("Error clearing browser storage:", e);
+      }
             
       // Set a fresh ID to ensure uniqueness this session
       const uniqueSessionId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
