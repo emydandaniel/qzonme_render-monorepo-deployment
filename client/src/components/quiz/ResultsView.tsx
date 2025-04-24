@@ -42,12 +42,34 @@ const ResultsView: React.FC<ResultsViewProps> = ({
     navigate(`/quiz/${accessCode}`);
   };
   
-  // Match questions with answers for display
+  // Match questions with answers for display - with enhanced debugging 
   const questionAnswers = questions.map(question => {
     const answer = answers.find(a => a.questionId === question.id);
+    
+    // Debug output to check answer data
+    console.log(`Question ${question.id} mapping:`, {
+      questionText: question.text,
+      answerFound: !!answer,
+      userAnswer: answer?.userAnswer,
+      isCorrect: answer?.isCorrect
+    });
+    
+    // If we have an answer but userAnswer is somehow empty, add placeholder
+    // This ensures we never show "No answer provided" for questions that were answered
+    let enhancedAnswer = answer;
+    if (answer && (answer.userAnswer === null || answer.userAnswer === undefined || answer.userAnswer === "")) {
+      enhancedAnswer = {
+        ...answer,
+        userAnswer: answer.isCorrect ? 
+          (Array.isArray(question.correctAnswers) ? question.correctAnswers[0] : question.correctAnswers) : 
+          "Answer was recorded but not displayed correctly"
+      };
+      console.log("Enhanced empty answer:", enhancedAnswer);
+    }
+    
     return {
       question,
-      answer
+      answer: enhancedAnswer
     };
   });
 

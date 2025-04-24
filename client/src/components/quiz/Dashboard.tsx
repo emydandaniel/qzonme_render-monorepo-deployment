@@ -53,16 +53,15 @@ const Dashboard: React.FC<DashboardProps> = ({
       console.log("Dashboard manual refresh data:", { 
         attempts: newAttempts.length, 
         questions: newQuestions.length,
-        attemptIds: newAttempts.map(a => a.id)
+        attemptIds: newAttempts.map((a: any) => a.id)
       });
       
-      // Completely replace cache for all matching queries regardless of their keys
-      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
-      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/questions`] });
+      // Completely clear all queries from cache - this is extreme but effective
+      queryClient.clear(); // Clear entire cache
       
-      // Force React Query to recognize new data
+      // Force page reload instead of just query refetch - this is the most reliable way
       window.setTimeout(() => {
-        // Update the cache with new data after a brief delay
+        // Try React Query update first
         queryClient.setQueryData([`/api/quizzes/${quizId}/attempts`], newAttempts);
         queryClient.setQueryData([`/api/quizzes/${quizId}/questions`], newQuestions);
         
@@ -72,6 +71,12 @@ const Dashboard: React.FC<DashboardProps> = ({
           description: `Latest data loaded: ${newAttempts.length} attempts`,
           variant: "default"
         });
+        
+        // Trigger hard refresh if there are any attempts
+        if (newAttempts.length > 0) {
+          console.log("Forcing complete reload to ensure latest data");
+          window.location.reload();
+        }
       }, 100);
     } catch (error) {
       console.error("Dashboard refresh error:", error);

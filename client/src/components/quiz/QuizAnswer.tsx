@@ -208,13 +208,31 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
                 {currentQuestion.text}
               </h3>
               
-              {/* Display question image if available */}
+              {/* Display question image if available with loading indicator */}
               {currentQuestion.imageUrl && (
-                <div className="mt-3 mb-4">
+                <div className="mt-3 mb-4 relative">
+                  {/* Loading placeholder */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+                    <div className="animate-pulse text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-500">Loading image...</p>
+                    </div>
+                  </div>
+                  
+                  {/* Actual image with preload */}
                   <img 
                     src={currentQuestion.imageUrl} 
                     alt="Question image" 
-                    className="max-w-full max-h-64 mx-auto rounded-lg"
+                    className="max-w-full max-h-64 mx-auto rounded-lg relative z-10"
+                    onLoad={(e) => {
+                      // Hide placeholder once image is loaded
+                      const target = e.target as HTMLImageElement;
+                      const parent = target.parentElement;
+                      if (parent && parent.firstElementChild) {
+                        parent.firstElementChild.classList.add('hidden');
+                      }
+                    }}
+                    loading="eager" // Force eager loading
                   />
                 </div>
               )}
