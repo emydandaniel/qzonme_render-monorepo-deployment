@@ -515,20 +515,7 @@ const QuizCreation: React.FC = () => {
       
       <Card key={mountId} className="mb-6">
         <CardContent className="pt-6">
-          {/* Creator Name Display */}
-          <div className="mb-6">
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-center justify-between">
-              <div>
-                <Label className="block text-sm font-medium mb-1 text-green-800">
-                  Quiz Creator
-                </Label>
-                <p className="text-lg font-semibold">{creatorName}</p>
-                <p className="text-xs text-green-700 mt-1">
-                  This name will be shown to people taking your quiz
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* No name display - using name from homepage */}
           
           {/* Progress indicator */}
           <div className="flex justify-center space-x-2 mb-6">
