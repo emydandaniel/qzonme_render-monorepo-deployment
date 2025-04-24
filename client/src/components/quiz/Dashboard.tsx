@@ -30,18 +30,39 @@ const Dashboard: React.FC<DashboardProps> = ({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Invalidate and refetch all relevant queries
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] }),
-        queryClient.invalidateQueries({ queryKey: [`/api/quizzes/${quizId}/questions`] })
+      // Force refetch with server data by removing previous data from cache
+      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
+      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/questions`] });
+      
+      // Manually fetch fresh data
+      const [attemptsResponse, questionsResponse] = await Promise.all([
+        fetch(`/api/quizzes/${quizId}/attempts`),
+        fetch(`/api/quizzes/${quizId}/questions`)
       ]);
+      
+      if (!attemptsResponse.ok || !questionsResponse.ok) {
+        throw new Error("Failed to fetch fresh data");
+      }
+      
+      // Update the cache with new data
+      const newAttempts = await attemptsResponse.json();
+      const newQuestions = await questionsResponse.json();
+      
+      queryClient.setQueryData([`/api/quizzes/${quizId}/attempts`], newAttempts);
+      queryClient.setQueryData([`/api/quizzes/${quizId}/questions`], newQuestions);
+      
+      console.log("Dashboard refreshed with new data:", { 
+        attempts: newAttempts.length, 
+        questions: newQuestions.length 
+      });
       
       toast({
         title: "Dashboard refreshed",
-        description: "Latest quiz attempt data has been loaded",
+        description: `Latest data loaded: ${newAttempts.length} attempts`,
         variant: "default"
       });
     } catch (error) {
+      console.error("Dashboard refresh error:", error);
       toast({
         title: "Refresh failed",
         description: "Could not load the latest data. Please try again.",

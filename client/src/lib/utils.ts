@@ -6,8 +6,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPercentage(score: number, total: number): string {
-  if (total === 0) return "0%";
-  return Math.round((score / total) * 100) + "%";
+  if (total <= 0) return "0%";
+  
+  // Ensure score doesn't exceed total
+  const validScore = Math.min(score, total);
+  
+  // Calculate percentage with the valid score
+  return Math.round((validScore / total) * 100) + "%";
 }
 
 export function createAvatarPlaceholder(name: string): string {
@@ -86,7 +91,13 @@ export function generateDashboardToken(): string {
 }
 
 export function getRemarkByScore(score: number, total: number): string {
-  const percentage = total === 0 ? 0 : (score / total) * 100;
+  if (total <= 0) return "Perfect! You're basically my twin 🧠❤️";
+  
+  // Ensure score doesn't exceed total
+  const validScore = Math.min(score, total);
+  
+  // Calculate percentage with the valid score
+  const percentage = (validScore / total) * 100;
   
   if (percentage <= 20) {
     return "Oops! You don't know me at all 😅";
