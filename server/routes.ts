@@ -299,15 +299,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/quizzes/:quizId/attempts", async (req, res) => {
     try {
+      // Add aggressive anti-caching headers
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       const quizId = parseInt(req.params.quizId);
+      const timestamp = Date.now(); // For debugging
+      
+      console.log(`[${timestamp}] Fetching attempts for quiz ${quizId}`);
       
       if (isNaN(quizId)) {
         return res.status(400).json({ message: "Invalid quiz ID" });
       }
       
+      // Add a small delay to ensure previous writes have been committed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const attempts = await storage.getQuizAttempts(quizId);
-      res.json(attempts);
+      
+      console.log(`[${timestamp}] Returning ${attempts.length} attempts for quiz ${quizId}`);
+      
+      // Add a server timestamp in the response to help client detect freshness
+      res.json({
+        data: attempts,
+        serverTime: timestamp,
+        count: attempts.length
+      });
     } catch (error) {
+      console.error("Error fetching quiz attempts:", error);
       res.status(500).json({ message: "Failed to fetch quiz attempts" });
     }
   });

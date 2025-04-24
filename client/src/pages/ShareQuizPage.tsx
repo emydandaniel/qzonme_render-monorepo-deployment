@@ -2,6 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import ShareQuiz from "@/components/quiz/ShareQuiz";
 import { useToast } from "@/hooks/use-toast";
+import MetaTags from "@/components/common/MetaTags";
 
 interface ShareQuizPageProps {
   params: {
@@ -13,8 +14,14 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
   const quizId = parseInt(params.quizId);
   const { toast } = useToast();
 
-  // Fetch quiz
-  const { data: quiz, isLoading: isLoadingQuiz, error } = useQuery({
+  // Fetch quiz with proper type
+  const { data: quiz, isLoading: isLoadingQuiz, error } = useQuery<{
+    id: number;
+    accessCode: string;
+    urlSlug: string;
+    creatorName: string;
+    createdAt: string;
+  }>({
     queryKey: [`/api/quizzes/${quizId}`],
     staleTime: 0, // Don't use cached data
     refetchOnMount: true, // Always fetch on component mount
@@ -80,12 +87,26 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     );
   }
 
+  // Use type assertion to help TypeScript understand the quiz structure
+  const quizData = quiz as any;
+  
   return (
-    <ShareQuiz
-      accessCode={quiz.accessCode}
-      quizId={quizId}
-      urlSlug={quiz.urlSlug}
-    />
+    <>
+      {/* Add meta tags for WhatsApp link sharing */}
+      <MetaTags 
+        creatorName={quizData.creatorName}
+        url={`${window.location.origin}/quiz/${quizData.accessCode}`}
+        imageUrl="/favicon.png"
+        title={`${quizData.creatorName}'s Quiz Just for You 💬`}
+        description={`How well do you know ${quizData.creatorName}? Try this private QzonMe quiz they made just for close friends.`}
+      />
+      
+      <ShareQuiz
+        accessCode={quizData.accessCode}
+        quizId={quizId}
+        urlSlug={quizData.urlSlug}
+      />
+    </>
   );
 };
 

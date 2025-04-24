@@ -46,9 +46,15 @@ const Dashboard: React.FC<DashboardProps> = ({
         throw new Error("Failed to fetch fresh data");
       }
       
-      // Get fresh data directly from server
-      const newAttempts = await attemptsResponse.json();
+      // Get fresh data directly from server, handle new response format
+      const attemptsResponseData = await attemptsResponse.json();
       const newQuestions = await questionsResponse.json();
+      
+      // Handle the new response format - server now returns an object with data, serverTime, and count
+      const newAttempts = attemptsResponseData.data || attemptsResponseData; // Fall back for backward compatibility
+      const serverTime = attemptsResponseData.serverTime || Date.now();
+      
+      console.log("Server timestamp:", new Date(serverTime).toISOString());
       
       console.log("Dashboard manual refresh data:", { 
         attempts: newAttempts.length, 
