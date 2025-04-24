@@ -34,7 +34,7 @@ export function showAdInterstitial() {
 }
 
 export function generateUrlSlug(creatorName: string): string {
-  console.log(`➡️ Generating FRESH URL SLUG for name: "${creatorName}"`);
+  console.log(`➡️ Generating URL slug for: "${creatorName}"`);
   
   // CRITICAL FIX: Block empty names entirely
   if (!creatorName || !creatorName.trim()) {
@@ -61,41 +61,19 @@ export function generateUrlSlug(creatorName: string): string {
     cleanName = "quiz" + Date.now().toString().slice(-4);
   }
   
-  // Limit the name to 10 characters max
-  cleanName = cleanName.substring(0, 10);
+  // Limit the name to max 15 characters
+  cleanName = cleanName.substring(0, 15);
   
-  // CRITICAL FIX: Generate multiple independent sources of entropy
-  // 1. Full precise timestamp with milliseconds
-  const fullTimestamp = Date.now().toString();
+  // Generate a short random code (4 characters)
+  const randomString = Math.random().toString(36).substring(2, 6);
   
-  // 2. ISO date converted to a code
-  const dateCode = new Date().toISOString().replace(/[^\d]/g, '').slice(-10);
+  // Generate a short numeric code
+  const numericCode = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   
-  // 3. Multiple random strings with different generation methods
-  const randomString1 = Math.random().toString(36).substring(2, 8);
-  const randomString2 = Math.random().toString(36).substring(2, 6);
+  // Combine for a shorter, more trustworthy slug
+  const slug = `${cleanName}-${randomString}${numericCode}`;
   
-  // 4. Random number using a more precise calculation
-  const randomNum = Math.floor(Math.random() * 1000000);
-  
-  // 5. Additional character-based randomness using array method
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  const randomChars = Array.from(
-    { length: 5 }, 
-    () => chars.charAt(Math.floor(Math.random() * chars.length))
-  ).join('');
-  
-  // 6. Create a completely unique and unpredictable combined format
-  const uniqueId = `${dateCode.slice(-4)}-${randomString1}-${randomString2}`;
-  
-  // Combine all entropy sources with the name for 100% uniqueness
-  // Final format: name-timestamp-uniqueId-randomNum-randomChars
-  const slug = `${cleanName}-${fullTimestamp.slice(-6)}-${uniqueId}-${randomNum}-${randomChars}`;
-  
-  console.log(`✅ GUARANTEED unique slug generated: ${slug}`);
-  console.log(`Base name: "${cleanName}" from "${creatorName}"`);
-  console.log(`Timestamp: ${fullTimestamp.slice(-6)}, Date code: ${dateCode.slice(-4)}`);
-  console.log(`Random components: ${uniqueId}, ${randomNum}, ${randomChars}`);
+  console.log(`✅ Created shortened slug: ${slug}`);
   
   return slug;
 }

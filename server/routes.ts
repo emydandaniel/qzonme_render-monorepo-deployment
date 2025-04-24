@@ -150,8 +150,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If no exact match, try checking if the slug uses a different casing
       if (!quiz) {
-        const allQuizzes = Array.from(storage["quizzes"].values());
-        const slugMatch = allQuizzes.find(q => 
+        // Get all quizzes from the database
+        const allQuizzesList = await db.select().from(quizzes);
+        
+        // Find a case-insensitive match
+        const slugMatch = allQuizzesList.find(q => 
           q.urlSlug.toLowerCase() === urlSlug.toLowerCase()
         );
         
@@ -187,9 +190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dashboardToken = req.params.token;
       console.log(`Looking up quiz with dashboard token: "${dashboardToken}"`);
       
-      // Find the quiz with the given dashboard token
-      const allQuizzes = Array.from(storage["quizzes"].values());
-      const quiz = allQuizzes.find(q => q.dashboardToken === dashboardToken);
+      // Use the storage function to get the quiz by dashboard token
+      const quiz = await storage.getQuizByDashboardToken(dashboardToken);
       
       if (!quiz) {
         console.log(`No quiz found with dashboard token: "${dashboardToken}"`);
@@ -315,8 +317,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid attempt ID" });
       }
       
-      // Find the attempt in all attempts
-      const allAttempts = Array.from(storage["quizAttempts"].values());
+      // Get all attempt IDs from all quizzes
+      // This is a temporary workaround since we don't have a direct getAttemptById method
+      const allQuizzesList = await db.select().from(quizzes);
+      const allAttempts = [];
+      
+      // Gather all attempts for all quizzes
+      for (const quiz of allQuizzesList) {
+        const quizAttempts = await storage.getQuizAttempts(quiz.id);
+        allAttempts.push(...quizAttempts);
+      }
+      
+      // Find the specific attempt
       const attempt = allAttempts.find(a => a.id === attemptId);
       
       if (!attempt) {
