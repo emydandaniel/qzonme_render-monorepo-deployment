@@ -56,24 +56,37 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     return new Date() > expirationDate;
   };
 
-  // Fetch quiz by access code or URL slug
+  // Generate unique cache key for this particular quiz attempt
+  const cacheKey = React.useMemo(() => `quiz-${identifier}-${Date.now()}`, [identifier]);
+
+  // Fetch quiz by access code or URL slug with aggressive cache invalidation
   const { data: quiz, isLoading: isLoadingQuiz, error: quizError } = useQuery<Quiz>({
-    queryKey: [endpoint],
+    queryKey: [endpoint, cacheKey],
     enabled: !!identifier && !!userName && !!userId,
     retry: 3, // Retry failed requests up to 3 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
     staleTime: 0, // Don't use stale data
-    refetchOnMount: true, // Always refetch on mount
+    gcTime: 0, // Don't cache at all
+    refetchOnMount: "always", // Always refetch on mount
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true
   });
   
-  // Debug logs removed
+  console.log("AnswerQuiz - quiz data:", { 
+    quizId: quiz?.id, 
+    creatorName: quiz?.creatorName,
+    accessCode: quiz?.accessCode
+  });
 
-  // Fetch questions for the quiz
+  // Fetch questions for the quiz with aggressive cache invalidation
   const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
-    queryKey: [`/api/quizzes/${quiz?.id}/questions`],
+    queryKey: [`/api/quizzes/${quiz?.id}/questions`, cacheKey],
     enabled: !!quiz?.id,
     staleTime: 0, // Don't use stale data
-    refetchOnMount: true, // Always refetch on mount
+    gcTime: 0, // Don't cache at all
+    refetchOnMount: "always", // Always refetch on mount
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true
   });
 
   // Submit quiz attempt

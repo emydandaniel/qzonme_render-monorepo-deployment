@@ -86,8 +86,19 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
       
       // If this was the last question, complete the quiz
       if (isLastQuestion) {
-        const score = updatedAnswers.filter(a => a.isCorrect).length;
-        onComplete(updatedAnswers, score);
+        // Calculate the score (correct answers count)
+        const correctAnswers = updatedAnswers.filter(a => a.isCorrect).length;
+        
+        // Ensure score cannot exceed total questions
+        const validScore = Math.min(correctAnswers, questions.length);
+        
+        console.log("Quiz completed - calculated score:", {
+          correctAnswers,
+          totalQuestions: questions.length,
+          finalScore: validScore
+        });
+        
+        onComplete(updatedAnswers, validScore);
       } else {
         // Move to next question
         setCurrentQuestionIndex(currentQuestionIndex + 1);

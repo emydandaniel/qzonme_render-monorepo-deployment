@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { QuizAttempt } from "@shared/schema";
 import { formatPercentage } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
@@ -16,62 +16,68 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   currentUserScore = 0,
   currentUserTotalQuestions = 1
 }) => {
-  // Track when attempts data changes to force refresh
-  const [processedAttempts, setProcessedAttempts] = useState<QuizAttempt[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Force refresh the leaderboard data when attempts change
+  // Force refresh the leaderboard data when attempts or current user data changes
   useEffect(() => {
-    console.log("Leaderboard received new attempts data:", { 
+    console.log("Leaderboard received new data:", { 
       attemptsCount: attempts?.length, 
-      attempt_ids: attempts?.map(a => a.id)
+      attempt_ids: attempts?.map(a => a.id),
+      currentUserName,
+      currentUserScore
     });
     
-    // Simulate a small delay to show loading indicator
+    // Show loading state briefly for visual feedback
     setIsRefreshing(true);
-    setTimeout(() => {
-      setProcessedAttempts([...attempts]);
+    const timer = setTimeout(() => {
+      setRefreshKey(prev => prev + 1); // Increment key to force re-render
       setIsRefreshing(false);
     }, 300);
-  }, [attempts, attempts?.length]);
+    
+    return () => clearTimeout(timer);
+  }, [
+    attempts, 
+    attempts?.length, 
+    currentUserName, 
+    currentUserScore, 
+    currentUserTotalQuestions
+  ]);
   
-  console.log("Leaderboard rendering with:", { 
-    attemptsCount: processedAttempts?.length, 
-    currentUserName,
-    currentUserScore 
-  });
-
-  // Create a virtual array that includes both real attempts and current user 
-  // (in case they're not in the attempts list yet)
-  const prepareLeaderboardData = () => {
-    // Start with sorted attempts array (if any)
-    let sortedData = [...(attempts || [])].sort((a, b) => {
-      const scoreA = (a.score / a.totalQuestions) * 100;
-      const scoreB = (b.score / b.totalQuestions) * 100;
+  // Memoize the processed leaderboard data to avoid recalculations
+  const sortedLeaderboardData = useMemo(() => {
+    // Start with sorted attempts array
+    let sortedData = [...(attempts || [])].map(attempt => ({
+      ...attempt,
+      // Ensure score can't exceed total questions
+      score: Math.min(attempt.score, attempt.totalQuestions)
+    })).sort((a, b) => {
+      const scoreA = (a.score / (a.totalQuestions || 1)) * 100;
+      const scoreB = (b.score / (b.totalQuestions || 1)) * 100;
       return scoreB - scoreA;
     });
 
     // Check if current user exists in the attempts data
-    const userExists = currentUserName && sortedData.some(a => a.userName === currentUserName);
+    const userExists = currentUserName && sortedData.some(a => 
+      a.userName?.toLowerCase() === currentUserName?.toLowerCase()
+    );
     
     // If user doesn't exist in the attempts but we have their name and score, add them
-    if (currentUserName && !userExists) {
+    if (currentUserName && !userExists && currentUserScore !== undefined) {
       // Create a virtual attempt for the current user
       const userAttempt = {
-        id: -1, // Use negative ID to indicate it's a virtual entry
+        id: -1, // Virtual entry marker
         quizId: 0,
         userAnswerId: 0,
         userName: currentUserName,
-        score: currentUserScore,
-        totalQuestions: currentUserTotalQuestions,
+        score: Math.min(currentUserScore, currentUserTotalQuestions || 1),
+        totalQuestions: currentUserTotalQuestions || 1,
         answers: [],
         completedAt: new Date()
       };
       
-      // Add to sorted array to get correct position
+      // Add to sorted array and resort
       sortedData.push(userAttempt);
-      
-      // Resort to ensure it's in the right position
       sortedData = sortedData.sort((a, b) => {
         const scoreA = (a.score / (a.totalQuestions || 1)) * 100;
         const scoreB = (b.score / (b.totalQuestions || 1)) * 100;
@@ -80,9 +86,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
     }
     
     return sortedData;
-  };
-
-  // If refreshing show loading state
+  }, [attempts, currentUserName, currentUserScore, currentUserTotalQuestions, refreshKey]);
+  
+  // If refreshing, show loading state
   if (isRefreshing) {
     return (
       <div className="overflow-hidden rounded-lg border border-gray-200 p-8 text-center">
@@ -91,48 +97,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
       </div>
     );
   }
-  
-  // Generate the leaderboard rows using the processed attempts
-  const leaderboardData = () => {
-    // Start with sorted processed attempts
-    let sortedData = [...(processedAttempts || [])].sort((a, b) => {
-      const scoreA = (a.score / a.totalQuestions) * 100;
-      const scoreB = (b.score / b.totalQuestions) * 100;
-      return scoreB - scoreA;
-    });
-
-    // Check if current user exists in the attempts data
-    const userExists = currentUserName && sortedData.some(a => a.userName === currentUserName);
-    
-    // If user doesn't exist in the attempts but we have their name and score, add them
-    if (currentUserName && !userExists && currentUserScore !== undefined) {
-      // Create a virtual attempt for the current user
-      const userAttempt = {
-        id: -1, // Use negative ID to indicate it's a virtual entry
-        quizId: 0,
-        userAnswerId: 0,
-        userName: currentUserName,
-        score: currentUserScore,
-        totalQuestions: currentUserTotalQuestions,
-        answers: [],
-        completedAt: new Date()
-      };
-      
-      // Add to sorted array to get correct position
-      sortedData.push(userAttempt);
-      
-      // Resort to ensure it's in the right position
-      sortedData = sortedData.sort((a, b) => {
-        const scoreA = (a.score / (a.totalQuestions || 1)) * 100;
-        const scoreB = (b.score / (b.totalQuestions || 1)) * 100;
-        return scoreB - scoreA;
-      });
-    }
-    
-    return sortedData;
-  };
-  
-  const sortedLeaderboardData = leaderboardData();
   
   // If there's no data at all, show empty state
   if (sortedLeaderboardData.length === 0) {
