@@ -24,12 +24,34 @@ const QuizCreation: React.FC = () => {
   // Creator name from homepage (stored in sessionStorage)
   const [creatorName, setCreatorName] = useState("");
   
+  // UI navigation and toast
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  
   // Get the username directly from session storage once
   React.useEffect(() => {
-    const username = sessionStorage.getItem("username") || "";
+    // Check both possible keys from session storage
+    const username = sessionStorage.getItem("username") || sessionStorage.getItem("userName") || "";
     console.log("Retrieved username from session:", username);
+    // Debug: List all session storage keys to verify what's available
+    console.log("All session storage items:", 
+      Object.keys(sessionStorage).map(key => {
+        return { key, value: sessionStorage.getItem(key) };
+      })
+    );
+    
+    // Set the creator name from session storage
     setCreatorName(username);
-  }, []);
+    
+    // Make sure we're getting the creator name right
+    if (!username) {
+      toast({
+        title: "Important",
+        description: "Please return to the home page and enter your name first",
+        variant: "destructive"
+      });
+    }
+  }, [toast]);
   
   // Question state
   const [questionText, setQuestionText] = useState("");
@@ -44,10 +66,6 @@ const QuizCreation: React.FC = () => {
   
   // Collection of questions for this quiz
   const [questions, setQuestions] = useState<Question[]>([]);
-  
-  // UI navigation
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
   
   // Minimum required questions indicator
   const requiredQuestionsCount = 5;

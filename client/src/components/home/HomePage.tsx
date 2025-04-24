@@ -59,7 +59,7 @@ const HomePage: React.FC = () => {
     try {
       const user = await createUserMutation.mutateAsync(userName);
       // Store user in session
-      sessionStorage.setItem("userName", userName);
+      sessionStorage.setItem("username", userName); // Use "username" to match what QuizCreation expects 
       sessionStorage.setItem("userId", user.id);
       
       // Navigate to quiz creation
@@ -88,7 +88,7 @@ const HomePage: React.FC = () => {
     try {
       const user = await createUserMutation.mutateAsync(userName);
       // Store user in session
-      sessionStorage.setItem("userName", userName);
+      sessionStorage.setItem("username", userName); // Use "username" to match what QuizCreation expects
       sessionStorage.setItem("userId", user.id);
       
       // If there's a pending quiz, navigate to it
