@@ -22,13 +22,15 @@ const QuizCreation: React.FC = () => {
   // Add additional entropy (timestamp + random) to React's useId to guarantee uniqueness
   const mountId = React.useId() + "-" + Math.random().toString(36).substring(2, 15) + "-" + Date.now();
   
-  // Creator name - directly entered in this form, NEVER retrieved from storage
-  // This is a controlled component with no default value to ensure user must enter name each time
-  const [creatorName, setCreatorName] = useState("");
+  // Creator name - retrieved from username in session storage (set on homepage)
+  const [creatorName, setCreatorName] = useState(() => {
+    // Get the username from session storage as default
+    const savedUsername = sessionStorage.getItem("username") || "";
+    return savedUsername;
+  });
   
-  // Keep track if the name has been confirmed with a regular state variable
-  // Using a state instead of ref to ensure proper re-rendering
-  const [isNameConfirmed, setIsNameConfirmed] = useState(false);
+  // Since we get the name from homepage, it's already confirmed
+  const [isNameConfirmed, setIsNameConfirmed] = useState(true);
 
   // Question state
   const [questionText, setQuestionText] = useState("");
@@ -69,15 +71,27 @@ const QuizCreation: React.FC = () => {
       setQuestions([]);
       setCurrentQuestionIndex(0);
       
-      // Clear all browser storage
+      // Selectively clear storage items, preserving user identity
       try {
-        // First clear sessionStorage of all quiz-related items
+        // Save username before clearing
+        const username = sessionStorage.getItem("username");
+        const userId = sessionStorage.getItem("userId");
+        
+        // Clear session storage except for critical identity values
         sessionStorage.clear();
         
-        // Also clear localStorage - should be empty but just to be safe
+        // Restore username and userId
+        if (username) sessionStorage.setItem("username", username);
+        if (userId) sessionStorage.setItem("userId", userId);
+        
+        // Make creator name match the username
+        setCreatorName(username || "");
+        setIsNameConfirmed(true);
+        
+        // Clear localStorage
         localStorage.clear();
         
-        console.log("✅ All browser storage successfully cleared");
+        console.log("✅ Browser storage cleared while preserving user identity");
       } catch (e) {
         console.error("Error clearing browser storage:", e);
       }
@@ -416,15 +430,7 @@ const QuizCreation: React.FC = () => {
       return;
     }
     
-    // Force user to confirm their name first
-    if (!isNameConfirmed) {
-      toast({
-        title: "Please confirm your name first",
-        description: "Click the 'Confirm Name' button next to your name",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Name is already confirmed from homepage
     
     // Then validate the quiz has enough questions
     if (!validateQuiz(questions)) {
@@ -509,58 +515,19 @@ const QuizCreation: React.FC = () => {
       
       <Card key={mountId} className="mb-6">
         <CardContent className="pt-6">
-          {/* Creator Name */}
+          {/* Creator Name Display */}
           <div className="mb-6">
-            <Label htmlFor="creator-name" className="block text-sm font-medium mb-1">
-              Your Name
-            </Label>
-            
-            {isNameConfirmed && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-2 mb-2">
-                <p className="text-green-800 text-sm">
-                  Name confirmed: <strong>{creatorName}</strong>
+            <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-center justify-between">
+              <div>
+                <Label className="block text-sm font-medium mb-1 text-green-800">
+                  Quiz Creator
+                </Label>
+                <p className="text-lg font-semibold">{creatorName}</p>
+                <p className="text-xs text-green-700 mt-1">
+                  This name will be shown to people taking your quiz
                 </p>
               </div>
-            )}
-            
-            <div className="flex gap-2 mb-1">
-              <Input
-                type="text"
-                id="creator-name"
-                className={`input-field flex-1 ${isNameConfirmed ? 'border-green-400 bg-green-50' : ''}`}
-                placeholder="Enter your name"
-                value={creatorName}
-                onChange={(e) => {
-                  // Simply set the name without side effects
-                  setCreatorName(e.target.value);
-                  
-                  // Reset confirmation if name changes significantly
-                  if (isNameConfirmed && e.target.value.trim() !== creatorName.trim()) {
-                    setIsNameConfirmed(false);
-                  }
-                }}
-                disabled={isNameConfirmed}
-                required
-              />
-              
-              <Button
-                type="button"
-                onClick={handleConfirmName}
-                className={isNameConfirmed ? "bg-green-600 hover:bg-green-700" : ""}
-                disabled={isNameConfirmed}
-              >
-                {isNameConfirmed ? "Confirmed ✓" : "Confirm Name"}
-              </Button>
             </div>
-            
-            <p className="mt-1 text-xs text-muted-foreground">
-              This name will be used to create your unique quiz link. Enter it exactly as you want it to appear.
-              {!isNameConfirmed && (
-                <span className="block mt-1 text-amber-600">
-                  You need to confirm your name with the button before continuing.
-                </span>
-              )}
-            </p>
           </div>
           
           {/* Progress indicator */}
@@ -574,14 +541,7 @@ const QuizCreation: React.FC = () => {
           </div>
           
           {/* Question Editor */}
-          <div className={`question-container ${!isNameConfirmed ? 'opacity-60 pointer-events-none' : ''}`}>
-            {!isNameConfirmed && (
-              <div className="bg-amber-50 border border-amber-300 rounded-md p-3 mb-4 text-center">
-                <p className="text-amber-800 text-sm font-medium">
-                  Please confirm your name above before adding questions
-                </p>
-              </div>
-            )}
+          <div className="question-container">
             
             <div className="mb-4">
               <Label htmlFor="question-text" className="block text-sm font-medium mb-1">
@@ -594,7 +554,6 @@ const QuizCreation: React.FC = () => {
                 placeholder="Ask something about yourself..."
                 value={questionText}
                 onChange={(e) => setQuestionText(e.target.value)}
-                disabled={!isNameConfirmed}
               />
             </div>
             
@@ -663,16 +622,13 @@ const QuizCreation: React.FC = () => {
               type="button" 
               className="btn-primary" 
               onClick={handleAddQuestion}
-              disabled={uploadImageMutation.isPending || !isNameConfirmed}
-              title={!isNameConfirmed ? "Please confirm your name first" : ""}
+              disabled={uploadImageMutation.isPending}
             >
               {uploadImageMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Uploading...
                 </>
-              ) : !isNameConfirmed ? (
-                "Confirm Name First"
               ) : (
                 questions.length > 0 ? "Add Question" : "First Question"
               )}
