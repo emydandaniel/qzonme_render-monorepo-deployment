@@ -67,34 +67,56 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
     retryDelay: 1000, // Retry after 1 second
   });
 
-  // Force refresh attempts data whenever dashboard is viewed + periodically
+  // Force refresh with drastic approach to ensure updates across browsers
   useEffect(() => {
     if (!quizId) return;
     
-    // Immediate refresh on component mount
+    // Function to force reload page entirely - most reliable but user-disruptive method
+    const forcePageReload = () => {
+      console.log("FORCE RELOAD: Dashboard page will refresh completely");
+      // Add cache busting parameter to reload fresh
+      window.location.href = `${window.location.pathname}?t=${Date.now()}`;
+    };
+    
+    // Less disruptive refresh that still fetches data directly
     const refreshData = async () => {
       console.log("Dashboard: Force refresh attempts data");
       
-      // Remove all previous queries from cache completely
-      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
+      // Clear all cache entries to ensure fresh data
+      queryClient.clear();
       
-      // Manually fetch fresh data
+      // Add cache busting to fetch call
+      const timestamp = Date.now();
+      
+      // Directly fetch data with aggressive cache prevention
       try {
-        const response = await fetch(`/api/quizzes/${quizId}/attempts`);
+        const response = await fetch(`/api/quizzes/${quizId}/attempts?nocache=${timestamp}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
         if (!response.ok) throw new Error('Failed to fetch attempts');
         
         const freshAttempts = await response.json();
         console.log(`Dashboard: Fetched ${freshAttempts.length} fresh attempts`);
         
-        // Update the cache with new data
+        // Force count update to trigger UI refresh
         queryClient.setQueryData([`/api/quizzes/${quizId}/attempts`, cacheKey], freshAttempts);
         
-        // Trigger refresh counter increment every 30 seconds to force complete refresh
+        // Trigger refresh counter increment to force complete refresh
         const now = Date.now();
-        if (now - lastRefreshTime > 30000) {
+        if (now - lastRefreshTime > 15000) { // Every 15 seconds do more aggressive refresh  
           setRefreshCount(prev => prev + 1);
           setLastRefreshTime(now);
-          console.log("Dashboard: Triggered complete cache refresh");
+          
+          // Every minute do a complete page reload to ensure freshest data
+          if (refreshCount % 4 === 0) {
+            forcePageReload();
+          }
         }
       } catch (error) {
         console.error("Error refreshing dashboard data:", error);
@@ -104,11 +126,17 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
     // Execute immediately
     refreshData();
     
-    // Also set up interval for periodic fresh fetches
-    const intervalId = setInterval(refreshData, 5000);
+    // Set up VERY frequent interval for aggressive fresh fetches
+    const intervalId = setInterval(refreshData, 2500); // Check every 2.5 seconds
     
-    return () => clearInterval(intervalId);
-  }, [quizId, queryClient, cacheKey, lastRefreshTime]);
+    // Also set up a backup full page reload every 2 minutes as absolute fallback
+    const reloadIntervalId = setInterval(forcePageReload, 120000);
+    
+    return () => {
+      clearInterval(intervalId);
+      clearInterval(reloadIntervalId);
+    };
+  }, [quizId, queryClient, cacheKey, lastRefreshTime, refreshCount]);
 
   // Format expiration date if we have a quiz
   const formatExpirationDate = (createdAtString: string | Date) => {

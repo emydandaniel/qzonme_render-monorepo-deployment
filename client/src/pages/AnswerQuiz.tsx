@@ -9,6 +9,7 @@ import { calculateScore } from "@/lib/quizUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/common/Layout";
+import MetaTags from "@/components/common/MetaTags";
 
 interface AnswerQuizProps {
   params: {
@@ -230,12 +231,21 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   }
 
   return (
-    <QuizAnswer
-      quizId={quiz.id}
-      quizCreator={quiz.creatorName}
-      questions={questions}
-      onComplete={handleQuizComplete}
-    />
+    <>
+      {/* Add meta tags for better WhatsApp sharing preview */}
+      <MetaTags 
+        creatorName={quiz.creatorName}
+        url={window.location.href}
+        imageUrl="/favicon.png"
+      />
+      
+      <QuizAnswer
+        quizId={quiz.id}
+        quizCreator={quiz.creatorName}
+        questions={questions}
+        onComplete={handleQuizComplete}
+      />
+    </>
   );
 };
 
