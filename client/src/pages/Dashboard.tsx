@@ -53,90 +53,87 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
     [quizId, refreshCount]
   );
   
-  // Fetch quiz attempts with ultra-aggressive refetching to ensure latest data
-  const { data: attempts = [], isLoading: isLoadingAttempts } = useQuery<QuizAttempt[]>({
-    queryKey: [`/api/quizzes/${quizId}/attempts`, cacheKey],
-    enabled: !!quizId,
-    refetchOnMount: "always", // Always refetch on mount
-    staleTime: 0, // Consider data always stale to ensure refetch
-    gcTime: 0, // Don't cache previous data
-    refetchInterval: 3000, // Refetch every 3 seconds to catch new attempts
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    refetchOnReconnect: true, // Refetch when reconnecting
-    retry: 3, // Retry failed requests 
-    retryDelay: 1000, // Retry after 1 second
-  });
-
-  // Force refresh with drastic approach to ensure updates across browsers
-  useEffect(() => {
+  // Use direct state management instead of React Query for attempts data
+  const [attempts, setAttempts] = React.useState<QuizAttempt[]>([]);
+  const [isLoadingAttempts, setIsLoadingAttempts] = React.useState(true);
+  
+  // Direct fetch function that bypasses all caching mechanisms
+  const fetchAttemptsDirectly = React.useCallback(async () => {
     if (!quizId) return;
     
-    // Function to force reload page entirely - most reliable but user-disruptive method
+    try {
+      console.log("Dashboard: Direct fetch attempts");
+      setIsLoadingAttempts(true);
+      
+      // Clear React Query cache for this endpoint before fetching
+      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
+      
+      // Add cache busting parameters and headers
+      const cacheBuster = Date.now();
+      const response = await fetch(`/api/quizzes/${quizId}/attempts?t=${cacheBuster}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch attempts');
+      }
+      
+      // Get data and handle the new response format
+      const attemptsData = await response.json();
+      
+      // Extract the attempts array from whatever format the server returns
+      const attemptsList = attemptsData.data || attemptsData;
+      const serverTime = attemptsData.serverTime || Date.now();
+      
+      console.log(`Directly fetched ${attemptsList.length} attempts at ${new Date(serverTime).toISOString()}`);
+      
+      // Update state with fresh data
+      setAttempts(attemptsList);
+      setIsLoadingAttempts(false);
+    } catch (error) {
+      console.error('Error directly fetching attempts:', error);
+      setIsLoadingAttempts(false);
+    }
+  }, [quizId, queryClient]);
+  
+  // Set up regular direct fetching
+  React.useEffect(() => {
+    if (!quizId) return;
+    
+    // Fetch immediately
+    fetchAttemptsDirectly();
+    
+    // Set up interval for very frequent refreshes
+    const refreshInterval = setInterval(fetchAttemptsDirectly, 2000); // Every 2 seconds
+    
+    // Return cleanup function
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [quizId, fetchAttemptsDirectly]);
+
+  // Set up a periodic hard reload effect (completely separate from the data fetching)
+  React.useEffect(() => {
+    if (!quizId) return;
+    
+    // Function for hard page reload - the most reliable way to get fresh data
     const forcePageReload = () => {
       console.log("FORCE RELOAD: Dashboard page will refresh completely");
-      // Add cache busting parameter to reload fresh
+      // Add cache busting parameter to reload fresh - this is the nuclear option
       window.location.href = `${window.location.pathname}?t=${Date.now()}`;
     };
     
-    // Less disruptive refresh that still fetches data directly
-    const refreshData = async () => {
-      console.log("Dashboard: Force refresh attempts data");
-      
-      // Clear all cache entries to ensure fresh data
-      queryClient.clear();
-      
-      // Add cache busting to fetch call
-      const timestamp = Date.now();
-      
-      // Directly fetch data with aggressive cache prevention
-      try {
-        const response = await fetch(`/api/quizzes/${quizId}/attempts?nocache=${timestamp}`, {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch attempts');
-        
-        const freshAttempts = await response.json();
-        console.log(`Dashboard: Fetched ${freshAttempts.length} fresh attempts`);
-        
-        // Force count update to trigger UI refresh
-        queryClient.setQueryData([`/api/quizzes/${quizId}/attempts`, cacheKey], freshAttempts);
-        
-        // Trigger refresh counter increment to force complete refresh
-        const now = Date.now();
-        if (now - lastRefreshTime > 15000) { // Every 15 seconds do more aggressive refresh  
-          setRefreshCount(prev => prev + 1);
-          setLastRefreshTime(now);
-          
-          // Every minute do a complete page reload to ensure freshest data
-          if (refreshCount % 4 === 0) {
-            forcePageReload();
-          }
-        }
-      } catch (error) {
-        console.error("Error refreshing dashboard data:", error);
-      }
-    };
-    
-    // Execute immediately
-    refreshData();
-    
-    // Set up VERY frequent interval for aggressive fresh fetches
-    const intervalId = setInterval(refreshData, 2500); // Check every 2.5 seconds
-    
-    // Also set up a backup full page reload every 2 minutes as absolute fallback
-    const reloadIntervalId = setInterval(forcePageReload, 120000);
+    // Schedule a hard reload every 90 seconds - this is our fail-safe
+    const reloadIntervalId = setInterval(forcePageReload, 90000);
     
     return () => {
-      clearInterval(intervalId);
       clearInterval(reloadIntervalId);
     };
-  }, [quizId, queryClient, cacheKey, lastRefreshTime, refreshCount]);
+  }, [quizId]);
 
   // Format expiration date if we have a quiz
   const formatExpirationDate = (createdAtString: string | Date) => {

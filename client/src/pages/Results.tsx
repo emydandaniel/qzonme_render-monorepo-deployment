@@ -19,22 +19,75 @@ const Results: React.FC<ResultsProps> = ({ params }) => {
   const userName = sessionStorage.getItem("userName") || sessionStorage.getItem("username") || "";
   const queryClient = useQueryClient();
 
-  // Refetch attempts when component mounts to ensure we have the latest data including the current user's attempt
+  // Implement direct fetch approach that ignores all caching
+  const [rawAttempts, setRawAttempts] = React.useState<any[]>([]);
+  const [rawAttempt, setRawAttempt] = React.useState<any>(null);
+  
+  // Direct fetch with no caching
+  const fetchAllDataDirectly = React.useCallback(async () => {
+    if (!quizId || !attemptId) return;
+    
+    try {
+      console.log("Results page: Directly fetching fresh data");
+      const timestamp = Date.now();
+      
+      // Fetch attempts with cache busting
+      const attemptsResponse = await fetch(`/api/quizzes/${quizId}/attempts?t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      // Fetch this specific attempt with cache busting
+      const attemptResponse = await fetch(`/api/quiz-attempts/${attemptId}?t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (attemptsResponse.ok && attemptResponse.ok) {
+        const attemptsData = await attemptsResponse.json();
+        const attemptData = await attemptResponse.json();
+        
+        const attemptsList = attemptsData.data || attemptsData;
+        const attemptResult = attemptData.data || attemptData;
+        
+        console.log(`Results page: Direct fetch retrieved ${attemptsList.length} attempts`);
+        
+        setRawAttempts(attemptsList);
+        setRawAttempt(attemptResult);
+      }
+    } catch (error) {
+      console.error("Error directly fetching results data:", error);
+    }
+  }, [quizId, attemptId]);
+  
+  // Set up regular refresh for the data
+  useEffect(() => {
+    if (quizId && attemptId) {
+      // Initial fetch
+      fetchAllDataDirectly();
+      
+      // Periodic refresh
+      const intervalId = setInterval(fetchAllDataDirectly, 5000); // Every 5 seconds
+      
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
+  }, [quizId, attemptId, fetchAllDataDirectly]);
+  
+  // Also use React Query for backup fallback data
   useEffect(() => {
     if (quizId) {
       // Force refetch all relevant data to ensure we have the latest
       queryClient.invalidateQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
       queryClient.invalidateQueries({ queryKey: [`/api/quiz-attempts/${attemptId}`] });
       console.log("Results page: Invalidated queries to refresh data");
-      
-      // Set an interval to periodically refresh the attempts data
-      const intervalId = setInterval(() => {
-        queryClient.invalidateQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
-        console.log("Results page: Auto-refreshing attempts data");
-      }, 10000); // Refresh every 10 seconds
-      
-      // Clean up the interval when the component unmounts
-      return () => clearInterval(intervalId);
     }
   }, [quizId, attemptId, queryClient]);
 
@@ -135,15 +188,25 @@ const Results: React.FC<ResultsProps> = ({ params }) => {
     );
   }
 
+  // Extract real data from possibly nested response structure
+  // Handle new response format with data property
+  const attemptsList = Array.isArray(attempts.data) ? attempts.data : attempts;
+  const attemptData = thisAttempt.data || thisAttempt;
+  
+  console.log("Results page - processed data:", {
+    attemptsCount: attemptsList.length,
+    attemptData: attemptData
+  });
+  
   // Type casting to fix TypeScript errors
   return (
     <ResultsView
       userName={userName}
       quizCreator={quiz.creatorName || ""}
       questions={questions as any[]}
-      answers={thisAttempt.answers || []}
-      attempts={attempts as any[]}
-      score={thisAttempt.score || 0}
+      answers={attemptData.answers || []}
+      attempts={attemptsList as any[]}
+      score={attemptData.score || 0}
       currentAttemptId={attemptId}
     />
   );

@@ -321,6 +321,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[${timestamp}] Returning ${attempts.length} attempts for quiz ${quizId}`);
       
       // Add a server timestamp in the response to help client detect freshness
+      // Sort attempts by completion date (newest first) for immediate display
+      attempts.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+      
+      console.log(`[${timestamp}] Sending sorted attempts: ${attempts.map(a => a.id).join(', ')}`);
+      
       res.json({
         data: attempts,
         serverTime: timestamp,
@@ -335,11 +340,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get specific quiz attempt by ID
   app.get("/api/quiz-attempts/:attemptId", async (req, res) => {
     try {
+      // Add anti-caching headers
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       const attemptId = parseInt(req.params.attemptId);
+      const timestamp = Date.now(); // For tracing and debugging
       
       if (isNaN(attemptId)) {
         return res.status(400).json({ message: "Invalid attempt ID" });
       }
+      
+      console.log(`[${timestamp}] Fetching attempt with ID ${attemptId}`);
       
       // Get all attempt IDs from all quizzes
       // This is a temporary workaround since we don't have a direct getAttemptById method
@@ -356,11 +369,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const attempt = allAttempts.find(a => a.id === attemptId);
       
       if (!attempt) {
+        console.log(`[${timestamp}] Attempt ID ${attemptId} not found`);
         return res.status(404).json({ message: "Quiz attempt not found" });
       }
       
-      console.log(`GET /api/quiz-attempts/${attemptId} response:`, attempt);
-      res.json(attempt);
+      console.log(`[${timestamp}] Found attempt ${attemptId} (quiz ${attempt.quizId})`);
+      
+      // Send with timestamp for caching verification
+      res.json({
+        data: attempt,
+        serverTime: timestamp
+      });
     } catch (error) {
       console.error(`Error fetching quiz attempt ${req.params.attemptId}:`, error);
       res.status(500).json({ message: "Failed to fetch quiz attempt" });

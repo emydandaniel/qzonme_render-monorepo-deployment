@@ -30,60 +30,22 @@ const Dashboard: React.FC<DashboardProps> = ({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Force complete refresh by bypassing React Query cache entirely
-      console.log("Dashboard: Manual refresh triggered by user");
+      // The most extreme approach - just force reload the entire page
+      // This guarantees fresh data by completely reloading the application
+      console.log("Dashboard: User clicked manual refresh - forcing page reload");
       
-      // Create fresh timestamp to bust cache
-      const timestamp = Date.now();
-      
-      // Manually fetch fresh data with cache-busting timestamp parameter
-      const [attemptsResponse, questionsResponse] = await Promise.all([
-        fetch(`/api/quizzes/${quizId}/attempts?t=${timestamp}`),
-        fetch(`/api/quizzes/${quizId}/questions?t=${timestamp}`)
-      ]);
-      
-      if (!attemptsResponse.ok || !questionsResponse.ok) {
-        throw new Error("Failed to fetch fresh data");
-      }
-      
-      // Get fresh data directly from server, handle new response format
-      const attemptsResponseData = await attemptsResponse.json();
-      const newQuestions = await questionsResponse.json();
-      
-      // Handle the new response format - server now returns an object with data, serverTime, and count
-      const newAttempts = attemptsResponseData.data || attemptsResponseData; // Fall back for backward compatibility
-      const serverTime = attemptsResponseData.serverTime || Date.now();
-      
-      console.log("Server timestamp:", new Date(serverTime).toISOString());
-      
-      console.log("Dashboard manual refresh data:", { 
-        attempts: newAttempts.length, 
-        questions: newQuestions.length,
-        attemptIds: newAttempts.map((a: any) => a.id)
+      toast({
+        title: "Refreshing dashboard",
+        description: "Loading the latest data from server...",
+        variant: "default"
       });
       
-      // Completely clear all queries from cache - this is extreme but effective
-      queryClient.clear(); // Clear entire cache
+      // After a brief pause to let the toast show, reload the page
+      setTimeout(() => {
+        // Add cache busting parameter to force a clean reload
+        window.location.href = window.location.pathname + "?refresh=" + Date.now();
+      }, 500);
       
-      // Force page reload instead of just query refetch - this is the most reliable way
-      window.setTimeout(() => {
-        // Try React Query update first
-        queryClient.setQueryData([`/api/quizzes/${quizId}/attempts`], newAttempts);
-        queryClient.setQueryData([`/api/quizzes/${quizId}/questions`], newQuestions);
-        
-        // Force component re-render
-        toast({
-          title: "Dashboard refreshed",
-          description: `Latest data loaded: ${newAttempts.length} attempts`,
-          variant: "default"
-        });
-        
-        // Trigger hard refresh if there are any attempts
-        if (newAttempts.length > 0) {
-          console.log("Forcing complete reload to ensure latest data");
-          window.location.reload();
-        }
-      }, 100);
     } catch (error) {
       console.error("Dashboard refresh error:", error);
       toast({
@@ -91,7 +53,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         description: "Could not load the latest data. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsRefreshing(false);
     }
   };
