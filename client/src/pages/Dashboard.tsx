@@ -43,28 +43,72 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
     enabled: !!quizId,
   });
 
-  // Fetch quiz attempts with aggressive refetching to ensure latest data
+  // Track the number of refreshes to trigger complete cache clearing periodically
+  const [refreshCount, setRefreshCount] = React.useState(0);
+  const [lastRefreshTime, setLastRefreshTime] = React.useState(Date.now());
+
+  // Create a unique cache key that changes every time we want to force a complete refresh
+  const cacheKey = React.useMemo(() => 
+    `dashboard-${quizId}-${refreshCount}-${Date.now()}`, 
+    [quizId, refreshCount]
+  );
+  
+  // Fetch quiz attempts with ultra-aggressive refetching to ensure latest data
   const { data: attempts = [], isLoading: isLoadingAttempts } = useQuery<QuizAttempt[]>({
-    queryKey: [`/api/quizzes/${quizId}/attempts`],
+    queryKey: [`/api/quizzes/${quizId}/attempts`, cacheKey],
     enabled: !!quizId,
     refetchOnMount: "always", // Always refetch on mount
     staleTime: 0, // Consider data always stale to ensure refetch
     gcTime: 0, // Don't cache previous data
-    refetchInterval: 5000, // Refetch every 5 seconds to catch new attempts
+    refetchInterval: 3000, // Refetch every 3 seconds to catch new attempts
     refetchOnWindowFocus: true, // Refetch when window regains focus
     refetchOnReconnect: true, // Refetch when reconnecting
     retry: 3, // Retry failed requests 
     retryDelay: 1000, // Retry after 1 second
   });
 
-  // Force refresh attempts data whenever dashboard is viewed
+  // Force refresh attempts data whenever dashboard is viewed + periodically
   useEffect(() => {
-    if (quizId) {
-      // Force refetch attempts to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
-      console.log("Dashboard: Invalidated attempts query to refresh leaderboard data");
-    }
-  }, [quizId, queryClient]);
+    if (!quizId) return;
+    
+    // Immediate refresh on component mount
+    const refreshData = async () => {
+      console.log("Dashboard: Force refresh attempts data");
+      
+      // Remove all previous queries from cache completely
+      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
+      
+      // Manually fetch fresh data
+      try {
+        const response = await fetch(`/api/quizzes/${quizId}/attempts`);
+        if (!response.ok) throw new Error('Failed to fetch attempts');
+        
+        const freshAttempts = await response.json();
+        console.log(`Dashboard: Fetched ${freshAttempts.length} fresh attempts`);
+        
+        // Update the cache with new data
+        queryClient.setQueryData([`/api/quizzes/${quizId}/attempts`, cacheKey], freshAttempts);
+        
+        // Trigger refresh counter increment every 30 seconds to force complete refresh
+        const now = Date.now();
+        if (now - lastRefreshTime > 30000) {
+          setRefreshCount(prev => prev + 1);
+          setLastRefreshTime(now);
+          console.log("Dashboard: Triggered complete cache refresh");
+        }
+      } catch (error) {
+        console.error("Error refreshing dashboard data:", error);
+      }
+    };
+    
+    // Execute immediately
+    refreshData();
+    
+    // Also set up interval for periodic fresh fetches
+    const intervalId = setInterval(refreshData, 5000);
+    
+    return () => clearInterval(intervalId);
+  }, [quizId, queryClient, cacheKey, lastRefreshTime]);
 
   // Format expiration date if we have a quiz
   const formatExpirationDate = (createdAtString: string | Date) => {

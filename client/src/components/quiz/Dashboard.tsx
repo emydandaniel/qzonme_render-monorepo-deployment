@@ -30,37 +30,49 @@ const Dashboard: React.FC<DashboardProps> = ({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Force refetch with server data by removing previous data from cache
-      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
-      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/questions`] });
+      // Force complete refresh by bypassing React Query cache entirely
+      console.log("Dashboard: Manual refresh triggered by user");
       
-      // Manually fetch fresh data
+      // Create fresh timestamp to bust cache
+      const timestamp = Date.now();
+      
+      // Manually fetch fresh data with cache-busting timestamp parameter
       const [attemptsResponse, questionsResponse] = await Promise.all([
-        fetch(`/api/quizzes/${quizId}/attempts`),
-        fetch(`/api/quizzes/${quizId}/questions`)
+        fetch(`/api/quizzes/${quizId}/attempts?t=${timestamp}`),
+        fetch(`/api/quizzes/${quizId}/questions?t=${timestamp}`)
       ]);
       
       if (!attemptsResponse.ok || !questionsResponse.ok) {
         throw new Error("Failed to fetch fresh data");
       }
       
-      // Update the cache with new data
+      // Get fresh data directly from server
       const newAttempts = await attemptsResponse.json();
       const newQuestions = await questionsResponse.json();
       
-      queryClient.setQueryData([`/api/quizzes/${quizId}/attempts`], newAttempts);
-      queryClient.setQueryData([`/api/quizzes/${quizId}/questions`], newQuestions);
-      
-      console.log("Dashboard refreshed with new data:", { 
+      console.log("Dashboard manual refresh data:", { 
         attempts: newAttempts.length, 
-        questions: newQuestions.length 
+        questions: newQuestions.length,
+        attemptIds: newAttempts.map(a => a.id)
       });
       
-      toast({
-        title: "Dashboard refreshed",
-        description: `Latest data loaded: ${newAttempts.length} attempts`,
-        variant: "default"
-      });
+      // Completely replace cache for all matching queries regardless of their keys
+      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/attempts`] });
+      queryClient.removeQueries({ queryKey: [`/api/quizzes/${quizId}/questions`] });
+      
+      // Force React Query to recognize new data
+      window.setTimeout(() => {
+        // Update the cache with new data after a brief delay
+        queryClient.setQueryData([`/api/quizzes/${quizId}/attempts`], newAttempts);
+        queryClient.setQueryData([`/api/quizzes/${quizId}/questions`], newQuestions);
+        
+        // Force component re-render
+        toast({
+          title: "Dashboard refreshed",
+          description: `Latest data loaded: ${newAttempts.length} attempts`,
+          variant: "default"
+        });
+      }, 100);
     } catch (error) {
       console.error("Dashboard refresh error:", error);
       toast({
