@@ -26,8 +26,9 @@ const QuizCreation: React.FC = () => {
   // This is a controlled component with no default value to ensure user must enter name each time
   const [creatorName, setCreatorName] = useState("");
   
-  // Create a ref to track if the name has been manually entered by the user
-  const hasUserEnteredName = useRef(false);
+  // Keep track if the name has been confirmed with a regular state variable
+  // Using a state instead of ref to ensure proper re-rendering
+  const [isNameConfirmed, setIsNameConfirmed] = useState(false);
 
   // Question state
   const [questionText, setQuestionText] = useState("");
@@ -44,6 +45,9 @@ const QuizCreation: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
+  // Progress indicator for visual feedback
+  const progressDots = Array(5).fill(false).map((_, i) => i < questions.length);
+
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
@@ -54,7 +58,7 @@ const QuizCreation: React.FC = () => {
     try {
       // CRITICAL FIX: Explicitly force reset the creator name to empty
       setCreatorName("");
-      hasUserEnteredName.current = false;
+      setIsNameConfirmed(false);
       
       // Clear all form fields
       setQuestionText("");
@@ -412,11 +416,11 @@ const QuizCreation: React.FC = () => {
       return;
     }
     
-    // Force user to type their name - in case they're using browser autofill
-    if (!hasUserEnteredName.current) {
+    // Force user to confirm their name first
+    if (!isNameConfirmed) {
       toast({
-        title: "Please enter your name manually",
-        description: "For security reasons, please type your name in the field at the top",
+        title: "Please confirm your name first",
+        description: "Click the 'Confirm Name' button next to your name",
         variant: "destructive"
       });
       return;
@@ -451,99 +455,107 @@ const QuizCreation: React.FC = () => {
       console.log("URL Slug:", quiz.urlSlug, "- Generated from name:", creatorName);
       console.log("Dashboard Token:", quiz.dashboardToken);
       
-      // Store essential quiz data in sessionStorage temporarily
-      // This ensures we have access to it even if API queries fail
+      // CRITICAL: Store these in session storage for the share page
       sessionStorage.setItem("currentQuizId", quiz.id.toString());
       sessionStorage.setItem("currentQuizAccessCode", quiz.accessCode);
       sessionStorage.setItem("currentQuizUrlSlug", quiz.urlSlug);
       sessionStorage.setItem("currentQuizDashboardToken", quiz.dashboardToken);
-      // Also update the sessionStorage userName to the latest value
-      sessionStorage.setItem("userName", creatorName);
       
-      // Navigate to the share page with the quiz ID
+      // Show success toast
+      toast({
+        title: "Quiz created successfully!",
+        description: `Your quiz "${creatorName}'s Quiz" is ready to share`,
+        variant: "default"
+      });
+      
+      // Navigate to the share page
       navigate(`/share/${quiz.id}`);
     } catch (error) {
-      console.error("Quiz creation failed:", error);
+      console.error("Failed to create quiz:", error);
       toast({
-        title: "Error",
-        description: "Failed to create quiz. Please try again.",
+        title: "Failed to create quiz",
+        description: "Please try again",
         variant: "destructive"
       });
     }
   };
 
-  // Calculate progress dots
-  const progressDots = Array(5).fill(null).map((_, i) => 
-    i < Math.min(currentQuestionIndex + 1, 5)
-  );
+  // Calculate how many questions have been completed
+  const completedQuestions = questions.length;
+  
+  // Handle name confirmation
+  const handleConfirmName = () => {
+    if (creatorName.trim()) {
+      setIsNameConfirmed(true);
+      toast({
+        title: "Name confirmed",
+        description: `Your quiz will be created with the name "${creatorName}"`,
+      });
+    } else {
+      toast({
+        title: "Name required",
+        description: "Please enter your name before confirming",
+        variant: "destructive"
+      });
+    }
+  };
 
+  // Render the form
   return (
     <Layout>
-      <Card className="mb-6" key={mountId}>
+      <h1 className="text-2xl font-bold mb-8 font-poppins text-center md:text-left">
+        Create Your Quiz
+      </h1>
+      
+      <Card key={mountId} className="mb-6">
         <CardContent className="pt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold font-poppins">Create Your Quiz</h2>
-            <span className="text-sm text-muted-foreground">Min. 5 questions</span>
-          </div>
-          
-          {/* IMPORTANT: Creator name input with confirmation button to lock it in */}
-          <div className="mb-6 border-b border-gray-200 pb-6">
-            <div className="flex justify-between items-center mb-1">
-              <Label htmlFor="creator-name" className="block text-sm font-medium">
-                Your Name <span className="text-red-500">*</span>
-              </Label>
-              {hasUserEnteredName.current && (
-                <span className="text-xs font-medium text-green-600">
-                  ✓ Name confirmed
-                </span>
-              )}
-            </div>
+          {/* Creator Name */}
+          <div className="mb-6">
+            <Label htmlFor="creator-name" className="block text-sm font-medium mb-1">
+              Your Name
+            </Label>
+            
+            {isNameConfirmed && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-2 mb-2">
+                <p className="text-green-800 text-sm">
+                  Name confirmed: <strong>{creatorName}</strong>
+                </p>
+              </div>
+            )}
             
             <div className="flex gap-2 mb-1">
               <Input
                 type="text"
                 id="creator-name"
-                className={`input-field flex-1 ${hasUserEnteredName.current ? 'border-green-400 bg-green-50' : ''}`}
+                className={`input-field flex-1 ${isNameConfirmed ? 'border-green-400 bg-green-50' : ''}`}
                 placeholder="Enter your name"
                 value={creatorName}
                 onChange={(e) => {
+                  // Simply set the name without side effects
                   setCreatorName(e.target.value);
-                  // If name is changed, unconfirm it
-                  if (hasUserEnteredName.current) {
-                    hasUserEnteredName.current = false;
+                  
+                  // Reset confirmation if name changes significantly
+                  if (isNameConfirmed && e.target.value.trim() !== creatorName.trim()) {
+                    setIsNameConfirmed(false);
                   }
                 }}
-                disabled={hasUserEnteredName.current}
+                disabled={isNameConfirmed}
                 required
               />
               
               <Button
                 type="button"
-                onClick={() => {
-                  if (creatorName.trim()) {
-                    hasUserEnteredName.current = true;
-                    toast({
-                      title: "Name confirmed",
-                      description: `Your quiz will be created with the name "${creatorName}"`,
-                    });
-                  } else {
-                    toast({
-                      title: "Name required",
-                      description: "Please enter your name before confirming",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-                className={hasUserEnteredName.current ? "bg-green-600 hover:bg-green-700" : ""}
-                disabled={hasUserEnteredName.current}
+                onClick={handleConfirmName}
+                className={isNameConfirmed ? "bg-green-600 hover:bg-green-700" : ""}
+                disabled={isNameConfirmed}
               >
-                {hasUserEnteredName.current ? "Confirmed ✓" : "Confirm Name"}
+                {isNameConfirmed ? "Confirmed ✓" : "Confirm Name"}
               </Button>
             </div>
             
             <p className="mt-1 text-xs text-muted-foreground">
               This name will be used to create your unique quiz link. Enter it exactly as you want it to appear.
-              {!hasUserEnteredName.current && (
+              {!isNameConfirmed && (
                 <span className="block mt-1 text-amber-600">
                   You need to confirm your name with the button before continuing.
                 </span>
@@ -562,8 +574,8 @@ const QuizCreation: React.FC = () => {
           </div>
           
           {/* Question Editor */}
-          <div className={`question-container ${!hasUserEnteredName.current ? 'opacity-60 pointer-events-none' : ''}`}>
-            {!hasUserEnteredName.current && (
+          <div className={`question-container ${!isNameConfirmed ? 'opacity-60 pointer-events-none' : ''}`}>
+            {!isNameConfirmed && (
               <div className="bg-amber-50 border border-amber-300 rounded-md p-3 mb-4 text-center">
                 <p className="text-amber-800 text-sm font-medium">
                   Please confirm your name above before adding questions
@@ -582,7 +594,7 @@ const QuizCreation: React.FC = () => {
                 placeholder="Ask something about yourself..."
                 value={questionText}
                 onChange={(e) => setQuestionText(e.target.value)}
-                disabled={!hasUserEnteredName.current}
+                disabled={!isNameConfirmed}
               />
             </div>
             
@@ -651,15 +663,15 @@ const QuizCreation: React.FC = () => {
               type="button" 
               className="btn-primary" 
               onClick={handleAddQuestion}
-              disabled={uploadImageMutation.isPending || !hasUserEnteredName.current}
-              title={!hasUserEnteredName.current ? "Please confirm your name first" : ""}
+              disabled={uploadImageMutation.isPending || !isNameConfirmed}
+              title={!isNameConfirmed ? "Please confirm your name first" : ""}
             >
               {uploadImageMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Uploading...
                 </>
-              ) : !hasUserEnteredName.current ? (
+              ) : !isNameConfirmed ? (
                 "Confirm Name First"
               ) : (
                 questions.length > 0 ? "Add Question" : "First Question"
