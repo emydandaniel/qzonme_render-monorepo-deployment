@@ -189,9 +189,16 @@ const Results: React.FC<ResultsProps> = ({ params }) => {
   }
 
   // Extract real data from possibly nested response structure
-  // Handle new response format with data property
-  const attemptsList = Array.isArray(attempts.data) ? attempts.data : attempts;
-  const attemptData = thisAttempt.data || thisAttempt;
+  // Use our directly fetched data first if available, fall back to React Query data
+  const attemptsList = rawAttempts.length > 0 ? 
+    rawAttempts : 
+    (attempts && typeof attempts === 'object' && 'data' in attempts && Array.isArray(attempts.data)) ? 
+    attempts.data : attempts;
+    
+  const attemptData = rawAttempt ? 
+    rawAttempt : 
+    (thisAttempt && typeof thisAttempt === 'object' && 'data' in thisAttempt) ? 
+    thisAttempt.data : thisAttempt;
   
   console.log("Results page - processed data:", {
     attemptsCount: attemptsList.length,
