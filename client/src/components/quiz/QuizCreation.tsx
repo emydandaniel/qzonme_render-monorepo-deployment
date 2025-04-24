@@ -570,7 +570,15 @@ const QuizCreation: React.FC = () => {
           </div>
           
           {/* Question Editor */}
-          <div className="question-container">
+          <div className={`question-container ${!hasUserEnteredName.current ? 'opacity-60 pointer-events-none' : ''}`}>
+            {!hasUserEnteredName.current && (
+              <div className="bg-amber-50 border border-amber-300 rounded-md p-3 mb-4 text-center">
+                <p className="text-amber-800 text-sm font-medium">
+                  Please confirm your name above before adding questions
+                </p>
+              </div>
+            )}
+            
             <div className="mb-4">
               <Label htmlFor="question-text" className="block text-sm font-medium mb-1">
                 Question
@@ -582,6 +590,7 @@ const QuizCreation: React.FC = () => {
                 placeholder="Ask something about yourself..."
                 value={questionText}
                 onChange={(e) => setQuestionText(e.target.value)}
+                disabled={!hasUserEnteredName.current}
               />
             </div>
             
@@ -650,13 +659,16 @@ const QuizCreation: React.FC = () => {
               type="button" 
               className="btn-primary" 
               onClick={handleAddQuestion}
-              disabled={uploadImageMutation.isPending}
+              disabled={uploadImageMutation.isPending || !hasUserEnteredName.current}
+              title={!hasUserEnteredName.current ? "Please confirm your name first" : ""}
             >
               {uploadImageMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Uploading...
                 </>
+              ) : !hasUserEnteredName.current ? (
+                "Confirm Name First"
               ) : (
                 questions.length > 0 ? "Add Question" : "First Question"
               )}
