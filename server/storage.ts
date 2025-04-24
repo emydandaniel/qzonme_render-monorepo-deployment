@@ -4,7 +4,8 @@ import {
   questions, type Question, type InsertQuestion,
   quizAttempts, type QuizAttempt, type InsertQuizAttempt
 } from "@shared/schema";
-import { nanoid } from "nanoid";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -31,79 +32,61 @@ export interface IStorage {
   isQuizExpired(quiz: Quiz): boolean;
 }
 
-// In-memory storage implementation
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private quizzes: Map<number, Quiz>;
-  private questions: Map<number, Question>;
-  private quizAttempts: Map<number, QuizAttempt>;
-  
-  private userId: number;
-  private quizId: number;
-  private questionId: number;
-  private attemptId: number;
-  
-  constructor() {
-    this.users = new Map();
-    this.quizzes = new Map();
-    this.questions = new Map();
-    this.quizAttempts = new Map();
-    
-    this.userId = 1;
-    this.quizId = 1;
-    this.questionId = 1;
-    this.attemptId = 1;
-  }
-  
+// Database storage implementation using Drizzle ORM
+export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
   
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userId++;
-    const user: User = { id, ...insertUser };
-    this.users.set(id, user);
+    // Validate the username is not empty
+    if (!insertUser.username || !insertUser.username.trim()) {
+      throw new Error("Username is required");
+    }
+    
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
   
   // Quiz methods
   async getQuiz(id: number): Promise<Quiz | undefined> {
-    return this.quizzes.get(id);
+    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
+    return quiz;
   }
   
   async getQuizByAccessCode(accessCode: string): Promise<Quiz | undefined> {
-    return Array.from(this.quizzes.values()).find(
-      (quiz) => quiz.accessCode === accessCode
-    );
+    const [quiz] = await db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.accessCode, accessCode));
+    return quiz;
   }
   
   async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
-    return Array.from(this.quizzes.values()).find(
-      (quiz) => quiz.urlSlug.toLowerCase() === urlSlug.toLowerCase()
-    );
+    const [quiz] = await db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.urlSlug, urlSlug));
+    return quiz;
   }
   
   async getQuizByDashboardToken(token: string): Promise<Quiz | undefined> {
-    return Array.from(this.quizzes.values()).find(
-      (quiz) => quiz.dashboardToken === token
-    );
+    const [quiz] = await db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.dashboardToken, token));
+    return quiz;
   }
   
   async createQuiz(insertQuiz: InsertQuiz): Promise<Quiz> {
-    const id = this.quizId++;
-    const createdAt = new Date();
-    
-    // Critical bug fix: Explicitly check quiz inputs for fresh data
+    // Validate required fields
     if (!insertQuiz.creatorName || !insertQuiz.creatorName.trim()) {
-      console.error("SERVER ERROR: Empty creator name received");
+      console.error("Empty creator name received");
       throw new Error("Creator name is required");
     }
     
-    // Log the creator name from the browser
-    console.log(`[SERVER] Received quiz creation with creator name: "${insertQuiz.creatorName}"`);
-    
-    // ALWAYS use the provided values and never use defaults to prevent bugs
     if (!insertQuiz.accessCode || !insertQuiz.urlSlug || !insertQuiz.dashboardToken) {
       console.error("Required quiz fields missing", { 
         hasAccessCode: !!insertQuiz.accessCode, 
@@ -113,68 +96,54 @@ export class MemStorage implements IStorage {
       throw new Error("Required quiz fields are missing");
     }
     
-    // Use exactly what's provided from the client for explicit control
-    const quiz: Quiz = { 
-      id, 
-      ...insertQuiz,
-      // Ensure these are exactly as received from the client
-      creatorName: insertQuiz.creatorName.trim(), 
-      accessCode: insertQuiz.accessCode,
-      urlSlug: insertQuiz.urlSlug,
-      dashboardToken: insertQuiz.dashboardToken,
-      createdAt
-    };
+    console.log(`Creating quiz with creator: "${insertQuiz.creatorName}", slug: "${insertQuiz.urlSlug}"`);
     
-    console.log(`[SERVER] Creating quiz with URL slug: "${quiz.urlSlug}"`);
-    console.log(`[SERVER] Quiz slug derived from name: "${quiz.creatorName}"`);
+    // Create the quiz
+    const [quiz] = await db
+      .insert(quizzes)
+      .values(insertQuiz)
+      .returning();
     
-    this.quizzes.set(id, quiz);
     return quiz;
   }
   
   // Question methods
   async getQuestionsByQuizId(quizId: number): Promise<Question[]> {
-    // If quizId is -1, return all questions (special case for verification)
-    // This prevents errors when searching for individual questions by ID
-    if (quizId === -1) {
-      return Array.from(this.questions.values());
-    }
+    const result = await db
+      .select()
+      .from(questions)
+      .where(eq(questions.quizId, quizId))
+      .orderBy(questions.order);
     
-    return Array.from(this.questions.values())
-      .filter(question => question.quizId === quizId)
-      .sort((a, b) => a.order - b.order);
+    return result;
   }
   
   async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
-    const id = this.questionId++;
-    const question: Question = { 
-      id, 
-      ...insertQuestion,
-      hint: insertQuestion.hint || null,
-      imageUrl: insertQuestion.imageUrl || null
-    };
-    this.questions.set(id, question);
+    const [question] = await db
+      .insert(questions)
+      .values(insertQuestion)
+      .returning();
+    
     return question;
   }
   
   // Quiz Attempt methods
   async getQuizAttempts(quizId: number): Promise<QuizAttempt[]> {
-    return Array.from(this.quizAttempts.values())
-      .filter(attempt => attempt.quizId === quizId)
-      .sort((a, b) => b.score - a.score);
+    const result = await db
+      .select()
+      .from(quizAttempts)
+      .where(eq(quizAttempts.quizId, quizId))
+      .orderBy(quizAttempts.score);
+    
+    return result.reverse(); // Reverse to get highest scores first
   }
   
   async createQuizAttempt(insertAttempt: InsertQuizAttempt): Promise<QuizAttempt> {
-    const id = this.attemptId++;
-    const completedAt = new Date();
+    const [attempt] = await db
+      .insert(quizAttempts)
+      .values(insertAttempt)
+      .returning();
     
-    const attempt: QuizAttempt = { 
-      id, 
-      ...insertAttempt,
-      completedAt
-    };
-    
-    this.quizAttempts.set(id, attempt);
     return attempt;
   }
   
@@ -191,4 +160,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Create and export an instance of DatabaseStorage
+export const storage = new DatabaseStorage();
