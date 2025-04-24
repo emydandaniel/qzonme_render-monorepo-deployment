@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -22,9 +22,14 @@ const QuizCreation: React.FC = () => {
   const componentKey = React.useId();
   
   // Creator name from homepage (stored in sessionStorage)
-  const [creatorName] = useState(() => {
-    return sessionStorage.getItem("username") || "";
-  });
+  const [creatorName, setCreatorName] = useState("");
+  
+  // Get the username directly from session storage once
+  React.useEffect(() => {
+    const username = sessionStorage.getItem("username") || "";
+    console.log("Retrieved username from session:", username);
+    setCreatorName(username);
+  }, []);
   
   // Question state
   const [questionText, setQuestionText] = useState("");
@@ -34,6 +39,7 @@ const QuizCreation: React.FC = () => {
   // Image handling for questions
   const [questionImage, setQuestionImage] = useState<File | null>(null);
   const [questionImagePreview, setQuestionImagePreview] = useState<string | null>(null);
+  const [editingImageUrl, setEditingImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Collection of questions for this quiz
@@ -152,7 +158,13 @@ const QuizCreation: React.FC = () => {
       // Handle image upload if present
       let imageUrl = null;
       
-      if (questionImage) {
+      // Use the existing image URL if we're editing a question
+      if (editingImageUrl) {
+        console.log("Using existing image URL from edit:", editingImageUrl);
+        imageUrl = editingImageUrl;
+      }
+      // Otherwise, upload the new image if one is selected
+      else if (questionImage) {
         try {
           const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
           imageUrl = uploadResult.imageUrl;
@@ -238,15 +250,20 @@ const QuizCreation: React.FC = () => {
     setQuestionText("");
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
+    setEditingImageUrl(null); // Clear the editing image URL
     handleRemoveImage();
   };
 
+
+  
   // Edit existing question
   const handleEditQuestion = (index: number) => {
     const question = questions[index];
     
+    // Set the question text
     setQuestionText(question.text);
     
+    // Set the options and correct answer
     if (question.options) {
       setOptions(question.options as string[]);
       const correctAnswerIndex = (question.options as string[]).findIndex(
@@ -255,10 +272,15 @@ const QuizCreation: React.FC = () => {
       setCorrectOption(correctAnswerIndex >= 0 ? correctAnswerIndex : 0);
     }
     
+    // Handle the image
     if (question.imageUrl) {
       setQuestionImagePreview(question.imageUrl);
+      // Save the image URL separately so we can use it when adding the question
+      setEditingImageUrl(question.imageUrl);
+      console.log("Editing question with image URL:", question.imageUrl);
     } else {
       handleRemoveImage();
+      setEditingImageUrl(null);
     }
     
     // Remove the question from the list
