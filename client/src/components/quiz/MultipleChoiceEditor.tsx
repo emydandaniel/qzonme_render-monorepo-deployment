@@ -17,9 +17,12 @@ const MultipleChoiceEditor: React.FC<MultipleChoiceEditorProps> = ({
   correctOption,
   setCorrectOption,
 }) => {
+  // Simplified direct handler to avoid any focus issues
   const handleOptionChange = (index: number, value: string) => {
-    const newOptions = [...options];
-    newOptions[index] = value;
+    // Create a new array with the updated value at the specific index
+    const newOptions = options.map((option, i) => 
+      i === index ? value : option
+    );
     setOptions(newOptions);
   };
 
@@ -39,9 +42,9 @@ const MultipleChoiceEditor: React.FC<MultipleChoiceEditorProps> = ({
           {options.map((option, index) => (
             <div key={index} className="flex items-center space-x-2">
               <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-              <Input
+              <input
                 type="text"
-                className="input-field"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder={`Option ${index + 1}`}
                 value={option}
                 onChange={(e) => handleOptionChange(index, e.target.value)}
