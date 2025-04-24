@@ -15,7 +15,8 @@ interface ResultsProps {
 const Results: React.FC<ResultsProps> = ({ params }) => {
   const quizId = parseInt(params.quizId);
   const attemptId = parseInt(params.attemptId);
-  const userName = sessionStorage.getItem("userName") || "";
+  // Check both possible keys for username compatibility
+  const userName = sessionStorage.getItem("userName") || sessionStorage.getItem("username") || "";
   const queryClient = useQueryClient();
 
   // Refetch attempts when component mounts to ensure we have the latest data including the current user's attempt
@@ -67,13 +68,18 @@ const Results: React.FC<ResultsProps> = ({ params }) => {
     retryDelay: 1000, // Retry after 1 second
   });
 
-  // Fetch this specific attempt
+  // Fetch this specific attempt with aggressive refetching
   const { data: thisAttempt, isLoading: isLoadingAttempt } = useQuery<any>({
     queryKey: [`/api/quiz-attempts/${attemptId}`],
     enabled: !!attemptId,
+    refetchOnMount: "always",
     staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true
+    gcTime: 0,
+    refetchInterval: 3000, // Refresh every 3 seconds along with attempts
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true, 
+    retry: 3,
+    retryDelay: 1000
   });
 
   console.log("Results page - current attempts data:", attempts);

@@ -21,7 +21,9 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   const { accessCode, creatorSlug } = params;
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const userName = sessionStorage.getItem("userName") || "";
+  
+  // Try both possible keys to maintain compatibility
+  const userName = sessionStorage.getItem("userName") || sessionStorage.getItem("username") || "";
   const userId = parseInt(sessionStorage.getItem("userId") || "0");
 
   // Check if user is logged in, if not, save the quiz info and redirect to home
