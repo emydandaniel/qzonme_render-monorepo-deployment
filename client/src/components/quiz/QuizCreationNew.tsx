@@ -116,10 +116,21 @@ const QuizCreation: React.FC = () => {
       // Get user ID from session
       const currentUserId = parseInt(sessionStorage.getItem("userId") || "0");
       
+      console.log(`Creating quiz with name: "${creatorName}" (ensuring fresh data)`);
+      
       // Generate fresh tokens and codes
       const accessCode = generateAccessCode();
       const dashboardToken = generateDashboardToken();
+      
+      // Important: Force a fresh slug creation with the current name to avoid cache issues
+      // Clear any old creatorName data from localStorage (if any) as a safety measure
+      localStorage.removeItem("creatorName");
+      
+      // Generate the URL slug with the current creator name
       const urlSlug = generateUrlSlug(creatorName);
+      
+      // Store the current dashboard token in sessionStorage for immediate access
+      sessionStorage.setItem("currentQuizDashboardToken", dashboardToken);
       
       // Create the quiz
       const quizResponse = await apiRequest("POST", "/api/quizzes", {

@@ -39,6 +39,14 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   console.log("Dashboard token from API:", quiz?.dashboardToken);
   console.log("Dashboard token from sessionStorage:", sessionStorage.getItem("currentQuizDashboardToken"));
   
+  // Save the dashboard token to sessionStorage whenever we get it from the API
+  useEffect(() => {
+    if (quiz?.dashboardToken) {
+      console.log("Saving dashboard token to sessionStorage:", quiz.dashboardToken);
+      sessionStorage.setItem("currentQuizDashboardToken", quiz.dashboardToken);
+    }
+  }, [quiz?.dashboardToken]);
+  
   // Use the custom domain for sharing as requested
   const customDomain = "https://qzonme.com";
   const quizLink = `${customDomain}/quiz/${urlSlug}`;
