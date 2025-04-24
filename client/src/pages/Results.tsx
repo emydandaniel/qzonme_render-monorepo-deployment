@@ -72,8 +72,8 @@ const Results: React.FC<ResultsProps> = ({ params }) => {
       // Initial fetch
       fetchAllDataDirectly();
       
-      // Periodic refresh
-      const intervalId = setInterval(fetchAllDataDirectly, 5000); // Every 5 seconds
+      // Periodic refresh - much less frequent
+      const intervalId = setInterval(fetchAllDataDirectly, 45000); // Every 45 seconds
       
       return () => {
         clearInterval(intervalId);
@@ -114,7 +114,7 @@ const Results: React.FC<ResultsProps> = ({ params }) => {
     refetchOnMount: "always", // Always refetch on mount
     staleTime: 0, // Consider data always stale to ensure refetch
     gcTime: 0, // Don't cache previous data
-    refetchInterval: 3000, // Refresh every 3 seconds (more frequently than dashboard)
+    refetchInterval: 60000, // Refresh every minute
     refetchOnWindowFocus: true, // Refetch when window regains focus
     refetchOnReconnect: true, // Refetch when reconnecting
     retry: 3, // Retry failed requests 
@@ -128,7 +128,7 @@ const Results: React.FC<ResultsProps> = ({ params }) => {
     refetchOnMount: "always",
     staleTime: 0,
     gcTime: 0,
-    refetchInterval: 3000, // Refresh every 3 seconds along with attempts
+    refetchInterval: 60000, // Refresh every minute (same as attempts)
     refetchOnWindowFocus: true,
     refetchOnReconnect: true, 
     retry: 3,

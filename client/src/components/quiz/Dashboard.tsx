@@ -30,21 +30,50 @@ const Dashboard: React.FC<DashboardProps> = ({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // The most extreme approach - just force reload the entire page
-      // This guarantees fresh data by completely reloading the application
-      console.log("Dashboard: User clicked manual refresh - forcing page reload");
+      // A more gentle approach - fetch fresh data without page reload
+      console.log("Dashboard: User clicked manual refresh");
       
       toast({
-        title: "Refreshing dashboard",
-        description: "Loading the latest data from server...",
+        title: "Refreshing data",
+        description: "Loading the latest attempts from server...",
         variant: "default"
       });
       
-      // After a brief pause to let the toast show, reload the page
-      setTimeout(() => {
-        // Add cache busting parameter to force a clean reload
-        window.location.href = window.location.pathname + "?refresh=" + Date.now();
-      }, 500);
+      // Add cache busting to fetch call
+      const timestamp = Date.now();
+      
+      // Fetch fresh data directly
+      try {
+        const response = await fetch(`/api/quizzes/${quizId}/attempts?nocache=${timestamp}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch attempts');
+        
+        // Parse the response
+        const data = await response.json();
+        const freshAttempts = data.data || data;
+        
+        console.log(`Manual refresh fetched ${freshAttempts.length} attempts`);
+        
+        // Update the data locally
+        queryClient.setQueryData([`/api/quizzes/${quizId}/attempts`], freshAttempts);
+        
+        toast({
+          title: "Dashboard refreshed",
+          description: `Latest data loaded: ${freshAttempts.length} attempts`,
+          variant: "default"
+        });
+        
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+        throw error;  // Re-throw to be caught by outer handler
+      }
       
     } catch (error) {
       console.error("Dashboard refresh error:", error);
@@ -53,6 +82,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         description: "Could not load the latest data. Please try again.",
         variant: "destructive"
       });
+    } finally {
       setIsRefreshing(false);
     }
   };

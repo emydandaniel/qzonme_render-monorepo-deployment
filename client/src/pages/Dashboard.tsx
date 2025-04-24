@@ -107,8 +107,8 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
     // Fetch immediately
     fetchAttemptsDirectly();
     
-    // Set up interval for very frequent refreshes
-    const refreshInterval = setInterval(fetchAttemptsDirectly, 2000); // Every 2 seconds
+    // Set up interval for much less frequent refreshes
+    const refreshInterval = setInterval(fetchAttemptsDirectly, 30000); // Every 30 seconds
     
     // Return cleanup function
     return () => {
@@ -116,19 +116,19 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
     };
   }, [quizId, fetchAttemptsDirectly]);
 
-  // Set up a periodic hard reload effect (completely separate from the data fetching)
+  // Set up a much less frequent hard reload effect (completely separate from the data fetching)
   React.useEffect(() => {
     if (!quizId) return;
     
-    // Function for hard page reload - the most reliable way to get fresh data
+    // Function for hard page reload - only used very occasionally
     const forcePageReload = () => {
       console.log("FORCE RELOAD: Dashboard page will refresh completely");
       // Add cache busting parameter to reload fresh - this is the nuclear option
       window.location.href = `${window.location.pathname}?t=${Date.now()}`;
     };
     
-    // Schedule a hard reload every 90 seconds - this is our fail-safe
-    const reloadIntervalId = setInterval(forcePageReload, 90000);
+    // Schedule a hard reload every 5 minutes - much less frequent
+    const reloadIntervalId = setInterval(forcePageReload, 300000); // 5 minutes
     
     return () => {
       clearInterval(reloadIntervalId);
