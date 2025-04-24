@@ -1,12 +1,16 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
 import { 
   insertUserSchema, 
   insertQuizSchema, 
   insertQuestionSchema, 
   insertQuizAttemptSchema,
-  questionAnswerSchema
+  questionAnswerSchema,
+  quizzes,
+  quizAttempts,
+  questions
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -106,8 +110,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all quizzes (for testing)
   app.get("/api/quizzes", async (req, res) => {
     try {
-      // Get all quizzes from the storage
-      const allQuizzes = Array.from(storage["quizzes"].values());
+      // Get all quizzes from the database
+      const allQuizzes = await db.select().from(quizzes);
       res.json(allQuizzes);
     } catch (error) {
       console.error("Error fetching all quizzes:", error);
@@ -356,9 +360,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         answer: z.union([z.string(), z.array(z.string())])
       }).parse(req.body);
       
-      // Fix: Get question directly from storage method rather than internal Map
-      const question = await storage.getQuestionsByQuizId(-1) // dummy param to avoid error
-        .then(allQuestions => allQuestions.find(q => q.id === questionId));
+      // Get all questions from the database
+      const allQuestions = await db.select().from(questions);
+      
+      // Find the specific question
+      const question = allQuestions.find(q => q.id === questionId);
       
       if (!question) {
         console.error(`[SERVER ERROR] Question not found: ${questionId}`);
