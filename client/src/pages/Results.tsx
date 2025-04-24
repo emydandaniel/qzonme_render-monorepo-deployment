@@ -49,7 +49,7 @@ const Results: React.FC<ResultsProps> = ({ params }) => {
     enabled: !!quizId,
   });
 
-  // Fetch quiz attempts
+  // Fetch quiz attempts with aggressive refetching strategy
   const { 
     data: attempts = [], 
     isLoading: isLoadingAttempts,
@@ -57,10 +57,14 @@ const Results: React.FC<ResultsProps> = ({ params }) => {
   } = useQuery<any[]>({
     queryKey: [`/api/quizzes/${quizId}/attempts`],
     enabled: !!quizId,
-    refetchOnMount: true, // Always refetch on mount
+    refetchOnMount: "always", // Always refetch on mount
     staleTime: 0, // Consider data always stale to ensure refetch
-    refetchInterval: 5000, // Refresh every 5 seconds
-    refetchOnWindowFocus: true
+    gcTime: 0, // Don't cache previous data
+    refetchInterval: 3000, // Refresh every 3 seconds (more frequently than dashboard)
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnReconnect: true, // Refetch when reconnecting
+    retry: 3, // Retry failed requests 
+    retryDelay: 1000, // Retry after 1 second
   });
 
   // Fetch this specific attempt
