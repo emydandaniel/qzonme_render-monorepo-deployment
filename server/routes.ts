@@ -22,29 +22,63 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Setup multer for image uploads
-const uploadDir = path.join(__dirname, "../uploads");
+// Setup a more permanent uploads directory
+// Use absolute path with the project root to avoid relative path issues
+const projectRoot = path.resolve(__dirname, '..');
+const uploadDir = path.join(projectRoot, 'uploads');
+const persistentUploadsDir = path.join(projectRoot, 'persistent_uploads');
 
-// Ensure upload directory exists
+console.log('Project root:', projectRoot);
+console.log('Upload directories:', { uploadDir, persistentUploadsDir });
+
+// Ensure both directories exist
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+  console.log(`Created upload directory: ${uploadDir}`);
 }
 
+if (!fs.existsSync(persistentUploadsDir)) {
+  fs.mkdirSync(persistentUploadsDir, { recursive: true });
+  console.log(`Created persistent uploads directory: ${persistentUploadsDir}`);
+}
+
+// Copy any existing files from uploads to persistent_uploads
+try {
+  const files = fs.readdirSync(uploadDir);
+  for (const file of files) {
+    const srcPath = path.join(uploadDir, file);
+    const destPath = path.join(persistentUploadsDir, file);
+    
+    // Skip if already exists in persistent dir
+    if (!fs.existsSync(destPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      console.log(`Copied ${file} to persistent storage`);
+    }
+  }
+} catch (err) {
+  console.error('Error copying existing files:', err);
+}
+
+// Use the persistent directory for multer storage
 const storage_config = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir);
+    // Save to both directories for redundancy
+    cb(null, persistentUploadsDir);
   },
   filename: function (req, file, cb) {
     // Create a unique filename with timestamp and random string
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    const filename = file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname);
+    
+    console.log(`New upload: ${filename}`);
+    cb(null, filename);
   }
 });
 
 const upload = multer({ 
   storage: storage_config,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 10 * 1024 * 1024 // Increased to 10MB limit
   },
   fileFilter: function (req, file, cb) {
     // Accept images only
@@ -456,19 +490,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Image upload endpoint
+  // Image upload endpoint with enhanced storage
   app.post("/api/upload-image", upload.single('image'), (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
+      // The file is already saved to persistentUploadsDir
+      const originalFilename = req.file.filename;
+      const persistentPath = path.join(persistentUploadsDir, originalFilename);
+      const standardPath = path.join(uploadDir, originalFilename);
+      
+      console.log(`Image uploaded: ${originalFilename}`);
+      console.log(`- Primary location: ${persistentPath}`);
+      
+      // Make sure it's also copied to standard uploads directory for redundancy
+      try {
+        // Only copy if file was initially saved to persistent dir
+        if (req.file.path !== standardPath && fs.existsSync(persistentPath)) {
+          fs.copyFileSync(persistentPath, standardPath);
+          console.log(`- Secondary location: ${standardPath} (redundancy copy created)`);
+        }
+      } catch (copyErr) {
+        console.error(`Warning: Could not create redundancy copy to standard uploads:`, copyErr);
+        // Continue anyway as we have the primary copy
+      }
+      
       // Return the file path that can be used to retrieve the image
-      const fileUrl = `/uploads/${req.file.filename}`;
+      const fileUrl = `/uploads/${originalFilename}`;
+      
+      // Add cache busting query parameter to ensure fresh loads
+      const cacheBustedUrl = `${fileUrl}?t=${Date.now()}`;
       
       res.status(201).json({ 
         imageUrl: fileUrl,
-        message: "Image uploaded successfully" 
+        cacheBustedUrl: cacheBustedUrl,
+        filename: originalFilename,
+        message: "Image uploaded successfully",
+        locations: {
+          persistent: fs.existsSync(persistentPath),
+          standard: fs.existsSync(standardPath)
+        }
       });
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -476,19 +539,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Serve uploaded files
+  // Serve uploaded files with fallback to persistent directory
   app.use('/uploads', (req, res, next) => {
-    const filePath = path.join(uploadDir, path.basename(req.path));
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-      if (err) {
-        res.status(404).send('File not found');
-      } else {
-        next();
+    const fileName = path.basename(req.path);
+    const standardPath = path.join(uploadDir, fileName);
+    const persistentPath = path.join(persistentUploadsDir, fileName);
+    
+    // Try to serve from standard uploads directory first
+    fs.access(standardPath, fs.constants.F_OK, (standardErr) => {
+      if (!standardErr) {
+        // File exists in standard directory
+        console.log(`Serving ${fileName} from standard uploads directory`);
+        return res.sendFile(standardPath);
       }
+      
+      // If not in standard directory, check persistent directory
+      fs.access(persistentPath, fs.constants.F_OK, (persistentErr) => {
+        if (!persistentErr) {
+          // File exists in persistent directory
+          console.log(`Serving ${fileName} from persistent directory`);
+          
+          // Also copy back to standard directory for future use if possible
+          try {
+            fs.copyFileSync(persistentPath, standardPath);
+            console.log(`Copied ${fileName} back to standard uploads directory`);
+          } catch (copyErr) {
+            console.error(`Could not copy ${fileName} to standard directory:`, copyErr);
+          }
+          
+          return res.sendFile(persistentPath);
+        }
+        
+        // File not found in either directory
+        console.error(`Image not found in either directory: ${fileName}`);
+        res.status(404).send({
+          error: 'File not found',
+          message: 'The requested image could not be found'
+        });
+      });
     });
-  }, (req, res) => {
-    const filePath = path.join(uploadDir, path.basename(req.path));
-    res.sendFile(filePath);
+  });
+  
+  // Add a dedicated endpoint for checking image availability
+  app.get('/api/image-check/:filename', (req, res) => {
+    const fileName = req.params.filename;
+    const standardPath = path.join(uploadDir, fileName);
+    const persistentPath = path.join(persistentUploadsDir, fileName);
+    
+    const standardExists = fs.existsSync(standardPath);
+    const persistentExists = fs.existsSync(persistentPath);
+    
+    res.json({
+      filename: fileName,
+      exists: standardExists || persistentExists,
+      location: standardExists ? 'standard' : (persistentExists ? 'persistent' : 'none')
+    });
   });
 
   const httpServer = createServer(app);
