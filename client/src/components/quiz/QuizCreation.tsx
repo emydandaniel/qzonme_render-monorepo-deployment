@@ -574,7 +574,7 @@ const QuizCreation: React.FC = () => {
                   <div className="flex flex-col items-center">
                     <Image className="h-8 w-8 text-gray-400 mb-2" />
                     <p className="text-sm font-medium text-gray-600 mb-1">Click to upload an image</p>
-                    <p className="text-xs text-gray-500">PNG, JPG or GIF (max. 5MB)</p>
+                    <p className="text-xs text-gray-500">PNG, JPG or GIF (max. 10MB)</p>
                   </div>
                   <input
                     ref={fileInputRef}
