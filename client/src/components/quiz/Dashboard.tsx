@@ -95,7 +95,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     : 0;
   
   const topScore = attempts.length > 0
-    ? Math.max(...attempts.map(a => (a.score / a.totalQuestions) * 100))
+    ? Math.round(Math.max(...attempts.map(a => (a.score / a.totalQuestions) * 100)))
     : 0;
   
   const handleShare = () => {
