@@ -22,55 +22,30 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Setup a more permanent uploads directory
-// Use absolute path with the project root to avoid relative path issues
+// Setup temporary upload directory for processing before sending to Cloudinary
 const projectRoot = path.resolve(__dirname, '..');
-const uploadDir = path.join(projectRoot, 'uploads');
-const persistentUploadsDir = path.join(projectRoot, 'persistent_uploads');
+const tempUploadDir = path.join(projectRoot, 'temp_uploads');
 
 console.log('Project root:', projectRoot);
-console.log('Upload directories:', { uploadDir, persistentUploadsDir });
+console.log('Temp upload directory:', tempUploadDir);
 
-// Ensure both directories exist
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log(`Created upload directory: ${uploadDir}`);
+// Ensure temp directory exists
+if (!fs.existsSync(tempUploadDir)) {
+  fs.mkdirSync(tempUploadDir, { recursive: true });
+  console.log(`Created temp upload directory: ${tempUploadDir}`);
 }
 
-if (!fs.existsSync(persistentUploadsDir)) {
-  fs.mkdirSync(persistentUploadsDir, { recursive: true });
-  console.log(`Created persistent uploads directory: ${persistentUploadsDir}`);
-}
-
-// Copy any existing files from uploads to persistent_uploads
-try {
-  const files = fs.readdirSync(uploadDir);
-  for (const file of files) {
-    const srcPath = path.join(uploadDir, file);
-    const destPath = path.join(persistentUploadsDir, file);
-    
-    // Skip if already exists in persistent dir
-    if (!fs.existsSync(destPath)) {
-      fs.copyFileSync(srcPath, destPath);
-      console.log(`Copied ${file} to persistent storage`);
-    }
-  }
-} catch (err) {
-  console.error('Error copying existing files:', err);
-}
-
-// Use the persistent directory for multer storage
+// Use multer with temporary storage
 const storage_config = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Save to both directories for redundancy
-    cb(null, persistentUploadsDir);
+    cb(null, tempUploadDir);
   },
   filename: function (req, file, cb) {
     // Create a unique filename with timestamp and random string
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const filename = file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname);
     
-    console.log(`New upload: ${filename}`);
+    console.log(`New temp upload: ${filename}`);
     cb(null, filename);
   }
 });
@@ -490,109 +465,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Image upload endpoint with enhanced storage
-  app.post("/api/upload-image", upload.single('image'), (req, res) => {
+  // Image upload endpoint using Cloudinary
+  app.post("/api/upload-image", upload.single('image'), async (req, res) => {
     try {
+      // Import here to avoid circular dependencies
+      const { uploadToCloudinary } = await import('./cloudinary');
+      
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
-      // The file is already saved to persistentUploadsDir
+      const filePath = req.file.path;
       const originalFilename = req.file.filename;
-      const persistentPath = path.join(persistentUploadsDir, originalFilename);
-      const standardPath = path.join(uploadDir, originalFilename);
       
-      console.log(`Image uploaded: ${originalFilename}`);
-      console.log(`- Primary location: ${persistentPath}`);
+      console.log(`Processing image upload: ${originalFilename}`);
       
-      // Make sure it's also copied to standard uploads directory for redundancy
+      // Get the quiz ID from the request body or query params
+      // Default to 0 for new quizzes that don't have an ID yet
+      const quizId = parseInt(req.body.quizId || req.query.quizId || '0');
+      
+      // Upload to Cloudinary with optimization
+      const cloudinaryResult = await uploadToCloudinary(filePath, quizId);
+      
+      // Delete the temporary file after upload
       try {
-        // Only copy if file was initially saved to persistent dir
-        if (req.file.path !== standardPath && fs.existsSync(persistentPath)) {
-          fs.copyFileSync(persistentPath, standardPath);
-          console.log(`- Secondary location: ${standardPath} (redundancy copy created)`);
-        }
-      } catch (copyErr) {
-        console.error(`Warning: Could not create redundancy copy to standard uploads:`, copyErr);
-        // Continue anyway as we have the primary copy
+        fs.unlinkSync(filePath);
+        console.log(`Deleted temporary file: ${filePath}`);
+      } catch (deleteErr) {
+        console.error(`Warning: Could not delete temporary file:`, deleteErr);
+        // Continue anyway as the upload is already complete
       }
       
-      // Return the file path that can be used to retrieve the image
-      const fileUrl = `/uploads/${originalFilename}`;
-      
-      // Add cache busting query parameter to ensure fresh loads
-      const cacheBustedUrl = `${fileUrl}?t=${Date.now()}`;
-      
+      // Return the Cloudinary image URL
       res.status(201).json({ 
-        imageUrl: fileUrl,
-        cacheBustedUrl: cacheBustedUrl,
-        filename: originalFilename,
-        message: "Image uploaded successfully",
-        locations: {
-          persistent: fs.existsSync(persistentPath),
-          standard: fs.existsSync(standardPath)
-        }
+        imageUrl: cloudinaryResult.secure_url,
+        // Include cache-busted URL for immediate use
+        cacheBustedUrl: `${cloudinaryResult.secure_url}?t=${Date.now()}`,
+        publicId: cloudinaryResult.public_id,
+        message: "Image uploaded successfully to Cloudinary",
+        format: cloudinaryResult.format,
+        width: cloudinaryResult.width,
+        height: cloudinaryResult.height,
+        bytes: cloudinaryResult.bytes
       });
     } catch (error) {
-      console.error("Error uploading image:", error);
-      res.status(500).json({ message: "Failed to upload image" });
+      console.error("Error uploading image to Cloudinary:", error);
+      res.status(500).json({ 
+        message: "Failed to upload image", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   
-  // Serve uploaded files with fallback to persistent directory
-  app.use('/uploads', (req, res, next) => {
-    const fileName = path.basename(req.path);
-    const standardPath = path.join(uploadDir, fileName);
-    const persistentPath = path.join(persistentUploadsDir, fileName);
-    
-    // Try to serve from standard uploads directory first
-    fs.access(standardPath, fs.constants.F_OK, (standardErr) => {
-      if (!standardErr) {
-        // File exists in standard directory
-        console.log(`Serving ${fileName} from standard uploads directory`);
-        return res.sendFile(standardPath);
-      }
-      
-      // If not in standard directory, check persistent directory
-      fs.access(persistentPath, fs.constants.F_OK, (persistentErr) => {
-        if (!persistentErr) {
-          // File exists in persistent directory
-          console.log(`Serving ${fileName} from persistent directory`);
-          
-          // Also copy back to standard directory for future use if possible
-          try {
-            fs.copyFileSync(persistentPath, standardPath);
-            console.log(`Copied ${fileName} back to standard uploads directory`);
-          } catch (copyErr) {
-            console.error(`Could not copy ${fileName} to standard directory:`, copyErr);
-          }
-          
-          return res.sendFile(persistentPath);
-        }
-        
-        // File not found in either directory
-        console.error(`Image not found in either directory: ${fileName}`);
-        res.status(404).send({
-          error: 'File not found',
-          message: 'The requested image could not be found'
-        });
-      });
-    });
-  });
-  
-  // Add a dedicated endpoint for checking image availability
-  app.get('/api/image-check/:filename', (req, res) => {
-    const fileName = req.params.filename;
-    const standardPath = path.join(uploadDir, fileName);
-    const persistentPath = path.join(persistentUploadsDir, fileName);
-    
-    const standardExists = fs.existsSync(standardPath);
-    const persistentExists = fs.existsSync(persistentPath);
-    
-    res.json({
-      filename: fileName,
-      exists: standardExists || persistentExists,
-      location: standardExists ? 'standard' : (persistentExists ? 'persistent' : 'none')
+  // Add a backward compatibility route for any old image URLs
+  // This will redirect to a "no image" placeholder to avoid breaking existing content
+  app.use('/uploads', (req, res) => {
+    console.log(`Legacy image request received for: ${req.path}`);
+    // Return 404 with a JSON message explaining the change
+    res.status(404).json({
+      error: 'Legacy image path',
+      message: 'Images are now served from Cloudinary for better performance and reliability'
     });
   });
 
