@@ -1,17 +1,16 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { Readable } from 'stream';
-import * as fs from 'fs';
-import * as path from 'path';
-import { log } from './vite';
+import fs from 'fs';
+import { promisify } from 'util';
+import path from 'path';
 
-// Configure Cloudinary
+// Cloudinary setup
 cloudinary.config({
   cloud_name: 'djkecqprm',
   api_key: '412876169339576',
   api_secret: 'qAQFpDVPgT2_HDKvZ18sTPOqmYw'
 });
 
-// Helper function to read a file and return a readable stream
+// Helper function to create read streams
 function createReadStream(filePath: string) {
   return fs.createReadStream(filePath);
 }
@@ -24,27 +23,43 @@ function createReadStream(filePath: string) {
  */
 export async function uploadToCloudinary(filePath: string, quizId: number) {
   try {
-    // Get file name for logging
-    const fileName = path.basename(filePath);
-    log(`Uploading ${fileName} to Cloudinary for quiz ${quizId}...`);
-
-    // Upload the file with transformations
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder: 'qzonme',
-      resource_type: 'image',
-      transformation: [
-        { width: 800, crop: 'limit' }, // Resize to max 800px width
-        { quality: 'auto:good' },      // Auto quality
-        { fetch_format: 'webp' }       // Convert to WebP
-      ],
-      tags: [`quiz:${quizId}`],        // Tag with quiz ID for later deletion
+    console.log(`Uploading file to Cloudinary: ${filePath} for quiz ${quizId}`);
+    
+    // Get file extension to help identify file type
+    const fileExt = path.extname(filePath).toLowerCase();
+    
+    // Upload to Cloudinary with optimization (resize to 800px width and convert to WebP)
+    const result = await new Promise<any>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'qzonme', // Store in a 'qzonme' folder for organization
+          tags: [`quiz:${quizId}`], // Tag for later retrieval and cleanup
+          resource_type: 'image',
+          transformation: [
+            { width: 800, crop: 'limit' }, // Resize to max 800px width
+            { quality: 'auto:good' }, // Automatic quality optimization
+            { fetch_format: 'auto' } // Convert to WebP when browser supports it
+          ]
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+      
+      // Pipe the file to the upload stream
+      fs.createReadStream(filePath).pipe(uploadStream);
     });
-
-    log(`Successfully uploaded ${fileName} to Cloudinary. URL: ${result.secure_url}`);
+    
+    console.log(`Successfully uploaded to Cloudinary: ${result.secure_url}`);
     return result;
   } catch (error) {
-    log(`Error uploading to Cloudinary: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`Failed to upload image to Cloudinary: ${error instanceof Error ? error.message : String(error)}`);
+    console.error("Error in uploadToCloudinary:", error);
+    throw error;
   }
 }
 
@@ -55,50 +70,61 @@ export async function uploadToCloudinary(filePath: string, quizId: number) {
  */
 export async function deleteImagesByQuizId(quizId: number) {
   try {
-    log(`Deleting all images for quiz ${quizId} from Cloudinary...`);
+    console.log(`Deleting images for quiz ${quizId} from Cloudinary`);
+    
     const result = await cloudinary.api.delete_resources_by_tag(`quiz:${quizId}`);
-    log(`Successfully deleted images for quiz ${quizId}`);
+    
+    console.log(`Successfully deleted images for quiz ${quizId}:`, result);
     return result;
   } catch (error) {
-    log(`Error deleting images for quiz ${quizId}: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`Failed to delete images for quiz ${quizId}: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`Error deleting images for quiz ${quizId}:`, error);
+    throw error;
   }
 }
 
 /**
- * Cleanup function to delete all images for quizzes older than 7 days
+ * Cleanup function to delete all images for expired quizzes
+ * @param oldQuizIds Array of expired quiz IDs to clean up
  * @returns Promise resolving to the cleanup result
  */
 export async function cleanupOldQuizImages(oldQuizIds: number[]) {
-  if (!oldQuizIds || oldQuizIds.length === 0) {
-    log('No old quizzes to clean up');
-    return;
-  }
-
   try {
-    log(`Cleaning up images for ${oldQuizIds.length} old quizzes...`);
+    console.log(`Starting cleanup of images for ${oldQuizIds.length} expired quizzes`);
     
-    // Delete images for each old quiz
+    const results = [];
+    
+    // Process deletions in batches to avoid rate limits
     for (const quizId of oldQuizIds) {
-      await deleteImagesByQuizId(quizId);
+      try {
+        const result = await deleteImagesByQuizId(quizId);
+        results.push({ quizId, success: true, result });
+      } catch (error) {
+        results.push({ quizId, success: false, error });
+      }
+      
+      // Small delay between operations
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    log(`Cleanup complete for ${oldQuizIds.length} old quizzes`);
-    return { success: true, count: oldQuizIds.length };
+    console.log(`Completed cleanup of expired quiz images:`, results);
+    return results;
   } catch (error) {
-    log(`Error during image cleanup: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`Failed to clean up old quiz images: ${error instanceof Error ? error.message : String(error)}`);
+    console.error("Error in cleanupOldQuizImages:", error);
+    throw error;
   }
 }
 
-// Test connection to Cloudinary
+/**
+ * Tests the Cloudinary connection
+ * @returns Promise resolving to the test result
+ */
 export async function testCloudinaryConnection() {
   try {
     const result = await cloudinary.api.ping();
-    log('Cloudinary connection test: ' + (result.status === 'ok' ? 'Success' : 'Failed'));
-    return result.status === 'ok';
+    console.log('Cloudinary connection successful:', result);
+    return { success: true, result };
   } catch (error) {
-    log(`Cloudinary connection test failed: ${error instanceof Error ? error.message : String(error)}`);
-    return false;
+    console.error('Cloudinary connection error:', error);
+    return { success: false, error };
   }
 }

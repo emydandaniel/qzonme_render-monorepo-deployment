@@ -1,20 +1,17 @@
 import { db } from './db';
 import { quizzes, questions, quizAttempts } from '@shared/schema';
-import { cleanupOldQuizImages, deleteImagesByQuizId } from './cloudinary';
-import { log } from './vite';
 import { eq, lt } from 'drizzle-orm';
-
-// Retention period in milliseconds (7 days)
-const RETENTION_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
+import { cleanupOldQuizImages } from './cloudinary';
 
 /**
  * Gets the cutoff date for quiz retention
  * @returns Date object for the cutoff (7 days ago)
  */
 function getRetentionCutoffDate(): Date {
-  const cutoffDate = new Date();
-  cutoffDate.setTime(cutoffDate.getTime() - RETENTION_PERIOD_MS);
-  return cutoffDate;
+  const now = new Date();
+  // Set cutoff to 7 days ago (changed from 30 days)
+  now.setDate(now.getDate() - 7);
+  return now;
 }
 
 /**
@@ -26,50 +23,84 @@ function getRetentionCutoffDate(): Date {
  * @returns Promise resolving to cleanup results
  */
 export async function cleanupExpiredQuizzes() {
-  const cutoffDate = getRetentionCutoffDate();
-  
-  log(`Starting cleanup of quizzes older than ${cutoffDate.toISOString()}`);
-  
   try {
-    // Find quizzes older than retention period
-    const oldQuizzes = await db
-      .select({ id: quizzes.id, createdAt: quizzes.createdAt })
+    console.log('Starting cleanup of expired quizzes...');
+    const cutoffDate = getRetentionCutoffDate();
+    console.log(`Cutoff date for expired quizzes: ${cutoffDate.toISOString()}`);
+    
+    // First, get all expired quizzes (older than 7 days)
+    const expiredQuizzes = await db
+      .select()
       .from(quizzes)
       .where(lt(quizzes.createdAt, cutoffDate));
     
-    if (oldQuizzes.length === 0) {
-      log('No expired quizzes found for cleanup');
-      return { success: true, count: 0 };
+    console.log(`Found ${expiredQuizzes.length} expired quizzes to clean up`);
+    
+    if (expiredQuizzes.length === 0) {
+      return { 
+        success: true, 
+        message: 'No expired quizzes found to clean up',
+        count: 0 
+      };
     }
     
-    log(`Found ${oldQuizzes.length} expired quizzes to clean up`);
-    const oldQuizIds = oldQuizzes.map(quiz => quiz.id);
+    const expiredQuizIds = expiredQuizzes.map(quiz => quiz.id);
     
-    // Delete from Cloudinary first
-    await cleanupOldQuizImages(oldQuizIds);
-    
-    // Then delete from database
-    for (const quizId of oldQuizIds) {
-      // Delete quiz attempts
-      await db.delete(quizAttempts).where(eq(quizAttempts.quizId, quizId));
-      
-      // Delete questions
-      await db.delete(questions).where(eq(questions.quizId, quizId));
-      
-      // Delete quiz
-      await db.delete(quizzes).where(eq(quizzes.id, quizId));
-      
-      log(`Deleted quiz ${quizId} and all related data`);
+    // Clean up related images from Cloudinary
+    try {
+      console.log(`Cleaning up images for ${expiredQuizIds.length} expired quizzes...`);
+      await cleanupOldQuizImages(expiredQuizIds);
+    } catch (imageError) {
+      console.error('Error cleaning up images:', imageError);
+      // Continue with database cleanup even if image cleanup fails
     }
+    
+    // Delete associated attempts
+    const attemptDeleteResult = await db
+      .delete(quizAttempts)
+      .where(
+        expiredQuizIds.length === 1
+          ? eq(quizAttempts.quizId, expiredQuizIds[0])
+          : /* SQL */ `quiz_id IN (${expiredQuizIds.join(',')})`
+      );
+    
+    console.log(`Deleted quiz attempts for expired quizzes`);
+    
+    // Delete associated questions
+    const questionDeleteResult = await db
+      .delete(questions)
+      .where(
+        expiredQuizIds.length === 1
+          ? eq(questions.quizId, expiredQuizIds[0])
+          : /* SQL */ `quiz_id IN (${expiredQuizIds.join(',')})`
+      );
+    
+    console.log(`Deleted questions for expired quizzes`);
+    
+    // Finally, delete the expired quizzes
+    const quizDeleteResult = await db
+      .delete(quizzes)
+      .where(
+        expiredQuizIds.length === 1
+          ? eq(quizzes.id, expiredQuizIds[0])
+          : /* SQL */ `id IN (${expiredQuizIds.join(',')})`
+      );
+    
+    console.log(`Deleted ${expiredQuizzes.length} expired quizzes`);
     
     return {
       success: true,
-      count: oldQuizzes.length,
-      message: `Successfully cleaned up ${oldQuizzes.length} expired quizzes`
+      message: `Cleaned up ${expiredQuizzes.length} expired quizzes`,
+      count: expiredQuizzes.length,
+      quizIds: expiredQuizIds
     };
   } catch (error) {
-    log(`Error during quiz cleanup: ${error instanceof Error ? error.message : String(error)}`);
-    throw new Error(`Failed to clean up expired quizzes: ${error instanceof Error ? error.message : String(error)}`);
+    console.error('Error cleaning up expired quizzes:', error);
+    return {
+      success: false,
+      error: String(error),
+      message: 'Failed to clean up expired quizzes'
+    };
   }
 }
 
@@ -79,23 +110,31 @@ export async function cleanupExpiredQuizzes() {
  * @returns The interval ID
  */
 export function scheduleCleanupTask(initialDelay: number = 0) {
-  // Run once after initialDelay
-  if (initialDelay > 0) {
-    setTimeout(() => {
-      cleanupExpiredQuizzes().catch(err => {
-        log(`Scheduled cleanup task failed: ${err.message}`);
-      });
-    }, initialDelay);
-  }
+  console.log(`Scheduling daily cleanup task (initial delay: ${initialDelay}ms)`);
   
-  // Schedule to run daily
-  const DAILY_MS = 24 * 60 * 60 * 1000;
-  const intervalId = setInterval(() => {
-    cleanupExpiredQuizzes().catch(err => {
-      log(`Scheduled cleanup task failed: ${err.message}`);
-    });
-  }, DAILY_MS);
+  // Run the task immediately after the initial delay
+  const initialTimeoutId = setTimeout(async () => {
+    console.log('Running initial cleanup task...');
+    try {
+      const result = await cleanupExpiredQuizzes();
+      console.log('Initial cleanup completed:', result);
+    } catch (error) {
+      console.error('Error in initial cleanup:', error);
+    }
+    
+    // Then schedule it to run daily (24 hours = 86400000ms)
+    const intervalId = setInterval(async () => {
+      console.log('Running scheduled cleanup task...');
+      try {
+        const result = await cleanupExpiredQuizzes();
+        console.log('Scheduled cleanup completed:', result);
+      } catch (error) {
+        console.error('Error in scheduled cleanup:', error);
+      }
+    }, 86400000); // 24 hours
+    
+    return intervalId;
+  }, initialDelay);
   
-  log('Cleanup task scheduled to run daily');
-  return intervalId;
+  return initialTimeoutId;
 }
