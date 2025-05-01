@@ -206,7 +206,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     );
   }
   
-  // Check if the quiz has expired (30 days after creation)
+  // Check if the quiz has expired (7 days after creation)
   if (isQuizExpired(quiz.createdAt)) {
     return (
       <Layout>
@@ -215,10 +215,10 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
             <div className="text-center py-8">
               <h2 className="text-2xl font-bold text-orange-500 mb-4">Quiz Expired</h2>
               <p className="mb-4">
-                This quiz has expired after the 30-day limit and is no longer accessible.
+                This quiz has expired after the 7-day limit and is no longer accessible.
               </p>
               <p className="text-sm text-gray-600 mb-6">
-                All quizzes on QzonMe are automatically removed 30 days after creation.
+                All quizzes on QzonMe are automatically removed 7 days after creation.
               </p>
               <Button onClick={() => window.location.href = "/"}>
                 Back to Home

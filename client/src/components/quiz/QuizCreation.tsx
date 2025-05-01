@@ -288,10 +288,10 @@ const QuizCreation: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit (increased from 5MB)
         toast({
           title: "File too large",
-          description: "Image must be less than 5MB",
+          description: "Image must be less than 10MB",
           variant: "destructive"
         });
         return;

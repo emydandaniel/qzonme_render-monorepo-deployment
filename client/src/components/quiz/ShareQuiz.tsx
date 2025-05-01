@@ -53,9 +53,9 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}`;
   const dashboardLink = dashboardToken ? `${customDomain}/dashboard/${dashboardToken}` : null;
   
-  // Format expiration date (30 days from today)
+  // Format expiration date (7 days from today)
   const expirationDate = new Date();
-  expirationDate.setDate(expirationDate.getDate() + 30);
+  expirationDate.setDate(expirationDate.getDate() + 7);
   const formattedExpirationDate = expirationDate.toLocaleDateString('en-US', {
     year: 'numeric', 
     month: 'long', 
@@ -125,9 +125,9 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
           {/* Expiration Alert */}
           <Alert variant="destructive" className="mb-6 border-amber-500 bg-amber-50 text-amber-700">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <AlertTitle>Your quiz will expire in 30 days</AlertTitle>
+            <AlertTitle>Your quiz will expire in 7 days</AlertTitle>
             <AlertDescription>
-              🕒 <strong>Note:</strong> This quiz and its dashboard will remain active for 30 days from today (until {formattedExpirationDate}).
+              🕒 <strong>Note:</strong> This quiz and its dashboard will remain active for 7 days from today (until {formattedExpirationDate}).
               After that, the links will expire and no longer be accessible.
             </AlertDescription>
           </Alert>
