@@ -139,7 +139,7 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
   const formatExpirationDate = (createdAtString: string | Date) => {
     const createdAt = new Date(createdAtString);
     const expirationDate = new Date(createdAt);
-    expirationDate.setDate(expirationDate.getDate() + 30);
+    expirationDate.setDate(expirationDate.getDate() + 7);
     
     return expirationDate.toLocaleDateString('en-US', {
       year: 'numeric', 
@@ -148,11 +148,11 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
     });
   };
 
-  // Check if quiz has expired (30 days after creation)
+  // Check if quiz has expired (7 days after creation)
   const isQuizExpired = (createdAtString: string | Date) => {
     const createdAt = new Date(createdAtString);
     const expirationDate = new Date(createdAt);
-    expirationDate.setDate(expirationDate.getDate() + 30);
+    expirationDate.setDate(expirationDate.getDate() + 7);
     
     return new Date() > expirationDate;
   };
@@ -195,9 +195,9 @@ const Dashboard: React.FC<DashboardProps> = ({ params }) => {
           <CardContent className="p-6">
             <div className="text-center">
               <h2 className="text-xl font-bold text-orange-500 mb-2">Quiz Expired</h2>
-              <p>This quiz has expired after the 30-day limit and is no longer accessible.</p>
+              <p>This quiz has expired after the 7-day limit and is no longer accessible.</p>
               <p className="mt-4 text-sm text-muted-foreground">
-                Quizzes are automatically removed 30 days after creation to keep the platform fresh.
+                Quizzes are automatically removed 7 days after creation to keep the platform fresh.
               </p>
             </div>
           </CardContent>
