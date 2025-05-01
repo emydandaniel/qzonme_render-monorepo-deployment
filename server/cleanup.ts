@@ -1,6 +1,6 @@
 import { db } from './db';
 import { quizzes, questions, quizAttempts } from '@shared/schema';
-import { eq, lt } from 'drizzle-orm';
+import { eq, lt, inArray, sql } from 'drizzle-orm';
 import { cleanupOldQuizImages } from './cloudinary';
 
 /**
@@ -61,7 +61,7 @@ export async function cleanupExpiredQuizzes() {
       .where(
         expiredQuizIds.length === 1
           ? eq(quizAttempts.quizId, expiredQuizIds[0])
-          : /* SQL */ `quiz_id IN (${expiredQuizIds.join(',')})`
+          : inArray(quizAttempts.quizId, expiredQuizIds)
       );
     
     console.log(`Deleted quiz attempts for expired quizzes`);
@@ -72,7 +72,7 @@ export async function cleanupExpiredQuizzes() {
       .where(
         expiredQuizIds.length === 1
           ? eq(questions.quizId, expiredQuizIds[0])
-          : /* SQL */ `quiz_id IN (${expiredQuizIds.join(',')})`
+          : inArray(questions.quizId, expiredQuizIds)
       );
     
     console.log(`Deleted questions for expired quizzes`);
@@ -83,7 +83,7 @@ export async function cleanupExpiredQuizzes() {
       .where(
         expiredQuizIds.length === 1
           ? eq(quizzes.id, expiredQuizIds[0])
-          : /* SQL */ `id IN (${expiredQuizIds.join(',')})`
+          : inArray(quizzes.id, expiredQuizIds)
       );
     
     console.log(`Deleted ${expiredQuizzes.length} expired quizzes`);

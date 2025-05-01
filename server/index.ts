@@ -80,7 +80,23 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+    
+    // Test Cloudinary connection
+    try {
+      const cloudinaryTestResult = await testCloudinaryConnection();
+      if (cloudinaryTestResult.success) {
+        log('Cloudinary connection successful');
+      } else {
+        log('Warning: Could not connect to Cloudinary - image uploads may fail');
+      }
+    } catch (error) {
+      log(`Error testing Cloudinary connection: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    
+    // Schedule daily cleanup task to run 5 minutes after server start
+    scheduleCleanupTask(5 * 60 * 1000);
+    log('Scheduled daily cleanup task for expired quizzes (7-day retention period)');
   });
 })();
