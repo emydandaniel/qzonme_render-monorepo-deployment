@@ -147,7 +147,7 @@ export class DatabaseStorage implements IStorage {
     return attempt;
   }
   
-  // Check if a quiz is expired (older than 30 days)
+  // Check if a quiz is expired (older than 7 days)
   isQuizExpired(quiz: Quiz): boolean {
     if (!quiz || !quiz.createdAt) return true;
     
@@ -156,7 +156,8 @@ export class DatabaseStorage implements IStorage {
     const diffInMs = now.getTime() - createdAt.getTime();
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
     
-    return diffInDays > 30;
+    // Changed from 30 days to 7 days expiration policy
+    return diffInDays > 7;
   }
 }
 
