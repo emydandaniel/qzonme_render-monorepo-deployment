@@ -47,27 +47,12 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
     }
   }, [quiz?.dashboardToken]);
   
-  // Use the custom domain for sharing with fallback to current domain
-  // This makes the app work even if the custom domain is temporarily unavailable
-  const useCurrentDomain = () => {
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    return `${protocol}//${host}`;
-  };
-  
-  // Try to use custom domain but fallback to current domain if issues occur
+  // Use the custom domain for sharing
   const customDomain = "https://qzonme.com";
-  const fallbackDomain = useCurrentDomain();
-  
-  // Create links with both domains for flexibility
   const quizLink = `${customDomain}/quiz/${urlSlug}`;
-  const fallbackQuizLink = `${fallbackDomain}/quiz/${urlSlug}`;
-  
-  // Use both links in share message to ensure accessibility
-  const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}\n\nAlternative link (if main link doesn't work): ${fallbackQuizLink}`;
+  const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}`;
   
   const dashboardLink = dashboardToken ? `${customDomain}/dashboard/${dashboardToken}` : null;
-  const fallbackDashboardLink = dashboardToken ? `${fallbackDomain}/dashboard/${dashboardToken}` : null;
   
   // Format expiration date (7 days from today)
   const expirationDate = new Date();
@@ -100,14 +85,12 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
       return;
     }
     
-    // Use both the primary and fallback dashboard links in case the custom domain is having issues
-    const combinedLinks = `${dashboardLink}\n\nAlternative dashboard link (if main link doesn't work): ${fallbackDashboardLink}`;
-    navigator.clipboard.writeText(combinedLinks);
+    navigator.clipboard.writeText(dashboardLink || "");
     
     setCopiedDashboard(true);
     toast({
-      title: "Dashboard links copied!",
-      description: "Primary and alternative links copied. Make sure to bookmark both in case of domain issues.",
+      title: "Dashboard link copied!",
+      description: "Make sure to bookmark it as you'll need it to view results.",
       duration: 3000
     });
     setTimeout(() => setCopiedDashboard(false), 3000);
@@ -160,10 +143,6 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               Hey! I made this QzonMe quiz just for YOU. 👀<br/>
               Let's see if you really know me 👇<br/>
               <span className="text-blue-500 truncate block">{quizLink}</span>
-              <div className="mt-2 pt-2 border-t border-gray-100">
-                <p className="text-xs text-gray-500 mb-1">Alternative link (if main link doesn't work):</p>
-                <span className="text-blue-500 truncate block text-xs">{fallbackQuizLink}</span>
-              </div>
             </div>
             <Button 
               type="button" 
@@ -204,18 +183,6 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
                   >
                     {copiedDashboard ? "Copied!" : <Copy className="h-4 w-4" />}
                   </Button>
-                </div>
-                
-                {/* Fallback link display */}
-                <div className="mt-2 pt-2 border-t border-gray-100">
-                  <p className="text-xs text-gray-500 mb-1 text-left">Alternative dashboard link (if main link doesn't work):</p>
-                  <div className="flex">
-                    <Input 
-                      value={fallbackDashboardLink || ""}
-                      readOnly
-                      className="bg-white text-xs"
-                    />
-                  </div>
                 </div>
               </div>
             ) : isLoading ? (
