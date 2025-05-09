@@ -139,22 +139,22 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     );
   }
 
-  if (quizError) {
+  if (quizError || !quiz) {
     // Convert error object to string for debugging
     const errorMessage = quizError instanceof Error 
       ? quizError.message
       : 'Unknown error occurred';
     
     // Extract more details if it's a response error
-    let detailedError = "";
+    let detailedError = "Quiz not found";
     try {
-      if (errorMessage.includes('{')) {
+      if (errorMessage && errorMessage.includes('{')) {
         const jsonPart = errorMessage.substring(errorMessage.indexOf('{'));
         const errorObj = JSON.parse(jsonPart);
-        detailedError = errorObj.message || 'No detailed message available';
+        detailedError = errorObj.message || 'Quiz not found';
       }
     } catch (e) {
-      detailedError = errorMessage;
+      detailedError = "Quiz not found";
     }
 
     console.log("Quiz error details:", { errorMessage, detailedError });
@@ -164,41 +164,34 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
-              <h2 className="text-2xl font-bold text-red-500 mb-4">Error Loading Quiz</h2>
-              <p className="mb-4">There was a problem loading the quiz with identifier: <br />
-                <code className="bg-gray-100 p-1 rounded">{identifier}</code>
-              </p>
-              <p className="text-sm text-gray-600 mb-6">
-                Please check that the URL is correct and try again.
-                <br />
-                <span className="text-xs text-red-500">{detailedError}</span>
-              </p>
-              <Button onClick={() => window.location.href = "/"}>
-                Back to Home
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </Layout>
-    );
-  }
-  
-  if (!quiz) {
-    return (
-      <Layout>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8">
+              <div className="flex justify-center mb-6">
+                <img src="/favicon.png" alt="QzonMe Logo" className="h-16 w-16" />
+              </div>
               <h2 className="text-2xl font-bold text-orange-500 mb-4">Quiz Not Found</h2>
-              <p className="mb-4">We couldn't find a quiz with the identifier: <br />
+              <p className="mb-4">
+                We couldn't find a quiz with the identifier: <br />
                 <code className="bg-gray-100 p-1 rounded">{identifier}</code>
               </p>
               <p className="text-sm text-gray-600 mb-6">
-                This quiz may have been removed or the link is incorrect.
+                This quiz may have expired or the link is incorrect.<br />
+                Would you like to find a different quiz?
               </p>
-              <Button onClick={() => window.location.href = "/"}>
-                Back to Home
-              </Button>
+              
+              <div className="flex flex-col md:flex-row gap-4 justify-center">
+                <Button 
+                  onClick={() => navigate("/")}
+                  variant="outline"
+                >
+                  Back to Home
+                </Button>
+                
+                <Button 
+                  onClick={() => navigate("/find-quiz")}
+                  className="btn-primary"
+                >
+                  Find a Quiz
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -213,16 +206,33 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
+              <div className="flex justify-center mb-6">
+                <img src="/favicon.png" alt="QzonMe Logo" className="h-16 w-16" />
+              </div>
               <h2 className="text-2xl font-bold text-orange-500 mb-4">Quiz Expired</h2>
               <p className="mb-4">
                 This quiz has expired after the 7-day limit and is no longer accessible.
               </p>
               <p className="text-sm text-gray-600 mb-6">
-                All quizzes on QzonMe are automatically removed 7 days after creation.
+                All quizzes on QzonMe are automatically removed 7 days after creation.<br />
+                Would you like to find a different quiz?
               </p>
-              <Button onClick={() => window.location.href = "/"}>
-                Back to Home
-              </Button>
+              
+              <div className="flex flex-col md:flex-row gap-4 justify-center">
+                <Button 
+                  onClick={() => navigate("/")}
+                  variant="outline"
+                >
+                  Back to Home
+                </Button>
+                
+                <Button 
+                  onClick={() => navigate("/find-quiz")}
+                  className="btn-primary"
+                >
+                  Find a Quiz
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
