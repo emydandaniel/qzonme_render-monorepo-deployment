@@ -481,8 +481,8 @@ const QuizCreation: React.FC = () => {
             </div>
           </div>
 
-          {/* Ad Placeholder */}
-          <AdPlaceholder />
+          {/* Ad Placeholder with refresh key to ensure ads reload when questions are added */}
+          <AdPlaceholder refreshKey={adRefreshCounter} />
         </CardContent>
       </Card>
     </>
