@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,11 +23,54 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
   questions, 
   onComplete 
 }) => {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [userAnswers, setUserAnswers] = useState<QuestionAnswer[]>([]);
+  // Generate a unique storage key for this quiz session
+  const storageKeyPrefix = `qzonme_quiz_${quizId}_`;
+  
+  // Load from localStorage if available, otherwise start fresh
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`${storageKeyPrefix}currentIndex`);
+      return saved ? parseInt(saved, 10) : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+  
+  const [userAnswers, setUserAnswers] = useState<QuestionAnswer[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${storageKeyPrefix}answers`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          console.log("Restored saved answers from local storage:", parsed.length);
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error("Error loading saved answers:", e);
+    }
+    return [];
+  });
+  
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [adRefreshCounter, setAdRefreshCounter] = useState(0);
   const { toast } = useToast();
+  
+  // Save to localStorage whenever answers or current index changes
+  useEffect(() => {
+    try {
+      if (userAnswers.length > 0) {
+        localStorage.setItem(`${storageKeyPrefix}answers`, JSON.stringify(userAnswers));
+        localStorage.setItem(`${storageKeyPrefix}currentIndex`, currentQuestionIndex.toString());
+        console.log("Saved quiz progress to local storage:", {
+          currentQuestionIndex,
+          answersCount: userAnswers.length
+        });
+      }
+    } catch (e) {
+      console.error("Error saving quiz progress:", e);
+    }
+  }, [userAnswers, currentQuestionIndex, storageKeyPrefix]);
   
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -100,6 +143,11 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
           totalQuestions: questions.length,
           finalScore: validScore
         });
+        
+        // Clear saved answers from localStorage when quiz is completed
+        localStorage.removeItem(`${storageKeyPrefix}answers`);
+        localStorage.removeItem(`${storageKeyPrefix}currentIndex`);
+        console.log("Cleared quiz progress from local storage after completion");
         
         onComplete(updatedAnswers, validScore);
       } else {
