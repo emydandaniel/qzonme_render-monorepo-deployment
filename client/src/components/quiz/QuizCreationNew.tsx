@@ -13,7 +13,7 @@ import { AlertCircle, Image, Loader2, X } from "lucide-react";
 import MultipleChoiceEditor from "./MultipleChoiceEditorNew";
 import QuestionList from "./QuestionList";
 import AdPlaceholder from "../common/AdPlaceholder";
-import Layout from "../common/Layout";
+// Remove Layout import to prevent duplicate headers/footers
 import { Question } from "@shared/schema";
 import { validateQuiz } from "@/lib/quizUtils";
 
@@ -344,7 +344,7 @@ const QuizCreation: React.FC = () => {
   };
 
   return (
-    <Layout>
+    <>
       <h1 className="text-3xl font-bold mb-4 text-primary">
         Create Your Quiz
       </h1>
@@ -479,7 +479,7 @@ const QuizCreation: React.FC = () => {
           <AdPlaceholder />
         </CardContent>
       </Card>
-    </Layout>
+    </>
   );
 };
 
