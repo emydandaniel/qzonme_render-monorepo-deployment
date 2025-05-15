@@ -26,6 +26,7 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<QuestionAnswer[]>([]);
   const [selectedOption, setSelectedOption] = useState<string>("");
+  const [adRefreshCounter, setAdRefreshCounter] = useState(0);
   const { toast } = useToast();
   
   const currentQuestion = questions[currentQuestionIndex];
@@ -77,6 +78,9 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
       
       // Reset inputs for next question
       setSelectedOption("");
+      
+      // Increment ad refresh counter to reload ads
+      setAdRefreshCounter(prev => prev + 1);
       
       // Show interstitial ad every 5 questions
       if ((currentQuestionIndex + 1) % 5 === 0) {
@@ -279,8 +283,8 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
         </CardContent>
       </Card>
       
-      {/* Ad Placeholder */}
-      <AdPlaceholder />
+      {/* Ad Placeholder with refresh key to ensure ads reload when questions are answered */}
+      <AdPlaceholder refreshKey={adRefreshCounter} />
     </>
   );
 };
