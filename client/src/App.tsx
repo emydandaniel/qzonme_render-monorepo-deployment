@@ -19,6 +19,13 @@ import FAQ from "@/pages/FAQ";
 import WhyQzonMe from "@/pages/BlogPosts/WhyQzonMe";
 import TopQuizWebsites from "@/pages/BlogPosts/TopQuizWebsites";
 import QuizIdeas from "@/pages/BlogPosts/QuizIdeas";
+import HowToMakeQuiz from "@/pages/BlogPosts/HowToMakeQuiz";
+import CelebrityQuizThemes from "@/pages/BlogPosts/CelebrityQuizThemes";
+import CreativeQuizQuestions from "@/pages/BlogPosts/CreativeQuizQuestions";
+import QuizzesLoveLanguage from "@/pages/BlogPosts/QuizzesLoveLanguage";
+import SevenQuizTypes from "@/pages/BlogPosts/SevenQuizTypes";
+import InfluencersQuizzes from "@/pages/BlogPosts/InfluencersQuizzes";
+import ScrollToTop from "@/components/common/ScrollToTop";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
@@ -43,9 +50,18 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/blog" component={Blog} />
+      
+      {/* Blog post routes */}
       <Route path="/blog/why-qzonme-is-the-funniest-way-to-bond" component={WhyQzonMe} />
       <Route path="/blog/top-quiz-websites" component={TopQuizWebsites} />
       <Route path="/blog/quiz-ideas" component={QuizIdeas} />
+      <Route path="/blog/how-to-make-quiz" component={HowToMakeQuiz} />
+      <Route path="/blog/celebrity-quiz-themes" component={CelebrityQuizThemes} />
+      <Route path="/blog/creative-quiz-questions" component={CreativeQuizQuestions} />
+      <Route path="/blog/quizzes-love-language" component={QuizzesLoveLanguage} />
+      <Route path="/blog/seven-quiz-types" component={SevenQuizTypes} />
+      <Route path="/blog/influencers-quizzes" component={InfluencersQuizzes} />
+      
       <Route path="/faq" component={FAQ} />
       <Route component={NotFound} />
     </Switch>
@@ -65,6 +81,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       <Router />
       <Toaster />
     </>
