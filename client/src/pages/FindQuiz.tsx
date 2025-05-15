@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/common/Layout";
+import MetaTags from "@/components/common/MetaTags";
 
 const FindQuiz: React.FC = () => {
   const [quizLink, setQuizLink] = useState("");
@@ -42,6 +43,10 @@ const FindQuiz: React.FC = () => {
 
   return (
     <Layout>
+      <MetaTags 
+        title="Find a Quiz | QzonMe - How Well Do Your Friends Know You?"
+        description="Enter a quiz code or link to take your friend's personalized quiz. See how well you know them and compare your score with others."
+      />
       <Card>
         <CardContent className="pt-6">
           <div className="text-center mb-8">
@@ -76,6 +81,59 @@ const FindQuiz: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Additional content for SEO and AdSense approval */}
+      <div className="mt-8 space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <h2 className="text-xl font-bold mb-4">Ways to Find a Quiz</h2>
+            <div className="space-y-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="font-semibold mb-2">Using a Quiz Link</h3>
+                <p>
+                  If someone shared a QzonMe quiz link with you through WhatsApp, social media, 
+                  or messaging apps, you can paste the entire link in the box above.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="font-semibold mb-2">Using a 6-Digit Code</h3>
+                <p>
+                  Every QzonMe quiz has a unique 6-digit code. If you have this code, 
+                  simply enter it in the box above to find your friend's quiz.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="font-semibold mb-2">Using a Creator's Name</h3>
+                <p>
+                  QzonMe generates custom URLs based on the creator's name. 
+                  If you know your friend's name used for the quiz, try entering it in the box above.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <h2 className="text-xl font-bold mb-4">About QzonMe Quizzes</h2>
+            <p className="mb-4">
+              QzonMe quizzes are personalized quizzes that test how well you know your friends. 
+              Each quiz contains questions created by someone about themselves, which you can answer 
+              to see how well you really know them.
+            </p>
+            <p className="mb-4">
+              After answering all the questions, you'll receive a score and see how you compare with other 
+              friends who have taken the same quiz. It's a fun way to see who knows the quiz creator best!
+            </p>
+            <p>
+              All quizzes remain active for 7 days, giving you plenty of time to take the quiz and 
+              compare your score with others.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </Layout>
   );
 };
