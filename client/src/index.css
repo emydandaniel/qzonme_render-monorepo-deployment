@@ -4,6 +4,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fix for page loading - render from top to bottom */
+html, body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  overflow-anchor: none;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 @layer base {
   :root {
     --background: 0 0% 98%;

@@ -9,7 +9,6 @@ import { createAvatarPlaceholder, showAdInterstitial } from "@/lib/utils";
 import { verifyAnswer } from "@/lib/quizUtils";
 import { apiRequest } from "@/lib/queryClient";
 import AdPlaceholder from "../common/AdPlaceholder";
-import Layout from "../common/Layout";
 
 interface QuizAnswerProps {
   quizId: number;
