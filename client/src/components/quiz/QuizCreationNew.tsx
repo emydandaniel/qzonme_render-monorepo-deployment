@@ -67,6 +67,9 @@ const QuizCreation: React.FC = () => {
   // Collection of questions for this quiz
   const [questions, setQuestions] = useState<Question[]>([]);
   
+  // Ad refresh counter - increments whenever we want to refresh ads
+  const [adRefreshCounter, setAdRefreshCounter] = useState(0);
+  
   // Minimum required questions indicator
   const requiredQuestionsCount = 5;
   const questionsNeeded = Math.max(0, requiredQuestionsCount - questions.length);
@@ -225,6 +228,9 @@ const QuizCreation: React.FC = () => {
 
       // Add to questions collection
       setQuestions(prev => [...prev, newQuestion]);
+      
+      // Increment ad refresh counter to reload ads
+      setAdRefreshCounter(prev => prev + 1);
       
       // Reset form for next question
       resetForm();
