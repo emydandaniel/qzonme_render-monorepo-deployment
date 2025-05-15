@@ -2,12 +2,26 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import * as pathModule from "path";
+import * as fs from "fs";
 import { scheduleCleanupTask } from './cleanup';
 import { testCloudinaryConnection } from './cloudinary';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Special route for sitemap.xml - ensure it's served with XML content type
+app.get('/sitemap.xml', (req, res) => {
+  const sitemapPath = pathModule.join(process.cwd(), 'public', 'sitemap.xml');
+  fs.readFile(sitemapPath, (err, data) => {
+    if (err) {
+      res.status(500).send('Error reading sitemap file');
+      return;
+    }
+    res.header('Content-Type', 'application/xml');
+    res.send(data);
+  });
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
