@@ -64,8 +64,36 @@ const QuizCreation: React.FC = () => {
   const [editingImageUrl, setEditingImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Collection of questions for this quiz
-  const [questions, setQuestions] = useState<Question[]>([]);
+  // Collection of questions for this quiz - initialize from localStorage if available
+  const [questions, setQuestions] = useState<Question[]>(() => {
+    // Try to load saved questions from localStorage
+    try {
+      const savedQuestions = localStorage.getItem('qzonme_draft_questions');
+      if (savedQuestions) {
+        const parsedQuestions = JSON.parse(savedQuestions);
+        if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+          console.log("Restored saved questions from local storage:", parsedQuestions.length);
+          return parsedQuestions;
+        }
+      }
+    } catch (e) {
+      console.error("Error loading saved questions:", e);
+    }
+    // Default to empty array if no saved questions or error
+    return [];
+  });
+  
+  // Save questions to localStorage whenever they change
+  useEffect(() => {
+    try {
+      if (questions.length > 0) {
+        localStorage.setItem('qzonme_draft_questions', JSON.stringify(questions));
+        console.log("Saved questions to local storage:", questions.length);
+      }
+    } catch (e) {
+      console.error("Error saving questions:", e);
+    }
+  }, [questions]);
   
   // Ad refresh counter - increments whenever we want to refresh ads
   const [adRefreshCounter, setAdRefreshCounter] = useState(0);
@@ -335,6 +363,10 @@ const QuizCreation: React.FC = () => {
   const handleFinishQuiz = async () => {
     try {
       const quiz = await createQuizMutation.mutateAsync();
+      
+      // Clear the saved questions from localStorage once quiz is created successfully
+      localStorage.removeItem('qzonme_draft_questions');
+      console.log("Cleared draft questions from local storage after successful quiz creation");
       
       toast({
         title: "Quiz Created!",
