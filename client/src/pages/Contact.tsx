@@ -16,7 +16,7 @@ const Contact: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate the form
@@ -40,24 +40,54 @@ const Contact: React.FC = () => {
       return;
     }
 
-    // Simulate form submission
+    // Submit form to API
     setIsSubmitting(true);
     
-    setTimeout(() => {
-      setIsSubmitting(false);
-      
-      // Show success message
-      toast({
-        title: "Message sent!",
-        description: "Thanks for contacting us. We'll get back to you soon.",
-        variant: "default",
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          message
+        }),
       });
       
-      // Reset the form
-      setName("");
-      setEmail("");
-      setMessage("");
-    }, 1500);
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Show success message
+        toast({
+          title: "Message sent!",
+          description: "Thanks for contacting us. We'll get back to you soon.",
+          variant: "default",
+        });
+        
+        // Reset the form
+        setName("");
+        setEmail("");
+        setMessage("");
+      } else {
+        // Show error message
+        toast({
+          title: "Failed to send message",
+          description: data.message || "There was a problem sending your message. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error sending contact form:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

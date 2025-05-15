@@ -17,6 +17,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from 'url';
+import { registerContactRoutes } from "./routes/contact";
 
 // Setup dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -527,6 +528,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       message: 'Images are now served from Cloudinary for better performance and reliability'
     });
   });
+  
+  // Register contact form routes
+  registerContactRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
