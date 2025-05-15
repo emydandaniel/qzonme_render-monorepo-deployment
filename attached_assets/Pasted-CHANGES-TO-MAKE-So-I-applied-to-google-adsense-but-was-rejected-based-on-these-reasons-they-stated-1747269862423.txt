@@ -1,0 +1,78 @@
+CHANGES TO MAKE;
+So I applied to google adsense but was rejected based on these reasons they stated;
+Why Your Site Wasn't Approved
+Google AdSense has rejected your site (qzonme.com) for two reasons:
+1. Low Value Content
+They believe your site:
+•	Doesn't yet offer unique, useful, or high-quality content.
+•	Looks incomplete or feels like it’s not ready for real users.
+•	Lacks enough written content (text-based pages, blog posts, help pages, etc.)
+2. Ads Shown Without Publisher Content
+They found pages that:
+•	Show Google ads but don’t have real written content.
+•	May just have navigation, images, forms, or behavior-only screens (like a quiz creation form or leaderboard with no surrounding info).
+So will love for you to make some changes on the website like;
+1.Add some sections on the home page like;
+a.why use qzonme or what is qzonme or  intro to qzonme.
+ with some writings and explaining for the section just like blogs
+b.Key features section too with some article or writings or explanations
+c.FAQ/how it works section with some article or writings or explanations
+d. blogs sections with links and little descriptions to the blogposts as will be given below
+2. add a contact page on the website footer and on the contact page add fields for people to enter their names,email and messages to be sent to my email and tell me how this works will I have to come there and check the messages or I will give you my email address for you to send to or will you add admin page where I can access their entered email address,names and messages?
+3.add hambugger icon at top right(menu) with pages like;home,blogs,contact us(contact page) and faq page/how it works page
+4.add a blog page whereby all blog posts with some little descriptions and linked to the blogpost for users to visit. The blog posts are:(note; one title or blog post per page
+         QzonMe Blog Series: Deep Dive Content & Engagement Strategies
+________________________________________
+Blog Post 1: Why QzonMe Is the Funniest Way to Bond
+Have you ever thought your friends knew everything about you, only to find out they got your favorite snack, color, or vacation spot completely wrong? That awkward moment when your bestie thinks you prefer pineapple on pizza when you actually hate it? That’s the kind of funny chaos QzonMe thrives on.
+QzonMe isn’t just another quiz platform. It’s a space where humor, friendship, and personality collide. The quizzes you create are about you—your likes, your memories, your quirks—and then you throw those questions at your friends to see how well they really know you. That alone leads to some hilarious moments.
+What makes it even better is how easy and fun it is to use. In less than a minute, you can build a full quiz with custom questions and even add images for flair. Then share your unique link and wait for the laughs to roll in. It’s perfect for bonding with friends, breaking the ice in group chats, or just killing time with something more personal than scrolling memes.
+Whether it’s roasting your friends for getting every answer wrong or cheering on someone who gets a perfect score, QzonMe turns friendship into a game. And it’s one that never gets old.
+________________________________________
+Blog Post 2: Top 7 Quiz Websites in 2024 (And Why QzonMe Stands Out)
+If you're into quizzes, games, or interactive fun, you’ve probably seen dozens of quiz sites floating around the internet. But not all quiz platforms are created equal. Here’s a look at the top 7 quiz websites in 2024 — and what makes QzonMe different:
+1. BuzzFeed Quizzes
+The original viral quiz hub. Great for pop culture and humor, but mostly editorial-based — you can't create personal quizzes easily.
+2. Quizlet
+Perfect for studying and flashcards. Not designed for fun or personality quizzes.
+3. Kahoot!
+Popular in classrooms and corporate training. Engaging but requires live participation and a separate host.
+4. Playbuzz
+Used to be a big player for interactive storytelling, but is less active now.
+5. Quizizz
+Another education-heavy tool. Gamified learning, but not really for personal bonding quizzes.
+6. ProProfs
+Great for making advanced quizzes, but it’s built for formal testing and requires more setup.
+7. QzonMe 🧠
+Made for fun, fast, personal quizzes. QzonMe lets you build a quiz about yourself, add images, and instantly generate a shareable link. It’s quick, easy, and built for social sharing and laughs — not classrooms.
+If you're looking to test your friends, entertain your group chat, or surprise your followers, QzonMe is your go-to platform.
+________________________________________
+Blog Post 3: 10 Fun Quiz Ideas to Challenge Your Friends
+Creating a quiz is half the fun, but getting started with good questions makes all the difference. Here are 10 creative and hilarious quiz themes to spark your next masterpiece:
+1. Guess My Favorites
+Ask friends to guess your favorite color, song, snack, movie, or season. A great way to test if they’ve really been paying attention.
+2. This or That?
+Would you choose dogs or cats? Pizza or burgers? Summer or winter? Add a few wildcards to throw them off!
+3. If I Won the Lottery…
+Would you travel the world, buy a yacht, or open a cat cafe? Let them guess your dream scenario.
+4. Song Lyrics I Relate To
+Drop relatable or emotional lyrics and ask which one sounds the most like you.
+5. My Dream Vacation
+Mountains, beaches, big cities, or somewhere quiet—this one’s great for wanderlust vibes.
+6. True or False: Me Edition
+Mix in real facts and made-up ones. “I once ate 10 tacos in one sitting.” True or false?
+7. How Would I React?
+In awkward or hilarious scenarios—like being stuck in an elevator or seeing your crush unexpectedly.
+8. What Emoji Describes Me?
+😂 😅 🤔 😈 — A fun visual twist to see how your friends perceive your vibe.
+9. Pick a Meme That Represents Me
+Upload memes and ask them to match your personality to one. Funny and very sharable.
+10. Inside Joke Edition
+Only your close friends will understand this one. Personal, unpredictable, and chaotic.
+________________________________________
+4.Add a FAQ/how it works page with some articles or writings explaining how the website works and if possible with some screenshots of the website and link the page to the hambugger icon/menu faq 
+5.please Add meta tags in the <head> section of each page and blog posts, including title, description, and keywords for QzonMe for seo purposes
+6. Add a <link rel='canonical'> tag in the head of each page that points to the https version of that page on qzonme.com.” so as to fix issues google console having canocal or duplicate issues as it sees that each page has 2 versions eg lets qzonme.com/about and www.qzonme.com/about
+7. Create a sitemap.xml file that includes all public pages on the QzonMe site: homepage, about, FAQ, privacy policy, terms of service, and all blog posts. Also include the quiz creation page.
+8. please make sure the website is also mobile friendly and please make sure to carry out all the changes carefully to avoid causing any other issues or bugs on the website.thank you
+
