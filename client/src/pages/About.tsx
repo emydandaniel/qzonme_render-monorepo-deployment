@@ -3,7 +3,10 @@ import StaticPageLayout from "@/components/common/StaticPageLayout";
 
 const About: React.FC = () => {
   return (
-    <StaticPageLayout title="About QzonMe">
+    <StaticPageLayout 
+      title="About QzonMe"
+      description="Learn more about QzonMe - the fun quiz platform where you can create quizzes about yourself and see how well your friends know you."
+    >
       <h2 className="text-xl font-semibold mb-4">What is QzonMe?</h2>
 
       <p className="mb-4">

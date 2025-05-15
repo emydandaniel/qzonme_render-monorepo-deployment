@@ -3,7 +3,10 @@ import StaticPageLayout from "@/components/common/StaticPageLayout";
 
 const Terms: React.FC = () => {
   return (
-    <StaticPageLayout title="Terms & Conditions">
+    <StaticPageLayout 
+      title="Terms & Conditions"
+      description="Read the terms and conditions for using QzonMe. Understand your rights and responsibilities when creating and sharing quizzes on our platform."
+    >
       <h2 className="text-xl font-semibold mb-4">Terms & Conditions for QzonMe</h2>
 
       <p className="mb-4">
