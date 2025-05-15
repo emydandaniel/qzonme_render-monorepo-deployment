@@ -49,12 +49,17 @@ const HomePage: React.FC = () => {
   const handleCreateQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // First scroll to the top of the page
+    window.scrollTo(0, 0);
+    
     if (!userName.trim()) {
       toast({
         title: "Name is required",
         description: "Please enter your name to continue",
         variant: "destructive",
       });
+      // Focus on the user name input at the top
+      document.getElementById('user-name')?.focus();
       return;
     }
     
