@@ -124,7 +124,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
 
   if (isLoadingQuiz || isLoadingQuestions) {
     return (
-      <Layout>
+      <>
         <MetaTags 
           title="Loading Quiz | QzonMe - How Well Do Your Friends Know You?"
           description="Loading a personalized quiz on QzonMe. Take the quiz to see how well you know your friend!"
@@ -165,7 +165,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
             to maintain data privacy and keep content fresh.
           </p>
         </div>
-      </Layout>
+      </>
     );
   }
 
@@ -190,7 +190,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     console.log("Quiz error details:", { errorMessage, detailedError });
     
     return (
-      <Layout>
+      <>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
@@ -225,14 +225,14 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
             </div>
           </CardContent>
         </Card>
-      </Layout>
+      </>
     );
   }
   
   // Check if the quiz has expired (7 days after creation)
   if (isQuizExpired(quiz.createdAt)) {
     return (
-      <Layout>
+      <>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
@@ -266,7 +266,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
             </div>
           </CardContent>
         </Card>
-      </Layout>
+      </>
     );
   }
 
@@ -284,36 +284,34 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
       
       {/* Descriptive content for SEO - hidden on mobile for better UX */}
       <div className="hidden md:block mb-4">
-        <Layout>
-          <Card className="mb-4">
-            <CardContent className="pt-6">
-              <div className="text-center mb-4">
-                <h1 className="text-2xl font-bold">{quiz.creatorName}'s Quiz</h1>
-                <p className="text-muted-foreground">
-                  This quiz was created by {quiz.creatorName} to test how well you know them.
-                  Answer all the questions carefully to get the highest score!
-                </p>
+        <Card className="mb-4">
+          <CardContent className="pt-6">
+            <div className="text-center mb-4">
+              <h1 className="text-2xl font-bold">{quiz.creatorName}'s Quiz</h1>
+              <p className="text-muted-foreground">
+                This quiz was created by {quiz.creatorName} to test how well you know them.
+                Answer all the questions carefully to get the highest score!
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-4 mb-2">
+              <div className="bg-muted p-3 rounded-lg">
+                <h3 className="font-semibold mb-1">Total Questions</h3>
+                <p>{questions.length} questions to answer</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-4 mb-2">
-                <div className="bg-muted p-3 rounded-lg">
-                  <h3 className="font-semibold mb-1">Total Questions</h3>
-                  <p>{questions.length} questions to answer</p>
-                </div>
-                
-                <div className="bg-muted p-3 rounded-lg">
-                  <h3 className="font-semibold mb-1">Scoring</h3>
-                  <p>Get scored based on your answers</p>
-                </div>
-                
-                <div className="bg-muted p-3 rounded-lg">
-                  <h3 className="font-semibold mb-1">Results</h3>
-                  <p>See where you rank on the leaderboard</p>
-                </div>
+              <div className="bg-muted p-3 rounded-lg">
+                <h3 className="font-semibold mb-1">Scoring</h3>
+                <p>Get scored based on your answers</p>
               </div>
-            </CardContent>
-          </Card>
-        </Layout>
+              
+              <div className="bg-muted p-3 rounded-lg">
+                <h3 className="font-semibold mb-1">Results</h3>
+                <p>See where you rank on the leaderboard</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
       <QuizAnswer
