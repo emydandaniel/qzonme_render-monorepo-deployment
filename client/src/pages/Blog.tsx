@@ -19,6 +19,46 @@ const blogPosts = [
     url: "/blog/quiz-ideas"
   },
   {
+    id: "how-to-make-quiz",
+    title: "How to Make a \"How Well Do You Know Me?\" Quiz",
+    excerpt: "A personalized quiz is the ultimate friendship challenge. Here's how to make one that's fun, surprising, and totally you with these easy steps.",
+    author: "QzonMe Team",
+    date: "May 14, 2025",
+    readTime: "3 min read",
+    image: "/blog/question-ideas.jpg",
+    url: "/blog/how-to-make-quiz"
+  },
+  {
+    id: "celebrity-quiz-themes",
+    title: "Top 5 Celebrity Quiz Themes Fans Are Loving Right Now",
+    excerpt: "Pop culture and quizzes are a match made in heaven. If you're looking to go viral or just entertain your fandom, try one of these trending celebrity quiz themes.",
+    author: "QzonMe Team",
+    date: "May 13, 2025",
+    readTime: "4 min read",
+    image: "/blog/quiz-success.jpg",
+    url: "/blog/celebrity-quiz-themes"
+  },
+  {
+    id: "creative-quiz-questions",
+    title: "Creative Questions to Ask in Your Best Friend Quiz",
+    excerpt: "Skip the usual boring questions and try these creative, funny, and unique questions that will make your friendship quiz stand out.",
+    author: "QzonMe Team",
+    date: "May 12, 2025",
+    readTime: "3 min read",
+    image: "/blog/question-ideas.jpg",
+    url: "/blog/creative-quiz-questions"
+  },
+  {
+    id: "quizzes-love-language",
+    title: "Why Online Quizzes Are the New Love Language",
+    excerpt: "In today's fast-paced digital world, real connection is hard to come by. But a well-made quiz? That's modern romance.",
+    author: "QzonMe Team",
+    date: "May 11, 2025",
+    readTime: "3 min read",
+    image: "/blog/friendship-facts.jpg",
+    url: "/blog/quizzes-love-language"
+  },
+  {
     id: "why-qzonme",
     title: "Why QzonMe Is the Funniest Way to Bond",
     excerpt: "QzonMe isn't just another quiz platform. It's a space where humor, friendship, and personality collide. The quizzes you create are about you—your likes, your memories, your quirks.",
@@ -27,6 +67,26 @@ const blogPosts = [
     readTime: "3 min read",
     image: "/blog/friendship-facts.jpg",
     url: "/blog/why-qzonme-is-the-funniest-way-to-bond"
+  },
+  {
+    id: "seven-quiz-types",
+    title: "From BFFs to Crushes – 7 Quiz Types You Can Make on QzonMe",
+    excerpt: "Need quiz ideas? Here's your cheat sheet for creating perfect quizzes for best friends, crushes, group chats, and more.",
+    author: "QzonMe Team",
+    date: "May 8, 2025",
+    readTime: "4 min read",
+    image: "/blog/quiz-success.jpg",
+    url: "/blog/seven-quiz-types"
+  },
+  {
+    id: "influencers-quizzes",
+    title: "How Celebrities, Influencers, and Social Media Creators Can Use QzonMe",
+    excerpt: "In the age of content overload, creators are always looking for unique ways to stand out, build engagement, and grow loyal communities.",
+    author: "QzonMe Team",
+    date: "May 7, 2025",
+    readTime: "5 min read",
+    image: "/blog/quiz-success.jpg",
+    url: "/blog/influencers-quizzes"
   },
   {
     id: "top-quiz-websites",
