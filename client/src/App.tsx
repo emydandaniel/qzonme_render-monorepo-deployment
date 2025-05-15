@@ -15,6 +15,7 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Blog from "@/pages/Blog";
 import FAQ from "@/pages/FAQ";
+import Admin from "@/pages/Admin";
 // Blog post pages
 import WhyQzonMe from "@/pages/BlogPosts/WhyQzonMe";
 import TopQuizWebsites from "@/pages/BlogPosts/TopQuizWebsites";
@@ -63,6 +64,7 @@ function Router() {
       <Route path="/blog/influencers-quizzes" component={InfluencersQuizzes} />
       
       <Route path="/faq" component={FAQ} />
+      <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );
