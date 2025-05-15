@@ -20,11 +20,11 @@ export default function NotFound() {
             <div className="flex justify-center mb-6">
               <SearchX className="h-16 w-16 text-orange-500" />
             </div>
-            <h1 className="text-2xl font-bold mb-4">Quiz Not Found</h1>
+            <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
             
             <p className="mb-6 text-gray-600">
-              The quiz you're looking for doesn't exist or may have expired.
-              <br />Would you like to find a different quiz or create your own?
+              Oops! The page you're looking for doesn't exist or may have been moved.
+              <br />Don't worry, you can easily get back on track!
             </p>
             
             <div className="flex flex-col md:flex-row gap-4 justify-center">
@@ -38,11 +38,11 @@ export default function NotFound() {
               </Button>
               
               <Button 
-                onClick={() => navigate("/find-quiz")}
+                onClick={() => navigate("/create")}
                 className="flex items-center"
               >
                 <ArrowRight className="mr-2 h-4 w-4" />
-                Find a Quiz
+                Create a Quiz
               </Button>
             </div>
           </div>
