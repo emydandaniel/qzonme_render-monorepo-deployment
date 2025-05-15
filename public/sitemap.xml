@@ -24,6 +24,7 @@
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Original blog posts -->
   <url>
     <loc>https://qzonme.com/blog/why-qzonme-is-the-funniest-way-to-bond</loc>
     <lastmod>2025-05-15</lastmod>
@@ -42,6 +43,44 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+  <!-- New blog posts -->
+  <url>
+    <loc>https://qzonme.com/blog/how-to-make-quiz</loc>
+    <lastmod>2025-05-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://qzonme.com/blog/celebrity-quiz-themes</loc>
+    <lastmod>2025-05-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://qzonme.com/blog/creative-quiz-questions</loc>
+    <lastmod>2025-05-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://qzonme.com/blog/quizzes-love-language</loc>
+    <lastmod>2025-05-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://qzonme.com/blog/seven-quiz-types</loc>
+    <lastmod>2025-05-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://qzonme.com/blog/influencers-quizzes</loc>
+    <lastmod>2025-05-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <!-- Other pages -->
   <url>
     <loc>https://qzonme.com/about</loc>
     <lastmod>2025-05-15</lastmod>
