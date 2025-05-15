@@ -88,9 +88,11 @@ const Blog: React.FC = () => {
                       {post.excerpt}
                     </p>
                     
-                    <Button variant="outline" className="mt-2" disabled>
-                      Coming Soon <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
+                    <Link href={post.url}>
+                      <Button variant="outline" className="mt-2">
+                        Read More <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </CardContent>
