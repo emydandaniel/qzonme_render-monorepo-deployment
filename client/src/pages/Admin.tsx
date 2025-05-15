@@ -70,10 +70,10 @@ const Admin: React.FC = () => {
     }
   }, [viewedMessages]);
 
-  const { data: contactMessages, isLoading, error } = useQuery<ContactMessage[]>({
+  const { data, isLoading, error } = useQuery<{success: boolean, messages: ContactMessage[]}>({
     queryKey: ["/api/contact/messages"],
     queryFn: async () => {
-      if (!isAuthenticated) return [];
+      if (!isAuthenticated) return {success: true, messages: []};
       const response = await fetch("/api/contact/messages");
       if (!response.ok) {
         throw new Error("Failed to fetch contact messages");
@@ -82,6 +82,9 @@ const Admin: React.FC = () => {
     },
     enabled: isAuthenticated,
   });
+  
+  // Extract messages from the response
+  const contactMessages = data?.messages || [];
 
   const handleLogin = () => {
     if (password === ADMIN_PASSWORD) {
