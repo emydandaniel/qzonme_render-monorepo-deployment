@@ -33,8 +33,13 @@ const Privacy: React.FC = () => {
       <h3 className="text-lg font-semibold mt-6 mb-2">3. Third-Party Services</h3>
       <p className="mb-4">
         We use third-party advertising networks and partners including Google AdSense, 
-        and other ad networks which may collect cookies and usage data to serve 
-        personalized or interest-based advertisements.
+        Media.net, Amazon Associates, Taboola, and other ad networks which may collect 
+        cookies and usage data to serve personalized or interest-based advertisements.
+      </p>
+      <p className="mb-4">
+        These advertising partners may use technologies such as cookies, web beacons, and 
+        similar technologies to collect information about your activities on our website 
+        to provide you with targeted advertising based on your browsing activities and interests.
       </p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">4. Data Protection</h3>

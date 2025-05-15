@@ -1,5 +1,11 @@
 User-agent: *
 Allow: /
 
+# Disallow dynamic pages, dashboard, and results pages
+Disallow: /dashboard/
+Disallow: /results/
+Disallow: /share/
+Disallow: /test-quiz-lookup
+
 # Sitemap
 Sitemap: https://qzonme.com/sitemap.xml
