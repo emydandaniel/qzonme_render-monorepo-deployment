@@ -125,16 +125,46 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
   if (isLoadingQuiz || isLoadingQuestions) {
     return (
       <Layout>
+        <MetaTags 
+          title="Loading Quiz | QzonMe - How Well Do Your Friends Know You?"
+          description="Loading a personalized quiz on QzonMe. Take the quiz to see how well you know your friend!"
+        />
         <Card>
           <CardContent className="pt-6">
             <div className="flex justify-center items-center h-40">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                 <p>Loading quiz...</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Preparing questions and answers for you to test your knowledge
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
+        
+        {/* Additional content for SEO purposes */}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-4">About QzonMe Quizzes</h2>
+          <p className="mb-4">
+            QzonMe offers fun and interactive quizzes that test how well your friends know you. 
+            Each quiz is personalized by the creator and contains multiple-choice questions that 
+            can include images and personal details.
+          </p>
+          
+          <h3 className="text-lg font-semibold mb-2">How It Works</h3>
+          <ul className="list-disc pl-5 mb-4 space-y-1">
+            <li>Answer each question to the best of your knowledge</li>
+            <li>Get instant feedback on your answers</li>
+            <li>See your final score and how you compare to others</li>
+            <li>Share your results on social media</li>
+          </ul>
+          
+          <p className="text-muted-foreground">
+            All quizzes remain active for 7 days after creation, after which they're automatically deleted 
+            to maintain data privacy and keep content fresh.
+          </p>
+        </div>
       </Layout>
     );
   }
@@ -244,10 +274,47 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     <>
       {/* Add meta tags for better WhatsApp sharing preview */}
       <MetaTags 
+        title={`${quiz.creatorName}'s Quiz | How Well Do You Know Me? | QzonMe`}
+        description={`Take ${quiz.creatorName}'s personalized quiz and see how well you really know them! Answer questions, get scored, and compare results with friends.`}
         creatorName={quiz.creatorName}
         url={window.location.href}
         imageUrl="/favicon.png"
+        type="quiz"
       />
+      
+      {/* Descriptive content for SEO - hidden on mobile for better UX */}
+      <div className="hidden md:block mb-4">
+        <Layout>
+          <Card className="mb-4">
+            <CardContent className="pt-6">
+              <div className="text-center mb-4">
+                <h1 className="text-2xl font-bold">{quiz.creatorName}'s Quiz</h1>
+                <p className="text-muted-foreground">
+                  This quiz was created by {quiz.creatorName} to test how well you know them.
+                  Answer all the questions carefully to get the highest score!
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-4 mb-2">
+                <div className="bg-muted p-3 rounded-lg">
+                  <h3 className="font-semibold mb-1">Total Questions</h3>
+                  <p>{questions.length} questions to answer</p>
+                </div>
+                
+                <div className="bg-muted p-3 rounded-lg">
+                  <h3 className="font-semibold mb-1">Scoring</h3>
+                  <p>Get scored based on your answers</p>
+                </div>
+                
+                <div className="bg-muted p-3 rounded-lg">
+                  <h3 className="font-semibold mb-1">Results</h3>
+                  <p>See where you rank on the leaderboard</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Layout>
+      </div>
       
       <QuizAnswer
         quizId={quiz.id}
