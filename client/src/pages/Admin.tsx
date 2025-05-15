@@ -222,10 +222,10 @@ const Admin: React.FC = () => {
             <Tabs defaultValue="unread">
               <TabsList className="mb-4">
                 <TabsTrigger value="unread">
-                  Unread {unreadMessages?.length > 0 && `(${unreadMessages.length})`}
+                  Unread {unreadMessages && unreadMessages.length > 0 && `(${unreadMessages.length})`}
                 </TabsTrigger>
                 <TabsTrigger value="read">
-                  Read {readMessages?.length > 0 && `(${readMessages.length})`}
+                  Read {readMessages && readMessages.length > 0 && `(${readMessages.length})`}
                 </TabsTrigger>
                 <TabsTrigger value="all">
                   All ({contactMessages.length})
