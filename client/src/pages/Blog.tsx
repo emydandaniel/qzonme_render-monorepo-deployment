@@ -130,23 +130,23 @@ const Blog: React.FC = () => {
               </ol>
               
               <h3>Childhood Memories</h3>
-              <ol start={4}>
+              <ul>
                 <li><strong>What was my childhood dream job?</strong> Include what you wanted to be as a kid.</li>
                 <li><strong>What was the name of my first pet?</strong> This tests how much your friends know about your childhood memories.</li>
-              </ol>
+              </ul>
               
               <h3>Habits & Quirks</h3>
-              <ol start={6}>
+              <ul>
                 <li><strong>What's my most annoying habit?</strong> Be honest and include things you know you do that might annoy others.</li>
                 <li><strong>How do I typically react when I'm stressed?</strong> Do you prefer to be alone, talk it out, or distract yourself?</li>
-              </ol>
+              </ul>
               
               <h3>Hypothetical Scenarios</h3>
-              <ol start={8}>
+              <ul>
                 <li><strong>If I won the lottery, what's the first thing I would buy?</strong> Include realistic options based on your personality.</li>
                 <li><strong>Which superpower would I choose if I could have any?</strong> This reveals a lot about your personality.</li>
                 <li><strong>If I could travel anywhere in the world, where would I go first?</strong> Include your dream destinations.</li>
-              </ol>
+              </ul>
               
               <p>
                 Remember to make your questions personal and specific to you. The more unique 
