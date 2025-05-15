@@ -393,13 +393,27 @@ const HomePage: React.FC = () => {
             <span className="text-primary hover:underline cursor-pointer">View all</span>
           </Link>
         </div>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-xl font-semibold mb-2">10 Fun Question Ideas for Your Friendship Quiz</h3>
-              <p className="text-muted-foreground mb-4">Looking for inspiration? Here are some creative questions to include in your next friendship quiz.</p>
-              <Link href="/blog/question-ideas">
-                <Button variant="outline">Read More</Button>
+              <h3 className="text-xl font-semibold mb-2">10 Fun Quiz Ideas to Challenge Your Friends</h3>
+              <p className="text-muted-foreground mb-4">Creating a quiz is half the fun, but getting started with good questions makes all the difference.</p>
+              <Link href="/blog/quiz-ideas">
+                <Button variant="outline">
+                  Read More <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="text-xl font-semibold mb-2">Why QzonMe Is the Funniest Way to Bond</h3>
+              <p className="text-muted-foreground mb-4">QzonMe isn't just another quiz platform. It's a space where humor, friendship, and personality collide.</p>
+              <Link href="/blog/why-qzonme-is-the-funniest-way-to-bond">
+                <Button variant="outline">
+                  Read More <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               </Link>
             </CardContent>
           </Card>
