@@ -124,11 +124,14 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
 
   if (isLoadingQuiz || isLoadingQuestions) {
     return (
-      <>
+      <Layout>
         <MetaTags 
           title="Loading Quiz | QzonMe - How Well Do Your Friends Know You?"
           description="Loading a personalized quiz on QzonMe. Take the quiz to see how well you know your friend!"
         />
+        
+        <h1 className="text-3xl font-bold mb-6">Loading Quiz</h1>
+        
         <Card>
           <CardContent className="pt-6">
             <div className="flex justify-center items-center h-40">
@@ -165,7 +168,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
             to maintain data privacy and keep content fresh.
           </p>
         </div>
-      </>
+      </Layout>
     );
   }
 
@@ -190,14 +193,20 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     console.log("Quiz error details:", { errorMessage, detailedError });
     
     return (
-      <>
+      <Layout>
+        <MetaTags 
+          title="Quiz Not Found | QzonMe"
+          description="We couldn't find the quiz you're looking for. It may have expired or the link is incorrect."
+        />
+        
+        <h1 className="text-3xl font-bold mb-6">Quiz Not Found</h1>
+        
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
               <div className="flex justify-center mb-6">
                 <img src="/favicon.png" alt="QzonMe Logo" className="h-16 w-16" />
               </div>
-              <h2 className="text-2xl font-bold text-orange-500 mb-4">Quiz Not Found</h2>
               <p className="mb-4">
                 We couldn't find a quiz with the identifier: <br />
                 <code className="bg-gray-100 p-1 rounded">{identifier}</code>
@@ -225,21 +234,27 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
             </div>
           </CardContent>
         </Card>
-      </>
+      </Layout>
     );
   }
   
   // Check if the quiz has expired (7 days after creation)
   if (isQuizExpired(quiz.createdAt)) {
     return (
-      <>
+      <Layout>
+        <MetaTags 
+          title="Quiz Expired | QzonMe"
+          description="This quiz has expired after the 7-day limit and is no longer accessible."
+        />
+        
+        <h1 className="text-3xl font-bold mb-6">Quiz Expired</h1>
+        
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
               <div className="flex justify-center mb-6">
                 <img src="/favicon.png" alt="QzonMe Logo" className="h-16 w-16" />
               </div>
-              <h2 className="text-2xl font-bold text-orange-500 mb-4">Quiz Expired</h2>
               <p className="mb-4">
                 This quiz has expired after the 7-day limit and is no longer accessible.
               </p>
@@ -266,12 +281,12 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
             </div>
           </CardContent>
         </Card>
-      </>
+      </Layout>
     );
   }
 
   return (
-    <>
+    <Layout>
       {/* Add meta tags for better WhatsApp sharing preview */}
       <MetaTags 
         title={`${quiz.creatorName}'s Quiz | How Well Do You Know Me? | QzonMe`}
@@ -282,12 +297,14 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
         type="quiz"
       />
       
+      {/* Quiz Title */}
+      <h1 className="text-3xl font-bold mb-6">{quiz.creatorName}'s Quiz</h1>
+      
       {/* Descriptive content for SEO - hidden on mobile for better UX */}
       <div className="hidden md:block mb-4">
         <Card className="mb-4">
           <CardContent className="pt-6">
             <div className="text-center mb-4">
-              <h1 className="text-2xl font-bold">{quiz.creatorName}'s Quiz</h1>
               <p className="text-muted-foreground">
                 This quiz was created by {quiz.creatorName} to test how well you know them.
                 Answer all the questions carefully to get the highest score!
@@ -320,7 +337,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
         questions={questions}
         onComplete={handleQuizComplete}
       />
-    </>
+    </Layout>
   );
 };
 
