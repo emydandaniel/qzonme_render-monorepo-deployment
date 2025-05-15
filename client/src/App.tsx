@@ -12,6 +12,9 @@ import TestQuizLookup from "@/pages/TestQuizLookup";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
 import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import Blog from "@/pages/Blog";
+import FAQ from "@/pages/FAQ";
 
 function Router() {
   return (
@@ -28,6 +31,9 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/about" component={About} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/faq" component={FAQ} />
       <Route component={NotFound} />
     </Switch>
   );
