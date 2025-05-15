@@ -125,7 +125,7 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
   
   if (questions.length === 0) {
     return (
-      <Layout>
+      <>
         <Card>
           <CardContent className="pt-6 text-center">
             <div className="flex items-center mb-6 justify-center">
@@ -153,25 +153,25 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
             </div>
           </CardContent>
         </Card>
-      </Layout>
+      </>
     );
   }
   
   if (!currentQuestion) {
     return (
-      <Layout>
+      <>
         <div className="flex justify-center items-center h-40">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p>Loading questions...</p>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
   
   return (
-    <Layout>
+    <>
       <Card>
         <CardContent className="pt-6">
           {/* Quiz Creator Info */}
@@ -281,7 +281,7 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
       
       {/* Ad Placeholder */}
       <AdPlaceholder />
-    </Layout>
+    </>
   );
 };
 
