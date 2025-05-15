@@ -34,8 +34,8 @@ export function generateAccessCode(): string {
 }
 
 export function showAdInterstitial() {
-  console.log("Ad Trigger: Show Interstitial Ad");
-  // Implementation would connect to Adsterra SDK
+  // No-op function - ads disabled for now
+  // When ad networks are approved, this can be re-implemented
 }
 
 export function generateUrlSlug(creatorName: string): string {
