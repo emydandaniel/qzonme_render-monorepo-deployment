@@ -9,31 +9,34 @@ import MetaTags from "@/components/common/MetaTags";
 // Blog post data 
 const blogPosts = [
   {
-    id: "question-ideas",
-    title: "10 Fun Question Ideas for Your Friendship Quiz",
-    excerpt: "Looking for inspiration? Here are some creative questions to include in your next friendship quiz that will really test how well your friends know you.",
+    id: "quiz-ideas",
+    title: "10 Fun Quiz Ideas to Challenge Your Friends",
+    excerpt: "Creating a quiz is half the fun, but getting started with good questions makes all the difference. Here are 10 creative and hilarious quiz themes to spark your next masterpiece.",
     author: "QzonMe Team",
-    date: "May 10, 2025",
+    date: "May 15, 2025",
     readTime: "4 min read",
-    image: "/blog/question-ideas.jpg"
+    image: "/blog/question-ideas.jpg",
+    url: "/blog/quiz-ideas"
   },
   {
-    id: "friendship-facts",
-    title: "Surprising Facts About Friendship You Never Knew",
-    excerpt: "Friendship is one of life's greatest joys, but there's more to it than you might think. Discover the science behind friendships and why they're so important.",
+    id: "why-qzonme",
+    title: "Why QzonMe Is the Funniest Way to Bond",
+    excerpt: "QzonMe isn't just another quiz platform. It's a space where humor, friendship, and personality collide. The quizzes you create are about you—your likes, your memories, your quirks.",
+    author: "QzonMe Team",
+    date: "May 10, 2025",
+    readTime: "3 min read",
+    image: "/blog/friendship-facts.jpg",
+    url: "/blog/why-qzonme-is-the-funniest-way-to-bond"
+  },
+  {
+    id: "top-quiz-websites",
+    title: "Top 7 Quiz Websites in 2024 (And Why QzonMe Stands Out)",
+    excerpt: "If you're into quizzes, games, or interactive fun, you've probably seen dozens of quiz sites floating around the internet. But not all quiz platforms are created equal.",
     author: "QzonMe Team",
     date: "May 5, 2025",
     readTime: "5 min read",
-    image: "/blog/friendship-facts.jpg"
-  },
-  {
-    id: "quiz-success",
-    title: "How to Make Your Quiz Go Viral Among Friends",
-    excerpt: "Want to get more friends to take your quiz? Learn the best strategies for sharing and promoting your personalized quiz to get maximum engagement.",
-    author: "QzonMe Team",
-    date: "April 28, 2025",
-    readTime: "3 min read",
-    image: "/blog/quiz-success.jpg"
+    image: "/blog/quiz-success.jpg",
+    url: "/blog/top-quiz-websites"
   }
 ];
 

@@ -15,6 +15,10 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Blog from "@/pages/Blog";
 import FAQ from "@/pages/FAQ";
+// Blog post pages
+import WhyQzonMe from "@/pages/BlogPosts/WhyQzonMe";
+import TopQuizWebsites from "@/pages/BlogPosts/TopQuizWebsites";
+import QuizIdeas from "@/pages/BlogPosts/QuizIdeas";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
@@ -39,6 +43,9 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/blog" component={Blog} />
+      <Route path="/blog/why-qzonme-is-the-funniest-way-to-bond" component={WhyQzonMe} />
+      <Route path="/blog/top-quiz-websites" component={TopQuizWebsites} />
+      <Route path="/blog/quiz-ideas" component={QuizIdeas} />
       <Route path="/faq" component={FAQ} />
       <Route component={NotFound} />
     </Switch>

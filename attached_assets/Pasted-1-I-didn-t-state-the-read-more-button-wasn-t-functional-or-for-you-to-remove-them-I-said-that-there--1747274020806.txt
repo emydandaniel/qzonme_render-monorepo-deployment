@@ -1,0 +1,55 @@
+1,I didn’t state the read more button wasn’t functional or for you to remove them I said that there was no blog post articlw when I clicked on them which I know I sent you anyways will send them again below; 
+
+Blog Post 1: Why QzonMe Is the Funniest Way to Bond
+Have you ever thought your friends knew everything about you, only to find out they got your favorite snack, color, or vacation spot completely wrong? That awkward moment when your bestie thinks you prefer pineapple on pizza when you actually hate it? That’s the kind of funny chaos QzonMe thrives on.
+QzonMe isn’t just another quiz platform. It’s a space where humor, friendship, and personality collide. The quizzes you create are about you—your likes, your memories, your quirks—and then you throw those questions at your friends to see how well they really know you. That alone leads to some hilarious moments.
+What makes it even better is how easy and fun it is to use. In less than a minute, you can build a full quiz with custom questions and even add images for flair. Then share your unique link and wait for the laughs to roll in. It’s perfect for bonding with friends, breaking the ice in group chats, or just killing time with something more personal than scrolling memes.
+Whether it’s roasting your friends for getting every answer wrong or cheering on someone who gets a perfect score, QzonMe turns friendship into a game. And it’s one that never gets old.
+________________________________________
+Blog Post 2: Top 7 Quiz Websites in 2024 (And Why QzonMe Stands Out)
+If you're into quizzes, games, or interactive fun, you’ve probably seen dozens of quiz sites floating around the internet. But not all quiz platforms are created equal. Here’s a look at the top 7 quiz websites in 2024 — and what makes QzonMe different:
+1. BuzzFeed Quizzes
+The original viral quiz hub. Great for pop culture and humor, but mostly editorial-based — you can't create personal quizzes easily.
+2. Quizlet
+Perfect for studying and flashcards. Not designed for fun or personality quizzes.
+3. Kahoot!
+Popular in classrooms and corporate training. Engaging but requires live participation and a separate host.
+4. Playbuzz
+Used to be a big player for interactive storytelling, but is less active now.
+5. Quizizz
+Another education-heavy tool. Gamified learning, but not really for personal bonding quizzes.
+6. ProProfs
+Great for making advanced quizzes, but it’s built for formal testing and requires more setup.
+7. QzonMe 🧠
+Made for fun, fast, personal quizzes. QzonMe lets you build a quiz about yourself, add images, and instantly generate a shareable link. It’s quick, easy, and built for social sharing and laughs — not classrooms.
+If you're looking to test your friends, entertain your group chat, or surprise your followers, QzonMe is your go-to platform.
+________________________________________
+Blog Post 3: 10 Fun Quiz Ideas to Challenge Your Friends
+Creating a quiz is half the fun, but getting started with good questions makes all the difference. Here are 10 creative and hilarious quiz themes to spark your next masterpiece:
+1. Guess My Favorites
+Ask friends to guess your favorite color, song, snack, movie, or season. A great way to test if they’ve really been paying attention.
+2. This or That?
+Would you choose dogs or cats? Pizza or burgers? Summer or winter? Add a few wildcards to throw them off!
+3. If I Won the Lottery…
+Would you travel the world, buy a yacht, or open a cat cafe? Let them guess your dream scenario.
+4. Song Lyrics I Relate To
+Drop relatable or emotional lyrics and ask which one sounds the most like you.
+5. My Dream Vacation
+Mountains, beaches, big cities, or somewhere quiet—this one’s great for wanderlust vibes.
+6. True or False: Me Edition
+Mix in real facts and made-up ones. “I once ate 10 tacos in one sitting.” True or false?
+7. How Would I React?
+In awkward or hilarious scenarios—like being stuck in an elevator or seeing your crush unexpectedly.
+8. What Emoji Describes Me?
+😂 😅 🤔 😈 — A fun visual twist to see how your friends perceive your vibe.
+9. Pick a Meme That Represents Me
+Upload memes and ask them to match your personality to one. Funny and very sharable.
+10. Inside Joke Edition
+Only your close friends will understand this one. Personal, unpredictable, and chaotic.
+________________________________________
+Please after adding the blogposts per page make sure to update the sitemap.xml and robots.txt file amd meta tags descriptions for the blogposts too.
+
+2.on the create quiz page and probably on the answer quiz page(haven’t checked answer quiz page) I noticed that there are 2 footers as one footer is above even the area to enter questions,image and options please fix this
+3. On the contact page can you remove those icons or sections including the whatsapp and email address as I don’t want to give out my email address since am a Nigerian which might cause trust issues and I don’t have custom email address like support@qzonme.com and you still haven’t told me how I will be able to access those messages by users
+4.after making all these changes make sure to reupdate the sitemap.xml and robots.txt  files and you still haven’t given me link to the sitemap.xml so that I can use it for google console account for indexing
+

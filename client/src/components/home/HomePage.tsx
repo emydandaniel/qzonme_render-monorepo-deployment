@@ -349,6 +349,42 @@ const HomePage: React.FC = () => {
         </Card>
       </section>
 
+      {/* What is QzonMe section */}
+      <section className="mb-12">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold">What is QzonMe?</h2>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <p>
+                QzonMe is a fun and engaging quiz platform that lets you create personalized "How Well Do You Know Me?" quizzes. 
+                It's the perfect way to test your friends, family, and followers on how well they really know you!
+              </p>
+              <div className="bg-muted p-4 rounded-md">
+                <h3 className="font-medium mb-2">Why Use QzonMe?</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>No account or sign-up required - create quizzes instantly</li>
+                  <li>Beautiful, mobile-friendly interface that works on any device</li>
+                  <li>Share your quiz anywhere with a custom link</li>
+                  <li>See who knows you best with our real-time leaderboard</li>
+                  <li>Completely free to use with no hidden fees</li>
+                </ul>
+              </div>
+              <p>
+                Whether you're looking to have fun with friends, engage your social media followers, or just learn more about how others perceive you,
+                QzonMe offers a fun, easy-to-use platform that anyone can enjoy.
+              </p>
+              <div className="flex justify-center">
+                <Link href="/faq">
+                  <Button variant="outline">Learn More About QzonMe</Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+      
       {/* Blog preview section */}
       <section className="mb-12">
         <div className="flex justify-between items-center mb-6">
