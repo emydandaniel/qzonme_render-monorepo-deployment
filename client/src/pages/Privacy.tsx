@@ -3,7 +3,10 @@ import StaticPageLayout from "@/components/common/StaticPageLayout";
 
 const Privacy: React.FC = () => {
   return (
-    <StaticPageLayout title="Privacy Policy">
+    <StaticPageLayout 
+      title="Privacy Policy"
+      description="Learn about how QzonMe handles your data and protects your privacy. Our policy explains what information we collect and how we use it."
+    >
       <h2 className="text-xl font-semibold mb-4">Privacy Policy for QzonMe</h2>
 
       <p className="mb-4">

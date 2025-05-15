@@ -3,15 +3,28 @@ import { Link } from "wouter";
 import Layout from "./Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import MetaTags from "./MetaTags";
 
 interface StaticPageLayoutProps {
   title: string;
   children: React.ReactNode;
+  description?: string;
+  type?: string;
 }
 
-const StaticPageLayout: React.FC<StaticPageLayoutProps> = ({ title, children }) => {
+const StaticPageLayout: React.FC<StaticPageLayoutProps> = ({ 
+  title, 
+  children, 
+  description = "QzonMe - Create and share personalized quizzes to test how well your friends know you.", 
+  type = "website" 
+}) => {
   return (
     <Layout>
+      <MetaTags 
+        title={`${title} | QzonMe`}
+        description={description}
+        type={type}
+      />
       <Card>
         <CardContent className="pt-6">
           <div className="mb-4 flex items-center justify-between">

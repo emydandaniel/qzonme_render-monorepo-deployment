@@ -3,12 +3,17 @@ import { Button } from "@/components/ui/button";
 import { SearchX, Home, ArrowRight } from "lucide-react";
 import { useLocation } from "wouter";
 import Layout from "@/components/common/Layout";
+import MetaTags from "@/components/common/MetaTags";
 
 export default function NotFound() {
   const [, navigate] = useLocation();
 
   return (
     <Layout>
+      <MetaTags 
+        title="Page Not Found | QzonMe"
+        description="Sorry, the page you're looking for doesn't exist or may have been moved. Try creating a new quiz or finding an existing one."
+      />
       <Card>
         <CardContent className="pt-6">
           <div className="text-center py-8">
