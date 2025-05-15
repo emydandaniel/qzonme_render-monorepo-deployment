@@ -31,6 +31,9 @@ const MetaTags = ({
     // Get current URL if none provided
     const pageUrl = url || window.location.href;
     
+    // Create canonical URL (without www prefix)
+    const canonicalUrl = pageUrl.replace('www.qzonme.com', 'qzonme.com');
+    
     // Create personalized title and description if creator name is provided
     const personalizedTitle = creatorName 
       ? `${creatorName} Made This Quiz Just for You 💬` 
@@ -39,6 +42,15 @@ const MetaTags = ({
     const personalizedDescription = creatorName
       ? `How well do you really know ${creatorName}? Try this private QzonMe quiz they made just for close friends.`
       : description;
+
+    // Update or create canonical link
+    let canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute('href', canonicalUrl);
 
     // Update Open Graph tags
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', personalizedTitle);
@@ -60,7 +72,8 @@ const MetaTags = ({
       personalizedTitle, 
       personalizedDescription, 
       fullImageUrl, 
-      pageUrl 
+      pageUrl,
+      canonicalUrl
     });
     
   }, [title, description, imageUrl, url, type, creatorName]);
