@@ -2,11 +2,10 @@ import React from "react";
 import QuizCreationNew from "@/components/quiz/QuizCreationNew";
 import MetaTags from "@/components/common/MetaTags";
 import { Card, CardContent } from "@/components/ui/card";
-import Layout from "@/components/common/Layout";
 
 const CreateQuiz: React.FC = () => {
   return (
-    <Layout>
+    <>
       <MetaTags 
         title="Create a Quiz | QzonMe - Test Your Friends" 
         description="Create a personalized quiz that tests how well your friends know you. Add multiple-choice questions, images, and share with friends in minutes!"
@@ -22,7 +21,7 @@ const CreateQuiz: React.FC = () => {
               Ready to see how well your friends, family, or followers really know you? Create your custom quiz in just a few minutes with these simple steps:
             </p>
             <ol className="list-decimal pl-5 mb-4 space-y-2">
-              <li>Add multiple-choice or open-ended questions about yourself</li>
+              <li>Add multiple-choice questions about yourself</li>
               <li>Upload images to make your quiz more personal and engaging</li>
               <li>Customize with your name and share with friends</li>
               <li>Watch as your friends try to guess your preferences, habits, and memories</li>
@@ -37,7 +36,7 @@ const CreateQuiz: React.FC = () => {
       
       {/* The actual quiz creation component */}
       <QuizCreationNew />
-    </Layout>
+    </>
   );
 };
 
