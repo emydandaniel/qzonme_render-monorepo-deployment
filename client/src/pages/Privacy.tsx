@@ -29,8 +29,9 @@ const Privacy: React.FC = () => {
 
       <h3 className="text-lg font-semibold mt-6 mb-2">3. Third-Party Services</h3>
       <p className="mb-4">
-        We use third-party advertising partners such as Ezoic, which may collect cookies 
-        and usage data.
+        We use third-party advertising networks and partners including Google AdSense, 
+        and other ad networks which may collect cookies and usage data to serve 
+        personalized or interest-based advertisements.
       </p>
 
       <h3 className="text-lg font-semibold mt-6 mb-2">4. Data Protection</h3>

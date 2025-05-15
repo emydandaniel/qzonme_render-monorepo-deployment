@@ -43,9 +43,8 @@ const FAQ: React.FC = () => {
                       </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
                         <li>Multiple-choice questions with up to 4 options</li>
-                        <li>Open-ended questions that accept multiple correct answers</li>
                         <li>Image questions to make your quiz more personal</li>
-                        <li>Custom hints for open-ended questions</li>
+                        <li>Fun and challenging questions about yourself</li>
                       </ul>
                     </div>
                   </div>

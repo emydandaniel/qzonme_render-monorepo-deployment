@@ -85,11 +85,9 @@ const Blog: React.FC = () => {
                       {post.excerpt}
                     </p>
                     
-                    <Link href={`/blog/${post.id}`}>
-                      <Button variant="outline" className="mt-2">
-                        Read More <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </Link>
+                    <Button variant="outline" className="mt-2" disabled>
+                      Coming Soon <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -97,80 +95,20 @@ const Blog: React.FC = () => {
           ))}
         </div>
         
-        {/* Sample blog post page */}
+        {/* Coming Soon Message */}
         <Card className="mt-12">
-          <CardContent className="pt-6">
-            <h2 className="text-xl font-bold mb-4">10 Fun Question Ideas for Your Friendship Quiz</h2>
-            <div className="flex flex-wrap gap-3 mb-6 text-sm text-muted-foreground">
-              <div className="flex items-center">
-                <User className="h-4 w-4 mr-1" />
-                QzonMe Team
-              </div>
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-1" />
-                May 10, 2025
-              </div>
-              <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-1" />
-                4 min read
-              </div>
-            </div>
-            
-            <div className="prose max-w-none">
-              <p>
-                Creating a memorable friendship quiz is all about asking the right questions. 
-                Here's a list of creative question ideas to include in your next QzonMe quiz:
-              </p>
-              
-              <h3>Personal Preferences</h3>
-              <ol>
-                <li><strong>What's my go-to comfort food when I'm feeling down?</strong> Options can include your favorite foods or snacks.</li>
-                <li><strong>Which movie genre do I absolutely refuse to watch?</strong> Test if your friends know your movie preferences.</li>
-                <li><strong>If I could only listen to one music artist for the rest of my life, who would it be?</strong> Include your favorite artist and some close seconds.</li>
-              </ol>
-              
-              <h3>Childhood Memories</h3>
-              <ul>
-                <li><strong>What was my childhood dream job?</strong> Include what you wanted to be as a kid.</li>
-                <li><strong>What was the name of my first pet?</strong> This tests how much your friends know about your childhood memories.</li>
-              </ul>
-              
-              <h3>Habits & Quirks</h3>
-              <ul>
-                <li><strong>What's my most annoying habit?</strong> Be honest and include things you know you do that might annoy others.</li>
-                <li><strong>How do I typically react when I'm stressed?</strong> Do you prefer to be alone, talk it out, or distract yourself?</li>
-              </ul>
-              
-              <h3>Hypothetical Scenarios</h3>
-              <ul>
-                <li><strong>If I won the lottery, what's the first thing I would buy?</strong> Include realistic options based on your personality.</li>
-                <li><strong>Which superpower would I choose if I could have any?</strong> This reveals a lot about your personality.</li>
-                <li><strong>If I could travel anywhere in the world, where would I go first?</strong> Include your dream destinations.</li>
-              </ul>
-              
-              <p>
-                Remember to make your questions personal and specific to you. The more unique 
-                and detailed your questions are, the better they'll test how well your friends 
-                truly know you!
-              </p>
-              
-              <p>
-                Ready to create your own friendship quiz? Head back to our 
-                <Link href="/">
-                  <a className="text-primary"> home page </a>
-                </Link>
-                and get started right away. It only takes a few minutes to create a quiz 
-                your friends will love!
-              </p>
-            </div>
-          </CardContent>
-          <CardFooter className="border-t">
-            <Link href="/blog">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-bold mb-4">More Articles Coming Soon!</h2>
+            <p className="text-muted-foreground mb-6">
+              We're working on creating more helpful content about friendship quizzes, social sharing tips, and how to create engaging questions.
+              Check back soon for new articles!
+            </p>
+            <Link href="/">
               <Button variant="outline">
-                Back to All Posts
+                Back to Home
               </Button>
             </Link>
-          </CardFooter>
+          </CardContent>
         </Card>
       </div>
     </Layout>
