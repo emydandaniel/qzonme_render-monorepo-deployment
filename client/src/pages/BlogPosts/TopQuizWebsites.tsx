@@ -36,38 +36,38 @@ const TopQuizWebsites: React.FC = () => {
               websites in 2024 — and what makes QzonMe different:
             </p>
             
-            <h2>1. BuzzFeed Quizzes</h2>
+            <h2><a href="https://www.buzzfeed.com/quizzes" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">1. BuzzFeed Quizzes</a></h2>
             <p>
               The original viral quiz hub. Great for pop culture and humor, but mostly editorial-based — you can't 
               create personal quizzes easily.
             </p>
             
-            <h2>2. Quizlet</h2>
+            <h2><a href="https://quizlet.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">2. Quizlet</a></h2>
             <p>
               Perfect for studying and flashcards. Not designed for fun or personality quizzes.
             </p>
             
-            <h2>3. Kahoot!</h2>
+            <h2><a href="https://kahoot.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">3. Kahoot!</a></h2>
             <p>
               Popular in classrooms and corporate training. Engaging but requires live participation and a separate host.
             </p>
             
-            <h2>4. Playbuzz</h2>
+            <h2><a href="https://www.playbuzz.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">4. Playbuzz</a></h2>
             <p>
               Used to be a big player for interactive storytelling, but is less active now.
             </p>
             
-            <h2>5. Quizizz</h2>
+            <h2><a href="https://quizizz.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">5. Quizizz</a></h2>
             <p>
               Another education-heavy tool. Gamified learning, but not really for personal bonding quizzes.
             </p>
             
-            <h2>6. ProProfs</h2>
+            <h2><a href="https://www.proprofs.com/quiz-school" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">6. ProProfs Quiz Maker</a></h2>
             <p>
               Great for making advanced quizzes, but it's built for formal testing and requires more setup.
             </p>
             
-            <h2>7. QzonMe 🧠</h2>
+            <h2><a href="https://qzonme.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">7. QzonMe 🧠</a></h2>
             <p>
               Made for fun, fast, personal quizzes. QzonMe lets you build a quiz about yourself, add images, and 
               instantly generate a shareable link. It's quick, easy, and built for social sharing and laughs — not classrooms.
