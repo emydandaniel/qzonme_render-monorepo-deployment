@@ -153,23 +153,23 @@ const HomePage: React.FC = () => {
   const features = [
     {
       icon: <Users className="h-8 w-8 text-primary" />,
-      title: "Test Your Friendship",
-      description: "Create custom quizzes about yourself and challenge friends to see who knows you best."
+      title: "Any Quiz Type",
+      description: "Friendship tests, trivia challenges, classroom games, fandom quizzes, or any topic you love!"
     },
     {
       icon: <Share2 className="h-8 w-8 text-primary" />,
       title: "Easy Sharing",
-      description: "Share your personalized quiz link on WhatsApp, Instagram, or any social platform."
+      description: "Share your quiz link on WhatsApp, Instagram, or any social platform in seconds."
     },
     {
       icon: <Trophy className="h-8 w-8 text-primary" />,
       title: "Competitive Leaderboard",
-      description: "See who scored highest on your quiz with our real-time leaderboard."
+      description: "See who scored highest on your quiz with our real-time leaderboard and rankings."
     },
     {
       icon: <Heart className="h-8 w-8 text-primary" />,
-      title: "Fun & Free",
-      description: "No sign-up required - create and share quizzes instantly at no cost."
+      title: "Quick & Free",
+      description: "No sign-up required - create and share any quiz instantly at no cost."
     }
   ];
 
@@ -177,15 +177,15 @@ const HomePage: React.FC = () => {
   const testimonials = [
     {
       name: "Sarah K.",
-      content: "Made this for my birthday and all my friends loved it! So much fun seeing who knows me best."
+      content: "Created a Harry Potter trivia for my friend group - we're all obsessed! Got 50+ responses in hours."
     },
     {
       name: "James T.",
-      content: "Super easy to create and share. My quiz got over 30 responses in one day!"
+      content: "Made a football quiz for my class. Super easy to create and the leaderboard made it so competitive!"
     },
     {
       name: "Mia L.",
-      content: "Used this for a team-building activity at work. Great way to break the ice!"
+      content: "Perfect for family game night! Created a 'How well do you know our family?' quiz everyone loved."
     }
   ];
 
@@ -196,7 +196,7 @@ const HomePage: React.FC = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4 font-poppins">How Well Do Your Friends Really Know You?</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 font-poppins">Create Any Quiz in Minutes!</h1>
               
               {/* Different description based on whether we are on the main domain or a shared link */}
               {pendingQuiz ? (
@@ -205,8 +205,8 @@ const HomePage: React.FC = () => {
                 </p>
               ) : (
                 <p className="text-lg text-muted-foreground mb-6">
-                  Create a personalized quiz, share it with friends, and discover who knows you best. 
-                  It's free, fun, and takes just minutes!
+                  From friendship tests to trivia challenges, classroom games to fandom quizzes - 
+                  create, share, and compete with friends! It's free, fun, and takes just minutes!
                 </p>
               )}
               
@@ -293,22 +293,22 @@ const HomePage: React.FC = () => {
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">1</div>
                 <div>
-                  <h3 className="font-semibold">Create Your Quiz</h3>
-                  <p className="text-muted-foreground">Enter your name and create questions about yourself. Add images to make it more personal!</p>
+                  <h3 className="font-semibold">Create Any Quiz</h3>
+                  <p className="text-muted-foreground">Enter your name and create questions on any topic! Add images to make it more engaging.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">2</div>
                 <div>
-                  <h3 className="font-semibold">Share With Friends</h3>
-                  <p className="text-muted-foreground">Get a unique link to share on social media or send directly to friends.</p>
+                  <h3 className="font-semibold">Share With Everyone</h3>
+                  <p className="text-muted-foreground">Get a unique link to share on social media or send directly to friends and family.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">3</div>
                 <div>
-                  <h3 className="font-semibold">Discover Results</h3>
-                  <p className="text-muted-foreground">See who knows you best on your personalized leaderboard!</p>
+                  <h3 className="font-semibold">See Who Wins</h3>
+                  <p className="text-muted-foreground">Check out your leaderboard to see who scored highest on your quiz!</p>
                 </div>
               </div>
             </div>
@@ -363,22 +363,32 @@ const HomePage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="space-y-4">
               <p>
-                QzonMe is a fun and engaging quiz platform that lets you create personalized "How Well Do You Know Me?" quizzes. 
-                It's the perfect way to test your friends, family, and followers on how well they really know you!
+                QzonMe is the ultimate quiz creation platform where you can build any type of quiz in minutes! 
+                From friendship tests to trivia challenges, classroom games to fandom quizzes - create, share, and compete!
               </p>
               <div className="bg-muted p-4 rounded-md">
-                <h3 className="font-medium mb-2">Why Use QzonMe?</h3>
+                <h3 className="font-medium mb-2">Perfect for Any Quiz Type:</h3>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>No account or sign-up required - create quizzes instantly</li>
+                  <li><strong>Personal Quizzes:</strong> "How well do you know me?" friendship tests</li>
+                  <li><strong>Trivia Challenges:</strong> Football, music, movies, anime, or any topic</li>
+                  <li><strong>Classroom Games:</strong> Fun revision quizzes and educational tests</li>
+                  <li><strong>Group Activities:</strong> Family games and team-building exercises</li>
+                  <li><strong>Fandom Fun:</strong> Test knowledge about favorite shows, books, or celebrities</li>
+                </ul>
+              </div>
+              <div className="bg-muted p-4 rounded-md">
+                <h3 className="font-medium mb-2">Why Choose QzonMe?</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>No account or sign-up required - create any quiz instantly</li>
                   <li>Beautiful, mobile-friendly interface that works on any device</li>
                   <li>Share your quiz anywhere with a custom link</li>
-                  <li>See who knows you best with our real-time leaderboard</li>
+                  <li>Real-time leaderboard shows who's winning</li>
                   <li>Completely free to use with no hidden fees</li>
                 </ul>
               </div>
               <p>
-                Whether you're looking to have fun with friends, engage your social media followers, or just learn more about how others perceive you,
-                QzonMe offers a fun, easy-to-use platform that anyone can enjoy.
+                Whether you're a teacher creating review games, a friend making trivia for your group, or someone testing family knowledge,
+                QzonMe makes quiz creation fun, fast, and completely free!
               </p>
               <div className="flex justify-center">
                 <Link href="/faq">

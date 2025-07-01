@@ -6,8 +6,8 @@ const Home: React.FC = () => {
   return (
     <>
       <MetaTags 
-        title="QzonMe - How Well Do Your Friends Know You?" 
-        description="Create fun and engaging quizzes to test how well your friends know you. Share with friends, view results, and see who knows you best!"
+        title="QzonMe - Create Fun Quizzes for Everyone" 
+        description="Create any kind of quiz instantly! From friendship tests to trivia challenges, classroom games to fandom quizzes. Share with friends and see who scores highest!"
         type="website"
       />
       <HomePage />
