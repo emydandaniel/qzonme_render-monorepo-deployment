@@ -98,8 +98,8 @@ const QuizCreation: React.FC = () => {
   // Ad refresh counter - increments whenever we want to refresh ads
   const [adRefreshCounter, setAdRefreshCounter] = useState(0);
   
-  // No minimum required questions - users can create quizzes with any number of questions
-  const requiredQuestionsCount = 1; // Just need at least 1 question to create a quiz
+  // Minimum required questions indicator
+  const requiredQuestionsCount = 5;
   const questionsNeeded = Math.max(0, requiredQuestionsCount - questions.length);
   
   // Image upload mutation
@@ -500,7 +500,7 @@ const QuizCreation: React.FC = () => {
           <div className="mt-6 pt-4 border-t border-gray-200">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                {questions.length} question{questions.length !== 1 ? 's' : ''} added
+                {questions.length} of {requiredQuestionsCount} questions added
               </span>
               <Button
                 type="button"
