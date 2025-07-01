@@ -8,30 +8,30 @@ const CreateQuiz: React.FC = () => {
   return (
     <Layout>
       <MetaTags 
-        title="Create a Quiz | QzonMe - Test Your Friends" 
-        description="Create a personalized quiz that tests how well your friends know you. Add multiple-choice questions, images, and share with friends in minutes!"
+        title="Create Any Quiz | QzonMe - Universal Quiz Builder" 
+        description="Create any type of quiz in minutes! Build personal friendship tests, trivia challenges, classroom games, family quizzes, or fandom tests. Add images and share instantly!"
         type="website"
       />
       
       {/* Create Quiz Heading */}
-      <h1 className="text-3xl font-bold mb-6">Create Your Quiz</h1>
+      <h1 className="text-3xl font-bold mb-6">Create Any Quiz</h1>
       
       {/* SEO Content */}
       <div className="mb-8">
         <Card className="mb-6">
           <CardContent className="pt-6">
             <p className="mb-4">
-              Ready to see how well your friends, family, or followers really know you? Create your custom quiz in just a few minutes with these simple steps:
+              Ready to create your custom quiz? Whether it's a personal friendship test, trivia challenge, classroom game, or fandom quiz, you can build it in just a few minutes:
             </p>
             <ol className="list-decimal pl-5 mb-4 space-y-2">
-              <li>Add multiple-choice questions about yourself</li>
-              <li>Upload images to make your quiz more personal and engaging</li>
-              <li>Customize with your name and share with friends</li>
-              <li>Watch as your friends try to guess your preferences, habits, and memories</li>
-              <li>See who knows you best on your personalized leaderboard</li>
+              <li>Choose your quiz topic - personal questions, trivia, educational content, or any subject you love</li>
+              <li>Add multiple-choice questions with up to 4 answer options</li>
+              <li>Upload images to make your quiz more engaging and visual</li>
+              <li>Customize with your name and get instant sharing links</li>
+              <li>Watch participants compete and see who scores highest on your leaderboard</li>
             </ol>
             <p className="text-muted-foreground">
-              Your quiz will remain active for 7 days, giving everyone plenty of time to participate. No account required!
+              Your quiz will remain active for 7 days, giving everyone plenty of time to participate. No account required - just create and share!
             </p>
           </CardContent>
         </Card>
