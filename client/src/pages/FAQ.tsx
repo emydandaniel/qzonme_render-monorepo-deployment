@@ -11,7 +11,7 @@ const FAQ: React.FC = () => {
     <Layout>
       <MetaTags 
         title="FAQ & How It Works | QzonMe" 
-        description="Learn how to create, share, and enjoy your QzonMe quizzes with friends. Find answers to frequently asked questions about our friendship quiz platform."
+        description="Learn how to create, share, and enjoy any type of quiz on QzonMe. Find answers to frequently asked questions about our universal quiz creation platform."
       />
       
       <div className="max-w-3xl mx-auto">
@@ -29,7 +29,7 @@ const FAQ: React.FC = () => {
               <CardHeader>
                 <CardTitle>How to Use QzonMe</CardTitle>
                 <CardDescription>
-                  Follow these simple steps to create and share your personalized quiz.
+                  Follow these simple steps to create and share any type of quiz in minutes.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -37,14 +37,17 @@ const FAQ: React.FC = () => {
                   <div className="flex gap-4 items-start">
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">1</div>
                     <div>
-                      <h3 className="text-xl font-semibold mb-2">Create Your Quiz</h3>
+                      <h3 className="text-xl font-semibold mb-2">Create Any Quiz</h3>
                       <p className="text-muted-foreground mb-4">
-                        Enter your name and start creating questions about yourself. You can add:
+                        Enter your name and start creating questions on any topic you love. You can create:
                       </p>
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-                        <li>Multiple-choice questions with up to 4 options</li>
-                        <li>Image questions to make your quiz more personal</li>
-                        <li>Fun and challenging questions about yourself</li>
+                        <li>Personal "How well do you know me?" friendship tests</li>
+                        <li>Trivia challenges on sports, movies, music, anime, or any topic</li>
+                        <li>Educational quizzes for classroom review and study games</li>
+                        <li>Family and group activity quizzes for gatherings</li>
+                        <li>Fandom quizzes to test knowledge about favorite shows or celebrities</li>
+                        <li>Multiple-choice questions with up to 4 options and image support</li>
                       </ul>
                     </div>
                   </div>
@@ -120,11 +123,23 @@ const FAQ: React.FC = () => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                      QzonMe is a fun web platform that lets you create personalized "How Well Do You Know Me?" quizzes. You can create questions about yourself, share them with friends, and see who knows you best based on their scores.
+                      QzonMe is the ultimate quiz creation platform where you can build any type of quiz in minutes! Create personal "How well do you know me?" tests, trivia challenges, classroom games, family quizzes, or fandom tests. It's simple, free, and works on any device.
                     </AccordionContent>
                   </AccordionItem>
                   
                   <AccordionItem value="item-2">
+                    <AccordionTrigger className="text-left">
+                      <div className="flex items-center">
+                        <Lightbulb className="mr-2 h-5 w-5 text-primary" />
+                        <span>What types of quizzes can I create?</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      You can create any type of quiz! Popular options include: personal "How well do you know me?" friendship tests, trivia challenges on sports/movies/music/anime, educational classroom review games, family gathering quizzes, fandom tests about TV shows or celebrities, and topic-based challenges on any subject you're passionate about.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-3">
                     <AccordionTrigger className="text-left">
                       <div className="flex items-center">
                         <Info className="mr-2 h-5 w-5 text-primary" />
@@ -136,7 +151,7 @@ const FAQ: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
                   
-                  <AccordionItem value="item-3">
+                  <AccordionItem value="item-4">
                     <AccordionTrigger className="text-left">
                       <div className="flex items-center">
                         <Lock className="mr-2 h-5 w-5 text-primary" />
@@ -148,7 +163,7 @@ const FAQ: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
                   
-                  <AccordionItem value="item-4">
+                  <AccordionItem value="item-5">
                     <AccordionTrigger className="text-left">
                       <div className="flex items-center">
                         <HelpCircle className="mr-2 h-5 w-5 text-primary" />
@@ -160,7 +175,7 @@ const FAQ: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
                   
-                  <AccordionItem value="item-5">
+                  <AccordionItem value="item-6">
                     <AccordionTrigger className="text-left">
                       <div className="flex items-center">
                         <Share2 className="mr-2 h-5 w-5 text-primary" />
@@ -172,7 +187,7 @@ const FAQ: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
                   
-                  <AccordionItem value="item-6">
+                  <AccordionItem value="item-7">
                     <AccordionTrigger className="text-left">
                       <div className="flex items-center">
                         <Lightbulb className="mr-2 h-5 w-5 text-primary" />
@@ -184,7 +199,7 @@ const FAQ: React.FC = () => {
                     </AccordionContent>
                   </AccordionItem>
                   
-                  <AccordionItem value="item-7">
+                  <AccordionItem value="item-8">
                     <AccordionTrigger className="text-left">
                       <div className="flex items-center">
                         <HelpCircle className="mr-2 h-5 w-5 text-primary" />

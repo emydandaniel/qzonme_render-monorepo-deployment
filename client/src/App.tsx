@@ -26,6 +26,7 @@ import CreativeQuizQuestions from "@/pages/BlogPosts/CreativeQuizQuestions";
 import QuizzesLoveLanguage from "@/pages/BlogPosts/QuizzesLoveLanguage";
 import SevenQuizTypes from "@/pages/BlogPosts/SevenQuizTypes";
 import InfluencersQuizzes from "@/pages/BlogPosts/InfluencersQuizzes";
+import QzonMeEvolution from "@/pages/BlogPosts/QzonMeEvolution";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
@@ -62,6 +63,7 @@ function Router() {
       <Route path="/blog/quizzes-love-language" component={QuizzesLoveLanguage} />
       <Route path="/blog/seven-quiz-types" component={SevenQuizTypes} />
       <Route path="/blog/influencers-quizzes" component={InfluencersQuizzes} />
+      <Route path="/blog/qzonme-evolution" component={QzonMeEvolution} />
       
       <Route path="/faq" component={FAQ} />
       <Route path="/admin" component={Admin} />

@@ -9,6 +9,16 @@ import MetaTags from "@/components/common/MetaTags";
 // Blog post data 
 const blogPosts = [
   {
+    id: "qzonme-evolution",
+    title: "The Evolution of QzonMe: From Friendship Quizzes to Universal Quiz Platform",
+    excerpt: "Discover how QzonMe evolved from a simple friendship quiz maker into the ultimate platform for creating any type of quiz - from trivia challenges to classroom games.",
+    author: "QzonMe Team",
+    date: "January 1, 2025",
+    readTime: "6 min read",
+    image: "/blog/quiz-success.jpg",
+    url: "/blog/qzonme-evolution"
+  },
+  {
     id: "quiz-ideas",
     title: "10 Fun Quiz Ideas to Challenge Your Friends",
     excerpt: "Creating a quiz is half the fun, but getting started with good questions makes all the difference. Here are 10 creative and hilarious quiz themes to spark your next masterpiece.",
