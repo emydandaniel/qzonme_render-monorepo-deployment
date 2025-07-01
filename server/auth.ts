@@ -17,9 +17,13 @@ export async function validateAdminCredentials(username: string, password: strin
   // If no hash is set in environment, use a fallback but warn
   if (!ADMIN_PASSWORD_HASH) {
     console.error('⚠️  SECURITY WARNING: ADMIN_PASSWORD_HASH not set in environment');
-    // Fallback for development - hash of "qzonmeadmin123"
-    const fallbackHash = '$2b$10$8K8K8K8K8K8K8K8K8K8K8u.'; // This should be properly generated
-    return await bcrypt.compare(password, fallbackHash);
+    // For development only - verify against the known password directly
+    // In production, this should use a proper bcrypt hash from environment
+    if (password === 'qzonmeadmin123') {
+      console.log('✅ Admin authenticated using development fallback');
+      return true;
+    }
+    return false;
   }
 
   return await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
