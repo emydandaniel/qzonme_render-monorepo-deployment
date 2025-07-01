@@ -35,8 +35,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { Eye, Search } from "lucide-react";
 
-// Simple password check
-const ADMIN_PASSWORD = "qzonmeadmin123"; // You can change this password
+// Secure admin authentication - now uses server-side JWT
 
 interface ContactMessage {
   id: string;
@@ -49,11 +48,23 @@ interface ContactMessage {
 
 const Admin: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [viewedMessages, setViewedMessages] = useState<Set<string>>(new Set());
+  const [adminToken, setAdminToken] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { toast } = useToast();
+
+  // Check for existing admin token on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (token) {
+      setAdminToken(token);
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   // Load viewed messages from localStorage
   useEffect(() => {
@@ -73,33 +84,93 @@ const Admin: React.FC = () => {
   const { data, isLoading, error } = useQuery<{success: boolean, messages: ContactMessage[]}>({
     queryKey: ["/api/contact/messages"],
     queryFn: async () => {
-      if (!isAuthenticated) return {success: true, messages: []};
-      const response = await fetch("/api/contact/messages");
+      if (!isAuthenticated || !adminToken) return {success: true, messages: []};
+      
+      const response = await fetch("/api/contact/messages", {
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
       if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired or invalid
+          localStorage.removeItem("adminToken");
+          setIsAuthenticated(false);
+          setAdminToken(null);
+          throw new Error("Session expired. Please login again.");
+        }
         throw new Error("Failed to fetch contact messages");
       }
       return response.json();
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!adminToken,
   });
   
   // Extract messages from the response
   const contactMessages = data?.messages || [];
 
-  const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      toast({
-        title: "Login Successful",
-        description: "Welcome to the admin panel.",
-      });
-    } else {
+  const handleLogin = async () => {
+    if (!username.trim() || !password.trim()) {
       toast({
         title: "Login Failed",
-        description: "Incorrect password. Please try again.",
+        description: "Please enter both username and password.",
         variant: "destructive",
       });
+      return;
     }
+
+    setIsLoggingIn(true);
+
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setAdminToken(data.token);
+        localStorage.setItem("adminToken", data.token);
+        setIsAuthenticated(true);
+        setPassword(""); // Clear password from memory
+        toast({
+          title: "Login Successful",
+          description: "Welcome to the admin panel.",
+        });
+      } else {
+        toast({
+          title: "Login Failed",
+          description: data.message || "Invalid credentials. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login Error",
+        description: "Unable to connect to server. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    setAdminToken(null);
+    setIsAuthenticated(false);
+    setUsername("");
+    setPassword("");
+    toast({
+      title: "Logged Out",
+      description: "You have been logged out successfully.",
+    });
   };
 
   const markAsViewed = (id: string) => {
@@ -150,13 +221,29 @@ const Admin: React.FC = () => {
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle className="text-center">Admin Login</CardTitle>
+              <p className="text-sm text-muted-foreground text-center">
+                Secure access to admin panel
+              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleLogin();
+                      }
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Input
                     type="password"
-                    placeholder="Enter admin password"
+                    placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyDown={(e) => {
@@ -169,8 +256,9 @@ const Admin: React.FC = () => {
                 <Button 
                   className="w-full" 
                   onClick={handleLogin}
+                  disabled={isLoggingIn}
                 >
-                  Login
+                  {isLoggingIn ? "Logging in..." : "Login"}
                 </Button>
               </div>
             </CardContent>
@@ -187,7 +275,12 @@ const Admin: React.FC = () => {
         description="Admin panel for QzonMe website"
         type="website"
       />
-      <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <Button variant="outline" onClick={handleLogout}>
+          Logout
+        </Button>
+      </div>
       
       <Card className="mb-6">
         <CardHeader>

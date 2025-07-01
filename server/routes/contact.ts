@@ -1,6 +1,7 @@
 import { Express, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
+import { requireAdmin, validateAdminCredentials, generateAdminToken, checkRateLimit, resetRateLimit } from '../auth';
 
 interface ContactMessage {
   id: string;
@@ -59,8 +60,52 @@ export function registerContactRoutes(app: Express) {
     }
   });
   
-  // Get all contact messages (this would typically be an admin-only endpoint)
-  app.get('/api/contact/messages', async (req: Request, res: Response) => {
+  // Admin login endpoint
+  app.post('/api/admin/login', async (req: Request, res: Response) => {
+    try {
+      const { username, password } = req.body;
+      const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+
+      // Check rate limiting
+      if (!checkRateLimit(clientIp)) {
+        return res.status(429).json({
+          success: false,
+          message: 'Too many login attempts. Please try again in 15 minutes.'
+        });
+      }
+
+      // Validate credentials
+      const isValid = await validateAdminCredentials(username, password);
+      
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials'
+        });
+      }
+
+      // Reset rate limit on successful login
+      resetRateLimit(clientIp);
+
+      // Generate JWT token
+      const token = generateAdminToken(username);
+
+      res.status(200).json({
+        success: true,
+        token,
+        message: 'Admin login successful'
+      });
+    } catch (error) {
+      console.error('Admin login error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Login failed'
+      });
+    }
+  });
+
+  // Get all contact messages (ADMIN ONLY - now properly secured)
+  app.get('/api/contact/messages', requireAdmin, async (req: Request, res: Response) => {
     try {
       // Read all message files from the directory
       const files = fs.readdirSync(CONTACT_MESSAGES_DIR);

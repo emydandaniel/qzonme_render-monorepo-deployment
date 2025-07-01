@@ -18,6 +18,16 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from 'url';
 import { registerContactRoutes } from "./routes/contact";
+import { requireAdmin } from "./auth";
+import { 
+  secureUserSchema, 
+  secureQuizSchema, 
+  secureQuestionSchema, 
+  secureQuizAttemptSchema,
+  checkRateLimit,
+  rateLimits,
+  validateInput 
+} from "./validation";
 
 // Setup dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -67,35 +77,42 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // User routes
-  app.post("/api/users", async (req, res) => {
+  // User routes with security validation
+  app.post("/api/users", validateInput(secureUserSchema), async (req, res) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+      
+      // Rate limiting
+      if (!checkRateLimit(clientIp, rateLimits.createUser)) {
+        return res.status(429).json({ 
+          message: "Too many user creation attempts. Please try again later." 
+        });
+      }
+
+      const userData = (req as any).validatedBody;
       const user = await storage.createUser(userData);
       res.status(201).json(user);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid user data", error: (error as z.ZodError).message });
-      } else {
-        res.status(500).json({ message: "Failed to create user" });
-      }
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
     }
   });
 
-  // Quiz routes
-  app.post("/api/quizzes", async (req, res) => {
+  // Quiz routes with enhanced security
+  app.post("/api/quizzes", validateInput(secureQuizSchema), async (req, res) => {
     try {
-      const quizData = insertQuizSchema.parse(req.body);
+      const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
       
-      // Additional server-side validation for creator name to prevent the bug
-      if (!quizData.creatorName || quizData.creatorName.trim() === '') {
-        return res.status(400).json({ 
-          message: "Creator name cannot be empty",
-          error: "EMPTY_CREATOR_NAME" 
+      // Rate limiting for quiz creation
+      if (!checkRateLimit(clientIp, rateLimits.createQuiz)) {
+        return res.status(429).json({ 
+          message: "Too many quiz creation attempts. Please try again later." 
         });
       }
+
+      const quizData = (req as any).validatedBody;
       
-      // Extra validation to catch any instance of the known default value
+      // Additional security validation
       if (quizData.creatorName.toLowerCase() === 'emydan') {
         console.error("CRITICAL BUG DETECTED: Default name 'emydan' was submitted");
         return res.status(400).json({ 
@@ -109,16 +126,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quiz = await storage.createQuiz(quizData);
       res.status(201).json(quiz);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid quiz data", error: (error as z.ZodError).message });
-      } else {
-        res.status(500).json({ message: "Failed to create quiz" });
-      }
+      console.error("Error creating quiz:", error);
+      res.status(500).json({ message: "Failed to create quiz" });
     }
   });
   
-  // Get all quizzes (for testing)
-  app.get("/api/quizzes", async (req, res) => {
+  // Get all quizzes (ADMIN ONLY - secured for testing/debugging)
+  app.get("/api/quizzes", requireAdmin, async (req, res) => {
     try {
       // Get all quizzes from the database
       const allQuizzes = await db.select().from(quizzes);

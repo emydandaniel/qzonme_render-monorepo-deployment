@@ -3,12 +3,18 @@ import fs from 'fs';
 import { promisify } from 'util';
 import path from 'path';
 
-// Cloudinary setup
+// Cloudinary setup - now using environment variables for security
 cloudinary.config({
-  cloud_name: 'djkecqprm',
-  api_key: '412876169339576',
-  api_secret: 'qAQFpDVPgT2_HDKvZ18sTPOqmYw'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'djkecqprm',
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// Validate that all required Cloudinary credentials are present
+if (!process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.error('⚠️  SECURITY WARNING: Cloudinary credentials not found in environment variables');
+  console.error('Please set CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET in your environment');
+}
 
 // Helper function to create read streams
 function createReadStream(filePath: string) {
