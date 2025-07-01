@@ -50,6 +50,7 @@ QzonMe is a social quiz web application that enables users to create and share p
 ### January 1, 2025 - Homepage Content Update & Security Overhaul
 - ✅ Updated homepage content to reflect broader quiz platform use case
 - ✅ Changed main heading from "How Well Do Your Friends Know You?" to "Create Any Quiz in Minutes!"
+- ✅ Updated logo tagline from "How well do your friends know you?" to "Create any quiz in minutes!"
 - ✅ Updated meta description to include trivia, classroom games, fandom quizzes
 - ✅ Modified features section to emphasize "Any Quiz Type" capabilities
 - ✅ Updated testimonials to showcase different quiz types (Harry Potter, football, family)

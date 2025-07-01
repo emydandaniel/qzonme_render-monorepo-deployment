@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span className="inline-block text-[#E76F51] transform rotate-2">Me</span>
               </h1>
               <p className="text-sm md:text-base text-muted-foreground">
-                How well do your friends know you?
+                Create any quiz in minutes!
               </p>
             </div>
           </Link>
