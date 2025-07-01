@@ -500,7 +500,7 @@ const QuizCreation: React.FC = () => {
           <div className="mt-6 pt-4 border-t border-gray-200">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                {questions.length} of {requiredQuestionsCount} questions added
+                {questions.length} question{questions.length !== 1 ? 's' : ''} added
               </span>
               <Button
                 type="button"
