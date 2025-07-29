@@ -18,6 +18,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from 'url';
 import { registerContactRoutes } from "./routes/contact";
+import { registerAutoCreateRoutes } from "./routes/autoCreateRoutes";
 import { requireAdmin } from "./auth";
 import { 
   secureUserSchema, 
@@ -77,6 +78,31 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for Render and uptime monitoring
+  app.get("/health", (req, res) => {
+    res.status(200).json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: "1.0.0",
+      environment: process.env.NODE_ENV || "development"
+    });
+  });
+
+  // Ping endpoint (alias for health check)
+  app.get("/ping", (req, res) => {
+    res.status(200).json({ 
+      status: "pong",
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Debug middleware to track all API requests
+  app.use('/api', (req, res, next) => {
+    console.log(`🔍 API Request: ${req.method} ${req.originalUrl} - params:`, req.params);
+    next();
+  });
+
   // User routes with security validation
   app.post("/api/users", validateInput(secureUserSchema), async (req, res) => {
     try {
@@ -111,15 +137,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const quizData = (req as any).validatedBody;
-      
-      // Additional security validation
-      if (quizData.creatorName.toLowerCase() === 'emydan') {
-        console.error("CRITICAL BUG DETECTED: Default name 'emydan' was submitted");
-        return res.status(400).json({ 
-          message: "Cannot use default creator name. Please enter your own name.",
-          error: "DEFAULT_CREATOR_NAME_USED"
-        });
-      }
       
       console.log(`Creating quiz with creator name: "${quizData.creatorName}"`);
       
@@ -245,22 +262,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Get quiz by ID
   app.get("/api/quizzes/:quizId", async (req, res) => {
+    console.log(`🔍 GET /api/quizzes/:quizId handler started - quizId: ${req.params.quizId}`);
     try {
       const quizId = parseInt(req.params.quizId);
+      console.log(`🔍 Parsed quizId: ${quizId}`);
       
       if (isNaN(quizId)) {
+        console.log(`🔍 Invalid quiz ID: ${req.params.quizId}`);
         return res.status(400).json({ message: "Invalid quiz ID" });
       }
       
+      console.log(`🔍 Calling storage.getQuiz(${quizId})`);
       const quiz = await storage.getQuiz(quizId);
+      console.log(`🔍 Storage result:`, quiz);
       
       if (!quiz) {
+        console.log(`🔍 Quiz not found: ${quizId}`);
         return res.status(404).json({ message: "Quiz not found" });
       }
       
       // Check if the quiz is expired (older than 7 days)
       const isExpired = storage.isQuizExpired(quiz);
+      console.log(`🔍 Quiz expired check: ${isExpired}`);
       if (isExpired) {
+        console.log(`🔍 Quiz ${quizId} is expired`);
         return res.status(410).json({ 
           message: "Quiz expired", 
           expired: true,
@@ -268,10 +293,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      console.log(`GET /api/quizzes/${quizId} response:`, quiz);
+      console.log(`🔍 Sending response for quiz ${quizId}:`, quiz);
       res.json(quiz);
+      console.log(`🔍 Response sent successfully for quiz ${quizId}`);
     } catch (error) {
-      console.error(`Error fetching quiz ${req.params.quizId}:`, error);
+      console.error(`🔍 Error in GET /api/quizzes/${req.params.quizId}:`, error);
       res.status(500).json({ message: "Failed to fetch quiz" });
     }
   });
@@ -545,6 +571,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register contact form routes
   registerContactRoutes(app);
+  
+  // Register auto-create quiz routes
+  registerAutoCreateRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
