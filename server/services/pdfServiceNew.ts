@@ -1,7 +1,7 @@
 // PDF Service using pdf2pic + tesseract for text extraction
 import fs from "fs/promises";
 import path from "path";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFName } from "pdf-lib";
 
 export interface PDFProcessingResult {
   success: boolean;
@@ -104,29 +104,156 @@ export async function validatePDFFile(filePath: string): Promise<{ valid: boolea
 
 async function extractTextFromPDFBuffer(pdfBuffer: Buffer, maxPages: number): Promise<string> {
   try {
-    // For now, we'll use a basic text extraction approach
-    // This is a simplified implementation - for production, you'd want to use pdf2pic + tesseract or pdf-parse
-    const text = pdfBuffer.toString('utf8');
+    console.log("🔍 Attempting advanced PDF text extraction...");
     
-    // Try to extract readable text by looking for common patterns
-    const textMatches = text.match(/[A-Za-z0-9\s\.\,\!\?\;\:\-\(\)\[\]\"\']{20,}/g);
+    // Load the PDF document
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    const pageCount = pdfDoc.getPageCount();
+    const pagesToProcess = Math.min(pageCount, maxPages);
     
-    if (textMatches && textMatches.length > 0) {
-      const extractedText = textMatches
-        .filter(match => match.trim().length > 10)
-        .slice(0, 50) // Limit to first 50 matches to avoid too much content
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+    let extractedTexts: string[] = [];
+    
+    // Method 1: Try to extract text from PDF structure
+    try {
+      // Get the PDF catalog and try to extract text objects
+      const catalog = pdfDoc.catalog;
+      const pages = pdfDoc.getPages();
       
-      return extractedText.length > 100 ? extractedText : 
-        "This PDF appears to contain text but requires advanced OCR processing for proper extraction.";
+      for (let i = 0; i < pagesToProcess; i++) {
+        const page = pages[i];
+        if (page) {
+          // Try to get text content from the page
+          const pageRef = pdfDoc.context.nextRef();
+          const pageDict = page.node;
+          
+          // Look for text in the page's content streams
+          const contentStreams = pageDict.get(PDFName.of('Contents'));
+          if (contentStreams) {
+            console.log(`📄 Processing page ${i + 1}...`);
+            
+            // This is a simplified approach - we'll extract readable ASCII text
+            const pageText = await extractTextFromPage(pdfBuffer, i);
+            if (pageText && pageText.length > 20) {
+              extractedTexts.push(pageText);
+            }
+          }
+        }
+      }
+    } catch (structureError) {
+      console.log("⚠️ PDF structure extraction failed, trying alternative method...");
     }
     
-    return "This PDF may be image-based or have complex formatting that requires OCR processing.";
+    // Method 2: Fallback to buffer analysis with better patterns
+    if (extractedTexts.length === 0) {
+      console.log("🔄 Using fallback text extraction method...");
+      const bufferText = await extractTextFromBufferAdvanced(pdfBuffer);
+      if (bufferText) {
+        extractedTexts.push(bufferText);
+      }
+    }
+    
+    // Combine and clean the extracted text
+    const combinedText = extractedTexts
+      .join('\n\n')
+      .replace(/\s+/g, ' ')
+      .replace(/[^\x20-\x7E\n]/g, '') // Remove non-printable characters
+      .trim();
+    
+    console.log(`✅ Extracted ${combinedText.length} characters from ${pagesToProcess} pages`);
+    
+    if (combinedText.length > 100) {
+      return combinedText;
+    } else if (combinedText.length > 0) {
+      return `${combinedText}\n\n[Note: This PDF may contain additional content that requires OCR processing]`;
+    } else {
+      return "This PDF appears to be image-based or has complex formatting. The content could not be extracted as text and would require OCR processing.";
+    }
     
   } catch (error) {
     console.error("Error extracting text from PDF buffer:", error);
-    return "Text extraction failed - PDF may be encrypted or corrupted.";
+    return "Text extraction failed - PDF may be encrypted, corrupted, or require specialized processing.";
+  }
+}
+
+async function extractTextFromPage(pdfBuffer: Buffer, pageIndex: number): Promise<string> {
+  try {
+    // Convert buffer to string and look for text objects on specific page
+    const pdfString = pdfBuffer.toString('binary');
+    
+    // Look for text showing operations like "BT...ET" (Begin Text...End Text)
+    const textBlockRegex = new RegExp('BT\\s+(.*?)\\s+ET', 'g');
+    const textMatches = pdfString.match(textBlockRegex);
+    
+    if (textMatches && textMatches.length > pageIndex) {
+      const pageTextBlock = textMatches[pageIndex];
+      
+      // Extract text from within parentheses and brackets
+      const textContentRegex = /\((.*?)\)|<(.*?)>/g;
+      let match;
+      const texts = [];
+      
+      while ((match = textContentRegex.exec(pageTextBlock)) !== null) {
+        const text = match[1] || match[2];
+        if (text && text.length > 2) {
+          // Decode basic PDF text encoding
+          const decoded = text
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\t/g, '\t')
+            .replace(/\\\\/g, '\\')
+            .replace(/\\(\d{3})/g, (_, octal) => String.fromCharCode(parseInt(octal, 8)));
+          
+          texts.push(decoded);
+        }
+      }
+      
+      return texts.join(' ').trim();
+    }
+    
+    return '';
+  } catch (error) {
+    console.error(`Error extracting text from page ${pageIndex}:`, error);
+    return '';
+  }
+}
+
+async function extractTextFromBufferAdvanced(pdfBuffer: Buffer): Promise<string> {
+  try {
+    // Convert to different encodings and look for readable text
+    const encodings = ['utf8', 'latin1', 'ascii'];
+    let bestText = '';
+    
+    for (const encoding of encodings) {
+      const text = pdfBuffer.toString(encoding as BufferEncoding);
+      
+      // Look for patterns that indicate readable text
+      const readableTextRegex = /[A-Za-z][A-Za-z0-9\s\.\,\!\?\;\:\-\(\)\[\]\"\']{15,}/g;
+      const matches = text.match(readableTextRegex);
+      
+      if (matches && matches.length > 0) {
+        const extractedText = matches
+          .filter(match => {
+            // Filter out likely PDF commands and metadata
+            return !match.includes('obj') && 
+                   !match.includes('endobj') && 
+                   !match.includes('stream') &&
+                   !match.includes('Filter') &&
+                   match.split(' ').length >= 3; // At least 3 words
+          })
+          .slice(0, 100) // Limit to first 100 matches
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        if (extractedText.length > bestText.length) {
+          bestText = extractedText;
+        }
+      }
+    }
+    
+    return bestText;
+  } catch (error) {
+    console.error("Error in advanced buffer extraction:", error);
+    return '';
   }
 }
