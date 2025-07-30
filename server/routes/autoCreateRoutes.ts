@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { checkRateLimit, incrementUsage, getUsageStats, rateLimitMiddleware } from "../services/rateLimiting";
 import { extractYouTubeTranscript } from "../services/contentExtraction";
 import { extractTextFromImage, extractTextFromMultipleImages } from "../services/ocrService";
-import { extractTextFromPDF, isPDFFile, validatePDFFile } from "../services/pdfService";
+import { extractTextFromPDF, isPDFFile, validatePDFFile } from "../services/pdfServiceNew";
 import { extractTextFromDocument, isDocumentFile, validateDocumentFile } from "../services/documentService";
 import { generateQuestions, generateQuestionPreview, generateQuestionsWithImage, checkAIServiceHealth } from "../services/hybridAIService-new";
 import { validateInput } from "../validation";

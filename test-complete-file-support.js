@@ -21,7 +21,7 @@ async function testFileTypeSupport() {
     
     // Test PDF Service
     try {
-      const { extractTextFromPDF, isPDFFile } = await import('./server/services/pdfService.ts');
+      const { extractTextFromPDF, isPDFFile } = await import('./server/services/pdfServiceNew.ts');
       console.log('✅ PDF Service: Ready (using PDF.js)');
       console.log('   - Handles: .pdf files');
       console.log('   - Method: Text extraction from PDF structure');
