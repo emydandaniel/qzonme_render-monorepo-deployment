@@ -1,23 +1,6 @@
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf.mjs';
+// PDF Service with graceful fallback for Node.js compatibility
 import fs from 'fs/promises';
 import path from 'path';
-import { createRequire } from 'module';
-import { pathToFileURL } from 'url';
-
-// Configure PDF.js for Node.js environment
-// Point to the actual worker file that exists
-try {
-  const require = createRequire(import.meta.url);
-  const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.min.mjs');
-  // Convert Windows path to proper file:// URL
-  GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
-  console.log('🔧 PDF worker configured at:', GlobalWorkerOptions.workerSrc);
-} catch (error) {
-  console.warn('⚠️ PDF worker setup failed:', error);
-  // Fallback - disable worker entirely for Node.js
-  GlobalWorkerOptions.workerSrc = false as any;
-  console.log('🔧 PDF worker disabled, using synchronous processing');
-}
 
 export interface PDFProcessingResult {
   success: boolean;
@@ -28,8 +11,8 @@ export interface PDFProcessingResult {
 }
 
 /**
- * Extract text from PDF file using PDF.js text extraction (not OCR)
- * This extracts selectable text directly from the PDF
+ * Extract text from PDF file with graceful fallback
+ * This provides a robust solution that won't break server startup
  */
 export async function extractTextFromPDF(filePath: string, maxPages: number = 10): Promise<PDFProcessingResult> {
   const startTime = Date.now();
@@ -37,56 +20,21 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
   try {
     console.log('📄 Starting PDF text extraction for:', filePath);
     
-    // Read PDF file
-    const pdfBuffer = await fs.readFile(filePath);
-    // Convert Buffer to Uint8Array for PDF.js compatibility
-    const pdfData = new Uint8Array(pdfBuffer);
-    const loadingTask = getDocument({ data: pdfData });
-    const pdf = await loadingTask.promise;
+    // For now, provide a graceful fallback until we resolve PDF library issues
+    // In a production environment, you might want to use external services
+    // like Google Document AI, AWS Textract, or Adobe PDF Services API
     
-    const totalPages = Math.min(pdf.numPages, maxPages);
-    console.log(`📄 PDF loaded: ${totalPages} pages to process (${pdf.numPages} total)`);
-    
-    const extractedTexts: string[] = [];
-    
-    // Extract text from each page
-    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-      try {
-        const page = await pdf.getPage(pageNum);
-        const textContent = await page.getTextContent();
-        
-        // Combine text items into a single string
-        const pageText = textContent.items
-          .map((item: any) => {
-            if ('str' in item) {
-              return item.str;
-            }
-            return '';
-          })
-          .join(' ')
-          .trim();
-        
-        if (pageText) {
-          extractedTexts.push(pageText);
-          console.log(`📄 Page ${pageNum}: extracted ${pageText.length} characters`);
-        }
-      } catch (pageError) {
-        console.warn(`⚠️ Error processing page ${pageNum}:`, pageError);
-        // Continue with other pages
-      }
-    }
-    
-    const combinedText = extractedTexts.join('\n\n').trim();
     const processingTime = Date.now() - startTime;
     
-    console.log(`✅ PDF text extraction completed in ${processingTime}ms`);
-    console.log(`📊 Extracted ${combinedText.length} characters from ${extractedTexts.length} pages`);
+    console.log('⚠️ PDF text extraction temporarily disabled due to library compatibility issues');
+    console.log('� Consider using external PDF processing services for production');
     
     return {
-      success: true,
-      text: combinedText,
-      pageCount: extractedTexts.length,
-      processingTime
+      success: false,
+      text: '',
+      pageCount: 0,
+      processingTime,
+      error: 'PDF processing temporarily unavailable. Please use text or image files for auto-create feature.'
     };
     
   } catch (error) {
@@ -128,26 +76,41 @@ export async function validatePDFFile(filePath: string): Promise<{ valid: boolea
       };
     }
     
-    // Check if it's actually a PDF by trying to load it
-    const pdfBuffer = await fs.readFile(filePath);
-    // Convert Buffer to Uint8Array for PDF.js compatibility
-    const pdfData = new Uint8Array(pdfBuffer);
-    const loadingTask = getDocument({ data: pdfData });
-    const pdf = await loadingTask.promise;
-    
-    if (pdf.numPages === 0) {
+    // Basic PDF validation by checking file extension and magic bytes
+    if (!isPDFFile(filePath)) {
       return {
         valid: false,
-        error: 'PDF file has no pages'
+        error: 'File is not a PDF'
       };
     }
     
-    return { valid: true };
+    // Check PDF magic bytes
+    try {
+      const buffer = await fs.readFile(filePath);
+      const header = buffer.toString('ascii', 0, 4);
+      
+      if (!header.startsWith('%PDF')) {
+        return {
+          valid: false,
+          error: 'Invalid PDF file format'
+        };
+      }
+      
+      return { 
+        valid: true,
+        error: 'PDF processing temporarily unavailable. Please use text or image files.'
+      };
+    } catch (readError) {
+      return {
+        valid: false,
+        error: 'Cannot read PDF file'
+      };
+    }
     
   } catch (error) {
     return {
       valid: false,
-      error: error instanceof Error ? error.message : 'Invalid PDF file'
+      error: error instanceof Error ? error.message : 'Cannot access PDF file'
     };
   }
 }

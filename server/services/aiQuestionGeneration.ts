@@ -594,7 +594,7 @@ function validateGenerationRequest(request: QuestionGenerationRequest): { valid:
 export async function generateQuestionPreview(request: QuestionGenerationRequest): Promise<QuestionGenerationResult> {
   const previewRequest = {
     ...request,
-    numberOfQuestions: Math.min(3, request.numberOfQuestions) // Generate max 3 questions for preview
+    numberOfQuestions: Math.max(5, Math.min(request.numberOfQuestions, 10)) // Generate 5-10 questions for preview
   };
   
   return generateQuestions(previewRequest);

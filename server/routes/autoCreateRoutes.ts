@@ -88,6 +88,41 @@ function expandTopicForQuestions(topic: string): string {
   return cleanTopic;
 }
 
+// Language mapping for common language codes
+const languageMap: Record<string, string> = {
+  'en': 'English',
+  'es': 'Spanish', 
+  'fr': 'French',
+  'de': 'German',
+  'it': 'Italian',
+  'pt': 'Portuguese',
+  'nl': 'Dutch',
+  'ru': 'Russian',
+  'zh': 'Chinese (Simplified)',
+  'ja': 'Japanese',
+  'ko': 'Korean',
+  'ar': 'Arabic',
+  'hi': 'Hindi',
+  // Also allow full names
+  'English': 'English',
+  'Spanish': 'Spanish',
+  'French': 'French',
+  'German': 'German',
+  'Italian': 'Italian',
+  'Portuguese': 'Portuguese',
+  'Dutch': 'Dutch',
+  'Russian': 'Russian',
+  'Chinese (Simplified)': 'Chinese (Simplified)',
+  'Japanese': 'Japanese',
+  'Korean': 'Korean',
+  'Arabic': 'Arabic',
+  'Hindi': 'Hindi'
+};
+
+function normalizeLanguage(language: string): string {
+  return languageMap[language] || 'English'; // Default to English if not found
+}
+
 // Validation schemas
 const linkExtractionSchema = z.object({
   url: z.string().url('Invalid URL format').refine(
@@ -101,7 +136,7 @@ const questionGenerationSchema = z.object({
   content: z.string().min(20, 'Content too short (minimum 20 characters)').max(50000, 'Content too long'),
   numberOfQuestions: z.number().min(5).max(50),
   difficulty: z.enum(['Easy', 'Medium', 'Hard']),
-  language: z.string(),
+  language: z.string().transform(normalizeLanguage), // Transform language code to full name
   contentType: z.enum(['document', 'youtube', 'topic', 'mixed']).optional(),
   contentQuality: z.number().min(1).max(10).optional()
 });

@@ -156,10 +156,10 @@ export async function generateQuestionPreview(request: QuestionGenerationRequest
     console.warn('⚠️ DeepSeek R1 preview error, falling back to Meta Llama Vision:', errorMessage);
   }
 
-  // Use generateQuestions with reduced count as fallback
+  // Use generateQuestions with minimum 5 questions as fallback
   const previewRequest = {
     ...request,
-    numberOfQuestions: Math.min(3, request.numberOfQuestions)
+    numberOfQuestions: Math.max(5, Math.min(request.numberOfQuestions, 10)) // Preview: 5-10 questions max
   };
   
   return generateQuestions(previewRequest);

@@ -728,7 +728,7 @@ function ensureAnswerVariety(questions: GeneratedQuestion[]): GeneratedQuestion[
 export async function generateQuestionPreviewWithDeepSeekR1(request: QuestionGenerationRequest): Promise<QuestionGenerationResult> {
   const previewRequest = {
     ...request,
-    numberOfQuestions: Math.min(3, request.numberOfQuestions)
+    numberOfQuestions: Math.max(5, Math.min(request.numberOfQuestions, 10))
   };
   
   return generateQuestionsWithDeepSeekR1(previewRequest);
