@@ -172,15 +172,34 @@ export class DatabaseStorage implements IStorage {
   
   // Check if a quiz is expired (older than 7 days)
   isQuizExpired(quiz: Quiz): boolean {
-    if (!quiz || !quiz.createdAt) return true;
+    if (!quiz || !quiz.createdAt) {
+      console.log(`🔍 Quiz expiration check: Missing quiz or createdAt`);
+      return true;
+    }
     
     const now = new Date();
     const createdAt = new Date(quiz.createdAt);
+    
+    console.log(`🔍 Quiz expiration debug: createdAt raw: ${quiz.createdAt}`);
+    console.log(`🔍 Quiz expiration debug: createdAt parsed: ${createdAt}`);
+    console.log(`🔍 Quiz expiration debug: now: ${now}`);
+    
+    // Check if the date parsing failed
+    if (isNaN(createdAt.getTime())) {
+      console.log(`🔍 Quiz expiration check: Invalid createdAt date`);
+      return true;
+    }
+    
     const diffInMs = now.getTime() - createdAt.getTime();
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
     
+    console.log(`🔍 Quiz expiration debug: diffInMs: ${diffInMs}, diffInDays: ${diffInDays}`);
+    
     // Changed from 30 days to 7 days expiration policy
-    return diffInDays > 7;
+    const isExpired = diffInDays > 7;
+    console.log(`🔍 Quiz expiration result: ${isExpired}`);
+    
+    return isExpired;
   }
 }
 

@@ -889,6 +889,19 @@ const QuizCreation: React.FC = () => {
         variant: "default"
       });
       
+      // Store quiz data in sessionStorage for immediate access by ShareQuizPage
+      // This matches the old working version's approach
+      sessionStorage.setItem("currentQuizId", quiz.id.toString());
+      sessionStorage.setItem("currentQuizAccessCode", quiz.accessCode);
+      sessionStorage.setItem("currentQuizUrlSlug", quiz.urlSlug);
+      sessionStorage.setItem("currentQuizDashboardToken", quiz.dashboardToken);
+      sessionStorage.setItem("createdQuizData", JSON.stringify(quiz));
+      console.log("Stored quiz data in sessionStorage:", {
+        id: quiz.id,
+        accessCode: quiz.accessCode,
+        urlSlug: quiz.urlSlug
+      });
+      
       // Navigate to share page
       console.log(`Navigating to share page: /share/${quiz.id}`);
       navigate(`/share/${quiz.id}`);
