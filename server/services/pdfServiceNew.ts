@@ -210,6 +210,7 @@ async function extractTextFromPage(pdfBuffer: Buffer, pageIndex: number): Promis
     }
     
     return '';
+}
   } catch (error) {
     console.error(`Error extracting text from page ${pageIndex}:`, error);
     return '';
@@ -329,20 +330,18 @@ async function extractDirectContent(pdfBuffer: Buffer): Promise<string> {
                !lowerMatch.includes('/type') &&
                !lowerMatch.includes('/subtype') &&
                !match.includes('obj') &&
-               !match.includes('endobj') &&
-               match.length > 20 &&
-               match.split(' ').length >= 4; // At least 4 words
+               !match.includes('endobj')
+               && match.length > 20
+               && match.split(' ').length >= 4;
       })
       .map(match => match.trim())
       .filter((match, index, arr) => arr.indexOf(match) === index) // Remove duplicates
       .slice(0, 30); // Limit to 30 sentences
-    
     const result = cleanedMatches.join(' ').replace(/\s+/g, ' ').trim();
     console.log(`🔍 Direct content extraction found ${result.length} characters`);
-    
     return result;
   } catch (error) {
-    console.error("Error in direct content extraction:", error);
+    console.error('Error in direct content extraction:', error);
     return '';
   }
 }
