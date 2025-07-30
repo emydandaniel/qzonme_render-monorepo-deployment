@@ -1,14 +1,46 @@
+import { config } from 'dotenv';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+// Remove static vite import - will import dynamically when needed
 import * as pathModule from "path";
 import * as fs from "fs";
 import { scheduleCleanupTask } from './cleanup';
 import { testCloudinaryConnection } from './cloudinary';
+import { 
+  setupSecurityMiddleware, 
+  setupSpecificRateLimits, 
+  setupSecurityErrorHandling,
+  sanitizeInput 
+} from './middleware/security';
+import { validateAndReport } from './security/configValidator';
+
+// Load environment variables FIRST
+config();
+
+// Validate security configuration
+console.log('🔒 Validating security configuration...');
+validateAndReport();
+
+// Now import and validate the auto-create config after env vars are loaded
+import { validateServerConfig } from './config/autoCreate';
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Setup security middleware FIRST (before any other middleware)
+setupSecurityMiddleware(app);
+
+// Body parsing middleware (with size limits for security)
+app.use(express.json({ 
+  limit: '10mb',  // Limit JSON payload size
+  type: ['application/json', 'text/plain']
+}));
+app.use(express.urlencoded({ 
+  extended: false,
+  limit: '10mb'  // Limit URL-encoded payload size
+}));
+
+// Input sanitization middleware
+app.use(sanitizeInput);
 
 // Special route for sitemap.xml - ensure it's served with XML content type
 app.get('/sitemap.xml', (req, res) => {
@@ -46,7 +78,7 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      log(logLine);
+      console.log(logLine);
     }
   });
 
@@ -56,6 +88,13 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Setup endpoint-specific rate limits after routes are registered
+  setupSpecificRateLimits(app);
+
+  // Setup security error handling
+  setupSecurityErrorHandling(app);
+
+  // Keep the original error handler as fallback
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -68,9 +107,17 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
+    const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Serve static files in production
+    const distPath = pathModule.resolve(pathModule.dirname(new URL(import.meta.url).pathname), "../client/dist");
+    
+    if (!fs.existsSync(distPath)) {
+      console.error(`Could not find the build directory: ${distPath}, make sure to build the client first`);
+    } else {
+      app.use(express.static(distPath));
+    }
     
     // History API fallback - serve index.html for any route that doesn't match an API or static resource
     // This is necessary for client-side routing to work with direct URL access
@@ -95,22 +142,34 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, async () => {
-    log(`serving on port ${port}`);
+    console.log(`serving on port ${port}`);
+    
+    // Validate auto-create configuration
+    const configValidation = validateServerConfig();
+    if (configValidation.isValid) {
+      console.log('✅ Auto-Create feature configuration is valid');
+    } else {
+      console.log('⚠️ Auto-Create feature has configuration issues:');
+      for (const key of configValidation.missingKeys) {
+        console.log(`  - Missing: ${key}`);
+      }
+      console.log('Auto-Create feature may not work properly until configuration is fixed.');
+    }
     
     // Test Cloudinary connection
     try {
       const cloudinaryTestResult = await testCloudinaryConnection();
       if (cloudinaryTestResult.success) {
-        log('Cloudinary connection successful');
+        console.log('✅ Cloudinary connection successful');
       } else {
-        log('Warning: Could not connect to Cloudinary - image uploads may fail');
+        console.log('⚠️ Warning: Could not connect to Cloudinary - image uploads may fail');
       }
     } catch (error) {
-      log(`Error testing Cloudinary connection: ${error instanceof Error ? error.message : String(error)}`);
+      console.log(`❌ Error testing Cloudinary connection: ${error instanceof Error ? error.message : String(error)}`);
     }
     
     // Schedule daily cleanup task to run 5 minutes after server start
     scheduleCleanupTask(5 * 60 * 1000);
-    log('Scheduled daily cleanup task for expired quizzes (7-day retention period)');
+    console.log('📅 Scheduled daily cleanup task for expired quizzes (7-day retention period)');
   });
 })();
