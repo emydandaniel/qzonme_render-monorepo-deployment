@@ -66,7 +66,13 @@ export class DatabaseStorage implements IStorage {
       // Create the actual query promise
       const queryPromise = db.select().from(quizzes).where(eq(quizzes.id, id))
         .then((result: Quiz[]) => {
-          console.log(`🔍 Database query completed, result:`, result[0] || 'No quiz found');
+          console.log(`🔍 Storage result:`, result);
+          console.log(`🔍 Storage result length:`, result.length);
+          if (result.length > 0) {
+            console.log(`✅ Found quiz ${id}:`, result[0]);
+          } else {
+            console.log(`❌ No quiz found with ID ${id}`);
+          }
           return result[0];
         });
       

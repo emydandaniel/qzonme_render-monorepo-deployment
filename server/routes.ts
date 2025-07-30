@@ -141,6 +141,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Creating quiz with creator name: "${quizData.creatorName}"`);
       
       const quiz = await storage.createQuiz(quizData);
+      
+      // Verify the quiz was created and is immediately readable
+      console.log(`✅ Quiz created with ID: ${quiz.id}, verifying readability...`);
+      try {
+        const verificationQuiz = await storage.getQuiz(quiz.id);
+        if (!verificationQuiz) {
+          console.warn(`⚠️ Quiz ${quiz.id} was created but is not immediately readable`);
+        } else {
+          console.log(`✅ Quiz ${quiz.id} is immediately readable after creation`);
+        }
+      } catch (verifyError) {
+        console.warn(`⚠️ Error verifying quiz ${quiz.id} readability:`, verifyError);
+      }
+      
       res.status(201).json(quiz);
     } catch (error) {
       console.error("Error creating quiz:", error);

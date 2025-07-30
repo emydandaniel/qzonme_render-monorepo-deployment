@@ -917,7 +917,15 @@ const QuizCreation: React.FC = () => {
       sessionStorage.setItem("currentQuizAccessCode", quiz.accessCode);
       sessionStorage.setItem("currentQuizUrlSlug", quiz.urlSlug);
       sessionStorage.setItem("currentQuizDashboardToken", quiz.dashboardToken);
+      sessionStorage.setItem("currentQuizCreatorName", quiz.creatorName || creatorName);
       sessionStorage.setItem("createdQuizData", JSON.stringify(quiz));
+      
+      console.log('✅ Quiz sessionStorage data stored:', {
+        id: quiz.id,
+        creatorName: quiz.creatorName || creatorName,
+        accessCode: quiz.accessCode,
+        urlSlug: quiz.urlSlug
+      });
       console.log("Stored quiz data in sessionStorage:", {
         id: quiz.id,
         accessCode: quiz.accessCode,

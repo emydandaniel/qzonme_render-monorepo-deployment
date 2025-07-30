@@ -147,8 +147,8 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     return (
       <>
         <MetaTags 
-          title={`${fallbackQuiz.creatorName}'s Quiz`}
-          description={`Take ${fallbackQuiz.creatorName}'s custom quiz and see how well you know them!`}
+          title={`${fallbackQuiz.creatorName}'s Custom Quiz`}
+          description={`Take ${fallbackQuiz.creatorName}'s custom quiz! Test your knowledge and see how well you score.`}
         />
         <ShareQuiz quiz={fallbackQuiz} />
       </>
@@ -199,13 +199,13 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
   
   return (
     <>
-      {/* Add meta tags for WhatsApp link sharing */}
+      {/* Add meta tags for social media sharing */}
       <MetaTags 
         creatorName={quizData.creatorName}
         url={`${window.location.origin}/quiz/${quizData.accessCode}`}
         imageUrl="/favicon.png"
-        title={`${quizData.creatorName}'s Quiz Just for You 💬`}
-        description={`How well do you know ${quizData.creatorName}? Try this private QzonMe quiz they made just for close friends.`}
+        title={`${quizData.creatorName}'s Custom Quiz 🧠`}
+        description={`Test your knowledge with ${quizData.creatorName}'s custom quiz! Challenge yourself and see how well you score.`}
       />
       
       <ShareQuiz
