@@ -5,10 +5,9 @@
  */
 
 import Tesseract, { createWorker } from 'tesseract.js';
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
-// Set the worker source for PDF.js
-GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
+// Note: PDF.js removed due to server-side compatibility issues
+// PDF processing is now handled by server-side services only
 
 export interface ClientOCRResult {
   success: boolean;
@@ -140,8 +139,9 @@ export async function extractTextFromImageClient(
 
 /**
  * Extract text from PDF by converting pages to images and running OCR
- * Following guide: https://github.com/mozilla/pdf.js
- * @param pdfFile - PDF File object
+ * NOTE: Client-side PDF processing has been disabled due to server compatibility issues.
+ * PDF processing is now handled exclusively by server-side services.
+ * @param pdfFile - PDF File object (not processed client-side)
  * @param language - Language code for OCR (default: 'eng')
  * @param onProgress - Progress callback function
  * @param maxPages - Maximum number of pages to process (default: 10)
@@ -154,113 +154,27 @@ export async function extractTextFromPDFClient(
 ): Promise<ClientOCRResult> {
   const startTime = Date.now();
   
-  try {
-    console.log('📄 Starting PDF to OCR processing...');
-    
-    onProgress?.(0, 'Loading PDF...');
-    
-    // Convert File to ArrayBuffer
-    const pdfArrayBuffer = await pdfFile.arrayBuffer();
-    
-    // Load PDF document
-    const loadingTask = getDocument(pdfArrayBuffer);
-    const pdf = await loadingTask.promise;
-    
-    const totalPages = Math.min(pdf.numPages, maxPages);
-    console.log(`📄 PDF loaded: ${totalPages} pages to process`);
-    
-    const extractedTexts: string[] = [];
-    let totalConfidence = 0;
-    let totalQuality = 0;
-    let successCount = 0;
-    
-    // Process each page
-    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-      try {
-        onProgress?.((pageNum - 1) / totalPages * 100, `Processing page ${pageNum} of ${totalPages}...`);
-        
-        console.log(`🔍 Processing page ${pageNum}...`);
-        
-        // Get page
-        const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 1.5 });
-        
-        // Create canvas
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d')!;
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        
-        // Render page to canvas
-        await page.render({ canvasContext: context, viewport }).promise;
-        
-        // Extract text from canvas using OCR
-        const { data: { text, confidence } } = await Tesseract.recognize(
-          canvas,
-          language,
-          { logger: m => console.log(`Page ${pageNum} OCR:`, m) }
-        );
-        
-        if (text && text.trim()) {
-          extractedTexts.push(`\n=== Page ${pageNum} ===\n${text.trim()}`);
-          totalConfidence += (confidence || 0) / 100;
-          totalQuality += assessClientOCRTextQuality(text, (confidence || 0) / 100);
-          successCount++;
-        }
-        
-        console.log(`✅ Page ${pageNum} completed: ${text.length} characters`);
-        
-      } catch (pageError) {
-        console.error(`❌ Error processing page ${pageNum}:`, pageError);
-        extractedTexts.push(`\n=== Page ${pageNum} (Error) ===\nFailed to extract text from this page.`);
-      }
+  // PDF processing is no longer available client-side
+  console.warn('⚠️ Client-side PDF processing is disabled. Please use server-side PDF processing.');
+  
+  onProgress?.(0, 'Client-side PDF processing not available');
+  
+  return {
+    success: false,
+    text: '',
+    confidence: 0,
+    quality: 0,
+    metadata: {
+      method: 'tesseract-pdf',
+      processingTime: Date.now() - startTime,
+      wordCount: 0,
+      pageCount: 0,
+      imageInfo: {
+        size: pdfFile.size
+      },
+      error: 'Client-side PDF processing is disabled for server compatibility. Please use server-side PDF processing instead.'
     }
-    
-    // Combine results
-    const combinedText = extractedTexts.join('\n\n');
-    const averageConfidence = successCount > 0 ? totalConfidence / successCount : 0;
-    const averageQuality = successCount > 0 ? totalQuality / successCount : 0;
-    
-    onProgress?.(100, 'PDF processing completed!');
-    
-    console.log(`🎉 PDF OCR completed: ${combinedText.length} characters from ${totalPages} pages`);
-    
-    return {
-      success: combinedText.trim().length > 0,
-      text: combinedText.trim(),
-      confidence: averageConfidence,
-      quality: Math.round(averageQuality),
-      metadata: {
-        method: 'tesseract-pdf',
-        processingTime: Date.now() - startTime,
-        wordCount: combinedText.split(/\s+/).filter((w: string) => w.length > 0).length,
-        pageCount: totalPages,
-        imageInfo: {
-          size: pdfFile.size
-        }
-      }
-    };
-    
-  } catch (error) {
-    console.error('PDF OCR error:', error);
-    
-    return {
-      success: false,
-      text: '',
-      confidence: 0,
-      quality: 0,
-      metadata: {
-        method: 'tesseract-pdf',
-        processingTime: Date.now() - startTime,
-        wordCount: 0,
-        pageCount: 0,
-        imageInfo: {
-          size: pdfFile.size
-        },
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
-    };
-  }
+  };
 }
 
 /**
