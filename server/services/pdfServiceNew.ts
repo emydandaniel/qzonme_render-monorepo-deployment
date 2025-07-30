@@ -1,12 +1,13 @@
-// Professional PDF Service using pdf-text-extract for reliable Node.js text extraction
+// Professional PDF Service using pdfjs-dist for reliable Node.js text extraction
 import fs from "fs/promises";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
-import { promisify } from "util";
 
-// Import pdf-text-extract with proper typing
-const pdfTextExtract = require('pdf-text-extract');
-const extractText = promisify(pdfTextExtract);
+// Import pdfjs-dist for Node.js environments
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js';
+
+// Configure pdfjs-dist for Node.js environment
+const pdfjs = pdfjsLib;
 
 export interface PDFProcessingResult {
   success: boolean;
@@ -31,10 +32,12 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
     const stats = await fs.stat(filePath);
     console.log(`📊 PDF file size: ${(stats.size / 1024).toFixed(2)} KB`);
 
+    // Read PDF file
+    const pdfBuffer = await fs.readFile(filePath);
+    
     // Get page count using pdf-lib
     let pageCount = 0;
     try {
-      const pdfBuffer = await fs.readFile(filePath);
       const pdfDoc = await PDFDocument.load(pdfBuffer);
       pageCount = pdfDoc.getPageCount();
       console.log(`📚 PDF has ${pageCount} pages`);
@@ -42,25 +45,48 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
       console.warn("⚠️ Could not get page count, proceeding with extraction");
     }
 
-    // Extract text using pdf-text-extract (Node.js optimized)
-    const extractedTextArray: string[] = await extractText(filePath, {
-      splitPages: false,
-      preserveLineBreaks: false
+    // Extract text using pdfjs-dist
+    const loadingTask = pdfjs.getDocument({
+      data: pdfBuffer,
+      standardFontDataUrl: undefined, // Disable font loading to avoid browser dependencies
+      disableFontFace: true,           // Disable font face loading
+      verbosity: 0                     // Reduce verbosity
     });
-
-    // Process extracted text
-    let rawText = "";
-    if (Array.isArray(extractedTextArray)) {
-      rawText = extractedTextArray.join(' ');
-    } else if (typeof extractedTextArray === 'string') {
-      rawText = extractedTextArray;
+    
+    const pdf = await loadingTask.promise;
+    const actualPageCount = pdf.numPages;
+    console.log(`📚 PDF.js detected ${actualPageCount} pages`);
+    
+    const pagesToProcess = Math.min(actualPageCount, maxPages);
+    let extractedText = "";
+    
+    // Extract text from each page
+    for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
+      try {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        
+        // Combine text items
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ')
+          .trim();
+        
+        if (pageText) {
+          extractedText += pageText + " ";
+          console.log(`📖 Page ${pageNum}: extracted ${pageText.length} characters`);
+        }
+      } catch (pageError) {
+        const errorMessage = pageError instanceof Error ? pageError.message : 'Unknown error';
+        console.warn(`⚠️ Could not extract text from page ${pageNum}:`, errorMessage);
+      }
     }
 
     // Clean and filter the extracted text
-    const cleanedText = cleanExtractedText(rawText);
+    const cleanedText = cleanExtractedText(extractedText.trim());
     
     const processingTime = Date.now() - startTime;
-    console.log(`✅ PDF processed successfully: ${pageCount} pages in ${processingTime}ms`);
+    console.log(`✅ PDF processed successfully: ${actualPageCount} pages in ${processingTime}ms`);
     console.log(`📝 Total extracted text length: ${cleanedText.length} characters`);
 
     if (cleanedText.length > 100) {
@@ -70,8 +96,8 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
 
     return {
       success: true,
-      text: cleanedText.length > 0 ? cleanedText : `This PDF contains ${pageCount} pages but text extraction was not successful. The PDF might be image-based or have complex formatting.`,
-      pageCount,
+      text: cleanedText.length > 0 ? cleanedText : `This PDF contains ${actualPageCount} pages but text extraction was not successful. The PDF might be image-based or have complex formatting.`,
+      pageCount: actualPageCount,
       processingTime,
       error: undefined
     };
