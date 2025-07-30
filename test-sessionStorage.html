@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SessionStorage Test</title>
+</head>
+<body>
+    <h1>SessionStorage Test</h1>
+    <button onclick="setTestData()">Set Test Data</button>
+    <button onclick="getTestData()">Get Test Data</button>
+    <button onclick="clearTestData()">Clear Test Data</button>
+    <div id="result"></div>
+
+    <script>
+        function setTestData() {
+            const testQuestions = [
+                {
+                    id: 1,
+                    text: "Test question 1?",
+                    type: "multiple-choice",
+                    options: ["A", "B", "C", "D"],
+                    correctAnswers: ["A"],
+                    order: 1
+                }
+            ];
+            
+            sessionStorage.setItem('generatedQuestions', JSON.stringify(testQuestions));
+            sessionStorage.setItem('autoCreateMode', 'true');
+            sessionStorage.setItem('requiresReview', 'true');
+            
+            document.getElementById('result').innerHTML = 'Test data set!';
+        }
+        
+        function getTestData() {
+            const questions = sessionStorage.getItem('generatedQuestions');
+            const autoCreate = sessionStorage.getItem('autoCreateMode');
+            const review = sessionStorage.getItem('requiresReview');
+            
+            document.getElementById('result').innerHTML = `
+                <p>Questions: ${questions ? 'Found' : 'Not found'}</p>
+                <p>AutoCreateMode: ${autoCreate}</p>
+                <p>RequiresReview: ${review}</p>
+                <p>Raw questions: ${questions}</p>
+            `;
+        }
+        
+        function clearTestData() {
+            sessionStorage.removeItem('generatedQuestions');
+            sessionStorage.removeItem('autoCreateMode');
+            sessionStorage.removeItem('requiresReview');
+            document.getElementById('result').innerHTML = 'Test data cleared!';
+        }
+    </script>
+</body>
+</html>

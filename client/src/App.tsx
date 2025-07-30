@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import CreateQuiz from "@/pages/CreateQuiz";
+import AutoCreateQuiz from "@/pages/AutoCreateQuiz";
 import AnswerQuiz from "@/pages/AnswerQuiz";
 import Results from "@/pages/Results";
 import Dashboard from "@/pages/Dashboard";
@@ -40,6 +41,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/create" component={CreateQuiz} />
+      <Route path="/auto-create" component={AutoCreateQuiz} />
       <Route path="/find-quiz" component={FindQuiz} />
       <Route path="/quiz/code/:accessCode" component={AnswerQuiz} />
       <Route path="/quiz/:creatorSlug" component={AnswerQuiz} />

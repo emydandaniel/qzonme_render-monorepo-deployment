@@ -9,7 +9,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl min-h-screen flex flex-col">
+    <div className="container mx-auto px-4 py-8 max-w-3xl">
       {/* Header with Logo and Navigation */}
       <header className="flex flex-col md:flex-row justify-between items-center mb-6 relative">
         <div className="w-full md:w-auto flex justify-between items-center">
@@ -38,7 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </header>
 
       {/* Main content */}
-      <main className="flex-grow">{children}</main>
+      <main>{children}</main>
       
       {/* Footer */}
       <Footer />

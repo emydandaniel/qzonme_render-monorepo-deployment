@@ -25,7 +25,8 @@ const QuizCreation: React.FC = () => {
   // Creator name - retrieved from username in session storage (set on homepage)
   const [creatorName, setCreatorName] = useState(() => {
     // Get the username from session storage as default
-    const savedUsername = sessionStorage.getItem("username") || "";
+    const savedUsername = sessionStorage.getItem("username") || sessionStorage.getItem("userName") || "";
+    console.log("Initializing creator name from sessionStorage:", savedUsername);
     return savedUsername;
   });
   
@@ -74,19 +75,31 @@ const QuizCreation: React.FC = () => {
       // Selectively clear storage items, preserving user identity
       try {
         // Save username before clearing
-        const username = sessionStorage.getItem("username");
+        const username = sessionStorage.getItem("username") || sessionStorage.getItem("userName");
         const userId = sessionStorage.getItem("userId");
+        
+        console.log("Preserving user data - username:", username, "userId:", userId);
         
         // Clear session storage except for critical identity values
         sessionStorage.clear();
         
         // Restore username and userId
-        if (username) sessionStorage.setItem("username", username);
+        if (username) {
+          sessionStorage.setItem("username", username);
+          sessionStorage.setItem("userName", username); // Set both for compatibility
+        }
         if (userId) sessionStorage.setItem("userId", userId);
         
         // Make creator name match the username
-        setCreatorName(username || "");
-        setIsNameConfirmed(true);
+        if (username) {
+          console.log("Setting creator name from preserved username:", username);
+          setCreatorName(username);
+          setIsNameConfirmed(true);
+        } else {
+          console.log("No username found, resetting to empty");
+          setCreatorName("");
+          setIsNameConfirmed(false);
+        }
         
         // Clear localStorage
         localStorage.clear();
@@ -144,7 +157,14 @@ const QuizCreation: React.FC = () => {
       // CRITICAL: We now use the directly entered creator name from our form
       // NOT from sessionStorage, to ensure absolute freshness
       
-      if (!creatorName.trim()) {
+      console.log("=== DEBUG QUIZ CREATION START ===");
+      console.log(`creatorName value: "${creatorName}"`);
+      console.log(`creatorName type: ${typeof creatorName}`);
+      console.log(`creatorName length: ${creatorName?.length || 'N/A'}`);
+      console.log(`creatorName trimmed: "${creatorName?.trim()}"`);
+      
+      if (!creatorName || !creatorName.trim()) {
+        console.error("CRITICAL ERROR: Creator name is empty or undefined");
         toast({
           title: "Creator Name Required",
           description: "Please enter your name at the top of the form",
@@ -153,10 +173,22 @@ const QuizCreation: React.FC = () => {
         throw new Error("Creator name is required");
       }
       
+      // Ensure we have a clean creator name
+      const cleanCreatorName = creatorName.trim();
+      if (cleanCreatorName.length === 0) {
+        console.error("CRITICAL ERROR: Creator name is empty after trimming");
+        toast({
+          title: "Creator Name Required",
+          description: "Please enter a valid name",
+          variant: "destructive"
+        });
+        throw new Error("Creator name cannot be empty");
+      }
+      
       // Get user ID from session, but name directly from input field
       const currentUserId = parseInt(sessionStorage.getItem("userId") || "0");
       
-      console.log(`Creating FRESH quiz for creator name: "${creatorName}" (typed directly in form)`);
+      console.log(`Creating FRESH quiz for creator name: "${cleanCreatorName}" (typed directly in form)`);
       console.log(`User ID for database reference only: ${currentUserId}`);
       
       // Always generate fresh tokens and codes for each quiz
@@ -165,15 +197,23 @@ const QuizCreation: React.FC = () => {
       
       // IMPORTANT: Generate URL slug from the FRESH creator name input in the form
       // Plus timestamp and random chars for absolute uniqueness
-      const freshUrlSlug = generateUrlSlug(creatorName);
+      console.log(`Calling generateUrlSlug with: "${cleanCreatorName}"`);
+      let freshUrlSlug;
+      try {
+        freshUrlSlug = generateUrlSlug(cleanCreatorName);
+        console.log(`Generated URL slug: "${freshUrlSlug}"`);
+      } catch (slugError) {
+        console.error("Error generating URL slug:", slugError);
+        throw new Error(`Failed to generate URL slug: ${slugError.message}`);
+      }
       
-      console.log(`Generated fresh URL slug: ${freshUrlSlug} from creator name: ${creatorName}`);
+      console.log(`Generated fresh URL slug: ${freshUrlSlug} from creator name: ${cleanCreatorName}`);
       console.log(`Generated fresh dashboard token: ${freshDashboardToken}`);
       
       // Create the quiz with fresh data, using form input for creator name
       const quizResponse = await apiRequest("POST", "/api/quizzes", {
         creatorId: currentUserId,
-        creatorName: creatorName.trim(), // Direct from form
+        creatorName: cleanCreatorName, // Use the clean name
         accessCode: freshAccessCode,
         urlSlug: freshUrlSlug,
         dashboardToken: freshDashboardToken
@@ -190,15 +230,25 @@ const QuizCreation: React.FC = () => {
       console.log(`URL Slug: ${quiz.urlSlug}`);
       
       // Create all questions for the quiz
-      const questionPromises = questions.map((question, index) =>
-        apiRequest("POST", "/api/questions", {
-          ...question,
+      const questionPromises = questions.map((question, index) => {
+        // For manual quiz creation, questions already have the correct format
+        const transformedQuestion = {
           quizId: quiz.id,
-          order: index
-        })
-      );
+          text: question.text, // Already correct field name
+          type: "multiple-choice",
+          options: question.options, // Keep as array
+          correctAnswers: question.correctAnswers, // Already in correct format
+          hint: question.hint, // Already correct field name
+          order: index,
+          imageUrl: question.imageUrl
+        };
+        
+        return apiRequest("POST", "/api/questions", transformedQuestion);
+      });
       
-      await Promise.all(questionPromises);
+      console.log("Creating questions...", questionPromises.length);
+      const questionResults = await Promise.all(questionPromises);
+      console.log("All questions created successfully:", questionResults.length);
       return quiz;
     }
   });
@@ -453,7 +503,9 @@ const QuizCreation: React.FC = () => {
       console.log(`Creator name (directly from form input): "${creatorName}"`);
       
       // Create the quiz with fresh creator name from form
+      console.log("Starting quiz creation process...");
       const quiz = await createQuizMutation.mutateAsync();
+      console.log("Quiz created successfully:", quiz);
       
       console.log("Quiz creation successful!");
       console.log("Quiz ID:", quiz.id);
@@ -475,6 +527,7 @@ const QuizCreation: React.FC = () => {
       });
       
       // Navigate to the share page
+      console.log(`Navigating to share page: /share/${quiz.id}`);
       navigate(`/share/${quiz.id}`);
     } catch (error) {
       console.error("Failed to create quiz:", error);
@@ -509,9 +562,35 @@ const QuizCreation: React.FC = () => {
   // Render the form
   return (
     <Layout>
-      <h1 className="text-2xl font-bold mb-8 font-poppins text-center md:text-left">
+      <h1 className="text-2xl font-bold mb-4 font-poppins text-center md:text-left">
         Create Your Quiz
       </h1>
+      
+      {/* Creator Name Display and Change Option */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm text-gray-600">Creating quiz as:</span>
+            <div className="font-medium text-lg">{creatorName || "No name set"}</div>
+          </div>
+          <div className="flex space-x-2">
+            <Input
+              type="text"
+              placeholder="Enter your name"
+              value={creatorName}
+              onChange={(e) => setCreatorName(e.target.value)}
+              className="w-48"
+            />
+            <Button
+              onClick={handleConfirmName}
+              size="sm"
+              disabled={!creatorName.trim()}
+            >
+              Update Name
+            </Button>
+          </div>
+        </div>
+      </div>
       
       <Card key={mountId} className="mb-6">
         <CardContent className="pt-6">

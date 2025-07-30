@@ -1,0 +1,16 @@
+// Test file to debug exports
+export async function generateQuestions() {
+  return { success: true };
+}
+
+export async function generateQuestionPreview() {
+  return { success: true };
+}
+
+export async function generateQuestionsWithImage() {
+  return { success: true };
+}
+
+export async function checkAIServiceHealth() {
+  return { success: true };
+}

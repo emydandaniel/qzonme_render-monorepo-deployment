@@ -40,17 +40,15 @@ export function showAdInterstitial() {
 
 export function generateUrlSlug(creatorName: string): string {
   console.log(`➡️ Generating URL slug for: "${creatorName}"`);
+  console.log(`➡️ Creator name type: ${typeof creatorName}`);
+  console.log(`➡️ Creator name length: ${creatorName?.length || 'N/A'}`);
   
   // CRITICAL FIX: Block empty names entirely
   if (!creatorName || !creatorName.trim()) {
     console.error("❌ CRITICAL ERROR: Empty creator name in slug generation");
+    console.error("❌ creatorName value:", creatorName);
+    console.error("❌ creatorName type:", typeof creatorName);
     throw new Error("Creator name cannot be empty for URL slug generation");
-  }
-  
-  // CRITICAL FIX: Block the problematic default name explicitly
-  if (creatorName.toLowerCase().includes('emydan')) {
-    console.error("❌ CRITICAL ERROR: Default name 'emydan' detected");
-    throw new Error("Cannot use default creator name");
   }
   
   // Convert to lowercase and clean the name (no special chars)
@@ -60,10 +58,13 @@ export function generateUrlSlug(creatorName: string): string {
     .replace(/[^a-z0-9]/g, '') // Remove all non-alphanumeric chars
     .replace(/\s+/g, '');      // Remove spaces
     
+  console.log(`➡️ Clean name after processing: "${cleanName}"`);
+  
   // VALIDATION: Ensure clean name has actual content
   if (!cleanName) {
     console.error("❌ CRITICAL ERROR: Name contained only special characters");
     cleanName = "quiz" + Date.now().toString().slice(-4);
+    console.log(`➡️ Using fallback name: "${cleanName}"`);
   }
   
   // Limit the name to max 15 characters
@@ -91,7 +92,7 @@ export function generateDashboardToken(): string {
 }
 
 export function getRemarkByScore(score: number, total: number): string {
-  if (total <= 0) return "Perfect! You're basically my twin 🧠❤️";
+  if (total <= 0) return "Perfect score! You're absolutely amazing! 🧠❤️";
   
   // Ensure score doesn't exceed total
   const validScore = Math.min(score, total);
@@ -100,14 +101,14 @@ export function getRemarkByScore(score: number, total: number): string {
   const percentage = (validScore / total) * 100;
   
   if (percentage <= 20) {
-    return "Oops! You don't know me at all 😅";
+    return "Don't worry, practice makes perfect! 😅";
   } else if (percentage <= 40) {
-    return "Hmm… you kinda know me 🤔";
+    return "Good effort! Keep learning 🤔";
   } else if (percentage <= 60) {
-    return "Not bad! You're getting there 👀";
+    return "Not bad! You're doing well 👀";
   } else if (percentage <= 80) {
-    return "Yoo you really know me! 🔥🔥";
+    return "Great job! You really know your stuff! 🔥🔥";
   } else {
-    return "Perfect! You're basically my twin 🧠❤️";
+    return "Perfect score! You're absolutely amazing! 🧠❤️";
   }
 }

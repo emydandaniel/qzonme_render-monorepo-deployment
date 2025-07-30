@@ -114,15 +114,15 @@ const Blog: React.FC = () => {
   return (
     <Layout>
       <MetaTags 
-        title="Blog | QzonMe - How Well Do Your Friends Know You?" 
-        description="Discover tips, tricks, and fun ideas for creating and sharing your QzonMe friendship quizzes. Read our latest articles about friendship, quizzes, and more."
+        title="Blog | QzonMe - Ultimate Quiz Creation Platform" 
+        description="Discover tips, tricks, and creative ideas for creating any type of quiz - from friendship tests to trivia challenges, classroom games to fandom quizzes."
       />
       
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">QzonMe Blog</h1>
           <p className="text-muted-foreground">
-            Discover tips, tricks, and fun ideas for your friendship quizzes
+            Discover tips, tricks, and creative ideas for creating any type of quiz
           </p>
         </div>
         
@@ -175,7 +175,7 @@ const Blog: React.FC = () => {
           <CardContent className="pt-6 text-center">
             <h2 className="text-xl font-bold mb-4">More Articles Coming Soon!</h2>
             <p className="text-muted-foreground mb-6">
-              We're working on creating more helpful content about friendship quizzes, social sharing tips, and how to create engaging questions.
+              We're working on creating more helpful content about quiz creation, AI auto-generation tips, social sharing strategies, and how to create engaging questions for any topic.
               Check back soon for new articles!
             </p>
             <Link href="/">

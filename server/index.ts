@@ -124,10 +124,20 @@ app.use((req, res, next) => {
   // doesn't interfere with the other routes
   if (process.env.NODE_ENV === "development") {
     try {
-      console.log('🔧 Setting up Vite for development...');
-      const { setupVite } = await import("./vite.js");
-      await setupVite(app, server);
-      console.log('✅ Vite development server setup complete');
+      console.log('🔧 Attempting to load Vite for development...');
+      // Check if vite module exists before importing
+      const vitePath = pathModule.resolve(pathModule.dirname(new URL(import.meta.url).pathname), './vite.js');
+      if (fs.existsSync(vitePath)) {
+        const viteModule = await import('./vite.js');
+        if (viteModule && viteModule.setupVite) {
+          await viteModule.setupVite(app, server);
+          console.log('✅ Vite development server setup complete');
+        } else {
+          throw new Error('Vite module loaded but setupVite function not found');
+        }
+      } else {
+        throw new Error('Vite module file not found');
+      }
     } catch (error) {
       console.warn('⚠️ Could not setup Vite development server:', error);
       console.log('🔄 Falling back to static file serving...');
@@ -135,6 +145,7 @@ app.use((req, res, next) => {
       const distPath = pathModule.resolve(pathModule.dirname(new URL(import.meta.url).pathname), "../client/dist");
       if (fs.existsSync(distPath)) {
         app.use(express.static(distPath));
+        console.log('📁 Serving static files from:', distPath);
       }
     }
   } else {

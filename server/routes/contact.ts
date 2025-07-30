@@ -64,42 +64,47 @@ export function registerContactRoutes(app: Express) {
   app.post('/api/admin/login', async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
-      const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+      const clientIp = req.ip || req.connection?.remoteAddress || 'unknown';
+      const userAgent = req.get('User-Agent');
 
       // Check rate limiting
-      if (!checkRateLimit(clientIp)) {
+      if (!checkRateLimit(clientIp, userAgent)) {
         return res.status(429).json({
           success: false,
-          message: 'Too many login attempts. Please try again in 15 minutes.'
+          message: 'Too many login attempts. Please try again in 15 minutes.',
+          error: 'RATE_LIMIT_EXCEEDED'
         });
       }
 
-      // Validate credentials
-      const isValid = await validateAdminCredentials(username, password);
+      // Validate credentials with enhanced security
+      const validationResult = await validateAdminCredentials(username, password, clientIp, userAgent);
       
-      if (!isValid) {
+      if (!validationResult.isValid) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid credentials'
+          message: validationResult.reason || 'Invalid credentials',
+          error: 'AUTHENTICATION_FAILED'
         });
       }
 
       // Reset rate limit on successful login
       resetRateLimit(clientIp);
 
-      // Generate JWT token
-      const token = generateAdminToken(username);
+      // Generate JWT token with tracking
+      const token = generateAdminToken(username, clientIp, userAgent);
 
       res.status(200).json({
         success: true,
         token,
-        message: 'Admin login successful'
+        message: 'Admin login successful',
+        expiresIn: '24h'
       });
     } catch (error) {
       console.error('Admin login error:', error);
       res.status(500).json({
         success: false,
-        message: 'Login failed'
+        message: 'Login failed due to server error',
+        error: 'SERVER_ERROR'
       });
     }
   });

@@ -39,16 +39,34 @@ const FAQ: React.FC = () => {
                     <div>
                       <h3 className="text-xl font-semibold mb-2">Create Any Quiz</h3>
                       <p className="text-muted-foreground mb-4">
-                        Enter your name and start creating questions on any topic you love. You can create:
+                        Enter your name and choose how you want to create your quiz:
                       </p>
-                      <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
-                        <li>Personal "How well do you know me?" friendship tests</li>
-                        <li>Trivia challenges on sports, movies, music, anime, or any topic</li>
-                        <li>Educational quizzes for classroom review and study games</li>
-                        <li>Family and group activity quizzes for gatherings</li>
-                        <li>Fandom quizzes to test knowledge about favorite shows or celebrities</li>
-                        <li>Multiple-choice questions with up to 4 options and image support</li>
-                      </ul>
+                      
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-primary mb-2">Manual Creation:</h4>
+                        <p className="text-muted-foreground mb-2">Create questions yourself on any topic you love:</p>
+                        <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-4 text-sm">
+                          <li>Personal "How well do you know me?" friendship tests</li>
+                          <li>Trivia challenges on sports, movies, music, anime, or any topic</li>
+                          <li>Educational quizzes for classroom review and study games</li>
+                          <li>Family and group activity quizzes for gatherings</li>
+                          <li>Fandom quizzes to test knowledge about favorite shows or celebrities</li>
+                          <li>Multiple-choice questions with up to 4 options and image support</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-primary mb-2">Auto Quiz Creation (AI-Powered):</h4>
+                        <p className="text-muted-foreground mb-2">Let AI generate questions for you from your content:</p>
+                        <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-4 text-sm">
+                          <li>Upload documents (PDF, Word, text files) or images</li>
+                          <li>Paste web links or YouTube video URLs</li>
+                          <li>Simply describe your topic in text</li>
+                          <li>AI analyzes content and generates multiple-choice questions</li>
+                          <li>Review and edit AI-generated questions before publishing</li>
+                          <li>Free with 3 auto-generations per day</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                   
@@ -62,7 +80,7 @@ const FAQ: React.FC = () => {
                       <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
                         <li>Edit or delete questions before finalizing</li>
                         <li>Reorder questions by deleting and re-adding them</li>
-                        <li>Create a quiz with at least 3 questions (maximum 20)</li>
+                        <li>Create a quiz with minimum 5 questions (no maximum limit)</li>
                       </ul>
                       <p className="text-muted-foreground mt-4">
                         <span className="font-semibold">Important:</span> Once your quiz is created, you cannot edit it, so make sure everything is correct!
@@ -135,7 +153,7 @@ const FAQ: React.FC = () => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                      You can create any type of quiz! Popular options include: personal "How well do you know me?" friendship tests, trivia challenges on sports/movies/music/anime, educational classroom review games, family gathering quizzes, fandom tests about TV shows or celebrities, and topic-based challenges on any subject you're passionate about.
+                      You can create any type of quiz with a minimum of 5 questions and no maximum limit! Popular options include: personal "How well do you know me?" friendship tests, trivia challenges on sports/movies/music/anime, educational classroom review games, family gathering quizzes, fandom tests about TV shows or celebrities, and topic-based challenges on any subject you're passionate about. You can create them manually or use our Auto Quiz Creation feature to generate questions from your content automatically.
                     </AccordionContent>
                   </AccordionItem>
                   
@@ -208,6 +226,18 @@ const FAQ: React.FC = () => {
                     </AccordionTrigger>
                     <AccordionContent>
                       QzonMe respects your privacy. All quizzes, results, and uploaded images are automatically deleted after 7 days. We use secure image hosting, and we don't sell or share your personal data with third parties. For more details, please see our Privacy Policy.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-9">
+                    <AccordionTrigger className="text-left">
+                      <div className="flex items-center">
+                        <Lightbulb className="mr-2 h-5 w-5 text-primary" />
+                        <span>What is Auto Quiz Creation?</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      Auto Quiz Creation is our AI-powered feature that generates quiz questions for you automatically. Simply upload documents, paste web links, describe a topic, or even share YouTube videos - and our AI will analyze the content to create engaging multiple-choice questions. You can then review, edit, and customize the generated questions before publishing your quiz. It's perfect for teachers, content creators, or anyone who wants to quickly create quizzes from existing material. Free users get 3 auto-generations per day.
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

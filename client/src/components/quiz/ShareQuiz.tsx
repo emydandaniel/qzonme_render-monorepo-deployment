@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import Layout from "../common/Layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
+import { getQuizUrl, getDashboardUrl, getShareMessage } from "../../lib/domain";
 
 interface ShareQuizProps {
   accessCode: string;
@@ -47,12 +48,10 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
     }
   }, [quiz?.dashboardToken]);
   
-  // Use the custom domain for sharing
-  const customDomain = "https://qzonme.com";
-  const quizLink = `${customDomain}/quiz/${urlSlug}`;
-  const shareMessage = `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizLink}`;
-  
-  const dashboardLink = dashboardToken ? `${customDomain}/dashboard/${dashboardToken}` : null;
+  // Use the domain utilities for generating links
+  const quizLink = getQuizUrl(urlSlug);
+  const dashboardLink = getDashboardUrl(dashboardToken || "");
+  const shareMessage = getShareMessage(urlSlug);
   
   // Format expiration date (7 days from today)
   const expirationDate = new Date();
@@ -85,7 +84,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
       return;
     }
     
-    navigator.clipboard.writeText(dashboardLink || "");
+    navigator.clipboard.writeText(dashboardLink);
     
     setCopiedDashboard(true);
     toast({
@@ -139,10 +138,8 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
             <p className="text-sm text-gray-600 mb-3 text-left">
               Copy this message to invite your friends to take your quiz!
             </p>
-            <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3 text-left">
-              Hey! I made this QzonMe quiz just for YOU. 👀<br/>
-              Let's see if you really know me 👇<br/>
-              <span className="text-blue-500 truncate block">{quizLink}</span>
+            <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3 text-left whitespace-pre-line">
+              {shareMessage}
             </div>
             <Button 
               type="button" 
@@ -172,7 +169,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               <div className="mb-3">
                 <div className="flex space-x-2 mb-2">
                   <Input 
-                    value={`${customDomain}/dashboard/${dashboardToken}`}
+                    value={dashboardLink}
                     readOnly
                     className="bg-white"
                   />

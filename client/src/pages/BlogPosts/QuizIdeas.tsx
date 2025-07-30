@@ -91,7 +91,7 @@ const QuizIdeas: React.FC = () => {
             <Link href="/blog">
               <Button variant="outline">Back to All Posts</Button>
             </Link>
-            <Link href="/create">
+            <Link href="/">
               <Button>Create Your Quiz Now</Button>
             </Link>
           </div>

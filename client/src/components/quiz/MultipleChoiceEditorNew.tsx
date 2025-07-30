@@ -59,31 +59,40 @@ const MultipleChoiceEditor: React.FC<MultipleChoiceEditorProps> = ({
           onValueChange={(val) => setCorrectOption(parseInt(val))}
           className="space-y-3"
         >
-          {options.map((option, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-              <div className="flex-1 flex items-center">
-                <input
-                  type="text"
-                  className="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder={`Option ${index + 1}`}
-                  value={option}
-                  onChange={(e) => handleOptionChange(index, e.target.value)}
-                />
-                {options.length > 2 && (
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    className="ml-2 h-8 w-8 p-0" 
-                    onClick={() => handleRemoveOption(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
+          {options.map((option, index) => {
+            const letter = String.fromCharCode(65 + index); // A, B, C, D
+            return (
+              <div key={index} className="flex items-center space-x-2">
+                <RadioGroupItem value={index.toString()} id={`option-${index}`} />
+                <Label 
+                  htmlFor={`option-${index}`} 
+                  className="font-medium text-sm w-4 flex-shrink-0 text-gray-600"
+                >
+                  {letter})
+                </Label>
+                <div className="flex-1 flex items-center">
+                  <input
+                    type="text"
+                    className="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder={`Enter option text`}
+                    value={option}
+                    onChange={(e) => handleOptionChange(index, e.target.value)}
+                  />
+                  {options.length > 2 && (
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm"
+                      className="ml-2 h-8 w-8 p-0" 
+                      onClick={() => handleRemoveOption(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </RadioGroup>
       </div>
       

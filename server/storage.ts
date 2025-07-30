@@ -52,8 +52,16 @@ export class DatabaseStorage implements IStorage {
   
   // Quiz methods
   async getQuiz(id: number): Promise<Quiz | undefined> {
-    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
-    return quiz;
+    console.log(`🔍 Storage.getQuiz(${id}) started`);
+    try {
+      console.log(`🔍 About to query database for quiz with id: ${id}`);
+      const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
+      console.log(`🔍 Database query completed, result:`, quiz);
+      return quiz;
+    } catch (error) {
+      console.error(`🔍 Error in storage.getQuiz(${id}):`, error);
+      throw error;
+    }
   }
   
   async getQuizByAccessCode(accessCode: string): Promise<Quiz | undefined> {

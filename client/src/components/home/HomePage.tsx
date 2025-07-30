@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Plus, Users, MessageSquare, Heart, ThumbsUp, Share2, Trophy } from "lucide-react";
+import { ArrowRight, Plus, Users, MessageSquare, Heart, ThumbsUp, Share2, Trophy, Sparkles, FileQuestion } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const HomePage: React.FC = () => {
@@ -73,8 +73,56 @@ const HomePage: React.FC = () => {
       // Clear any local storage that might be interfering
       localStorage.removeItem("creatorName");
       
+      // Clear auto-create flags to ensure clean manual quiz creation
+      sessionStorage.removeItem("autoCreateMode");
+      sessionStorage.removeItem("requiresReview");
+      sessionStorage.removeItem("generatedQuestions");
+      sessionStorage.removeItem("generationMetadata");
+      
+      // Clear any old draft questions and their metadata to prevent contamination
+      localStorage.removeItem("qzonme_draft_questions");
+      localStorage.removeItem("qzonme_draft_metadata");
+      
       // Navigate to quiz creation
       navigate("/create");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create user. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAutoCreateQuiz = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // First scroll to the top of the page
+    window.scrollTo(0, 0);
+    
+    if (!userName.trim()) {
+      toast({
+        title: "Name is required",
+        description: "Please enter your name to continue",
+        variant: "destructive",
+      });
+      // Focus on the user name input at the top
+      document.getElementById('user-name')?.focus();
+      return;
+    }
+    
+    try {
+      const user = await createUserMutation.mutateAsync(userName);
+      // Store user in session - ensure both variations are set to prevent issues
+      sessionStorage.setItem("username", userName); 
+      sessionStorage.setItem("userName", userName); // Set both versions for compatibility
+      sessionStorage.setItem("userId", user.id);
+      
+      // Clear any local storage that might be interfering
+      localStorage.removeItem("creatorName");
+      
+      // Navigate to auto-create quiz page
+      navigate("/auto-create");
     } catch (error) {
       toast({
         title: "Error",
@@ -157,6 +205,11 @@ const HomePage: React.FC = () => {
       description: "Friendship tests, trivia challenges, classroom games, fandom quizzes, or any topic you love!"
     },
     {
+      icon: <Sparkles className="h-8 w-8 text-primary" />,
+      title: "AI-Powered Creation",
+      description: "Let our smart AI generate quiz questions automatically, or create them manually - your choice!"
+    },
+    {
       icon: <Share2 className="h-8 w-8 text-primary" />,
       title: "Easy Sharing",
       description: "Share your quiz link on WhatsApp, Instagram, or any social platform in seconds."
@@ -170,22 +223,27 @@ const HomePage: React.FC = () => {
       icon: <Heart className="h-8 w-8 text-primary" />,
       title: "Quick & Free",
       description: "No sign-up required - create and share any quiz instantly at no cost."
+    },
+    {
+      icon: <FileQuestion className="h-8 w-8 text-primary" />,
+      title: "Perfect for Education",
+      description: "Teachers love using QzonMe for classroom review games, study sessions, and engaging students with interactive learning."
     }
   ];
 
   // Testimonials for homepage
   const testimonials = [
     {
-      name: "Sarah K.",
-      content: "Created a Harry Potter trivia for my friend group - we're all obsessed! Got 50+ responses in hours."
+      name: "Emma R. (Teacher)",
+      content: "Perfect for my classroom! I create review quizzes for my students before exams. The AI feature saves me hours - I just upload my lesson notes and get instant quiz questions!"
     },
     {
-      name: "James T.",
-      content: "Made a football quiz for my class. Super easy to create and the leaderboard made it so competitive!"
+      name: "Jake M. (Content Creator)",
+      content: "My followers love the 'How well do you know me?' quizzes I make! Great way to engage my audience and the leaderboard makes it super competitive. Got 500+ responses in one day!"
     },
     {
-      name: "Mia L.",
-      content: "Perfect for family game night! Created a 'How well do you know our family?' quiz everyone loved."
+      name: "Sarah K. (Student)",
+      content: "I make study quizzes for my friend group before finals. We test each other on everything from biology to history. Makes studying way more fun and interactive!"
     }
   ];
 
@@ -227,15 +285,15 @@ const HomePage: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-6">
-                  {/* Always show both buttons, regardless of how the page was accessed */}
+                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
+                  {/* Always show all three buttons, with Auto Create Quiz as the newest feature last */}
                   <Button 
                     type="button" 
                     className="btn-primary flex-1" 
                     onClick={handleCreateQuiz}
                     disabled={createUserMutation.isPending}
                   >
-                    <Plus className="h-4 w-4 mr-2" /> Create a Quiz
+                    <Plus className="h-4 w-4 mr-2" /> Create Quiz
                   </Button>
                   <Button 
                     type="button" 
@@ -249,9 +307,17 @@ const HomePage: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        Answer a Quiz
+                        Answer Quiz
                       </>
                     )}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    className="btn-secondary flex-1" 
+                    onClick={handleAutoCreateQuiz}
+                    disabled={createUserMutation.isPending}
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" /> Auto Create
                   </Button>
                 </div>
               </form>
@@ -266,7 +332,7 @@ const HomePage: React.FC = () => {
       {/* Features Section */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-6 text-center">Why People Love QzonMe</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {features.map((feature, index) => (
             <Card key={index} className="h-full">
               <CardHeader>
@@ -286,36 +352,73 @@ const HomePage: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-center">How It Works</CardTitle>
-            <CardDescription className="text-center">Create, share, and enjoy in 3 simple steps</CardDescription>
+            <CardDescription className="text-center">Create, share, and enjoy in 3 simple steps - manually or with AI assistance!</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">1</div>
-                <div>
-                  <h3 className="font-semibold">Create Any Quiz</h3>
-                  <p className="text-muted-foreground">Enter your name and create questions on any topic! Add images to make it more engaging.</p>
+            <div className="space-y-8">
+              {/* Manual Creation */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4 text-center">📝 Manual Quiz Creation</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">1</div>
+                    <div>
+                      <h4 className="font-medium">Create Your Quiz</h4>
+                      <p className="text-muted-foreground text-sm">Enter your name and create questions on any topic! Add images to make it more engaging.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">2</div>
+                    <div>
+                      <h4 className="font-medium">Share With Everyone</h4>
+                      <p className="text-muted-foreground text-sm">Get a unique link to share on social media or send directly to friends and family.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">3</div>
+                    <div>
+                      <h4 className="font-medium">See Who Wins</h4>
+                      <p className="text-muted-foreground text-sm">Check out your leaderboard to see who scored highest on your quiz!</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">2</div>
-                <div>
-                  <h3 className="font-semibold">Share With Everyone</h3>
-                  <p className="text-muted-foreground">Get a unique link to share on social media or send directly to friends and family.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">3</div>
-                <div>
-                  <h3 className="font-semibold">See Who Wins</h3>
-                  <p className="text-muted-foreground">Check out your leaderboard to see who scored highest on your quiz!</p>
+
+              {/* AI Auto Creation */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4 text-center">✨ AI Auto Quiz Creation</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground font-bold text-sm">1</div>
+                    <div>
+                      <h4 className="font-medium">Choose Your Topic</h4>
+                      <p className="text-muted-foreground text-sm">Tell our AI what quiz you want - from "football trivia" to "how well do you know me" - and watch the magic happen!</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground font-bold text-sm">2</div>
+                    <div>
+                      <h4 className="font-medium">AI Generates Questions</h4>
+                      <p className="text-muted-foreground text-sm">Our smart AI creates engaging questions with multiple choice answers automatically - you can edit or approve them.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground font-bold text-sm">3</div>
+                    <div>
+                      <h4 className="font-medium">Share & Compete</h4>
+                      <p className="text-muted-foreground text-sm">Your AI-generated quiz is ready to share! Track results on the leaderboard just like manual quizzes.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-center">
+          <CardFooter className="flex justify-center gap-4">
             <Button onClick={handleCreateQuiz}>
-              <Plus className="h-4 w-4 mr-2" /> Create Your Quiz Now
+              <Plus className="h-4 w-4 mr-2" /> Create Manual Quiz
+            </Button>
+            <Button onClick={handleAutoCreateQuiz} variant="secondary">
+              <Sparkles className="h-4 w-4 mr-2" /> Try AI Auto Create
             </Button>
           </CardFooter>
         </Card>
@@ -345,10 +448,15 @@ const HomePage: React.FC = () => {
           <CardContent className="pt-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4">Ready to Create Your Quiz?</h2>
-              <p className="mb-6">It's free, fun, and takes just minutes to set up!</p>
-              <Button variant="secondary" size="lg" onClick={handleCreateQuiz}>
-                <Plus className="h-4 w-4 mr-2" /> Create Your Quiz
-              </Button>
+              <p className="mb-6">Choose manual creation for full control or let AI do the work - it's free, fun, and takes just minutes!</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button variant="secondary" size="lg" onClick={handleCreateQuiz}>
+                  <Plus className="h-4 w-4 mr-2" /> Create Manual Quiz
+                </Button>
+                <Button variant="outline" size="lg" onClick={handleAutoCreateQuiz} className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary">
+                  <Sparkles className="h-4 w-4 mr-2" /> Try AI Auto Create
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -364,8 +472,15 @@ const HomePage: React.FC = () => {
             <div className="space-y-4">
               <p>
                 QzonMe is the ultimate quiz creation platform where you can build any type of quiz in minutes! 
-                From friendship tests to trivia challenges, classroom games to fandom quizzes - create, share, and compete!
+                From friendship tests to trivia challenges, classroom games to fandom quizzes - create manually or let our AI do the work for you!
               </p>
+              <div className="bg-muted p-4 rounded-md">
+                <h3 className="font-medium mb-2">Two Ways to Create:</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li><strong>Manual Creation:</strong> Build your quiz question by question with full control over content and images</li>
+                  <li><strong>AI Auto Creation:</strong> Tell our AI your topic and let it generate engaging questions automatically (3 generations per day)</li>
+                </ul>
+              </div>
               <div className="bg-muted p-4 rounded-md">
                 <h3 className="font-medium mb-2">Perfect for Any Quiz Type:</h3>
                 <ul className="list-disc pl-5 space-y-1">
@@ -380,6 +495,7 @@ const HomePage: React.FC = () => {
                 <h3 className="font-medium mb-2">Why Choose QzonMe?</h3>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>No account or sign-up required - create any quiz instantly</li>
+                  <li>AI-powered auto generation or full manual control - your choice</li>
                   <li>Beautiful, mobile-friendly interface that works on any device</li>
                   <li>Share your quiz anywhere with a custom link</li>
                   <li>Real-time leaderboard shows who's winning</li>
@@ -388,7 +504,7 @@ const HomePage: React.FC = () => {
               </div>
               <p>
                 Whether you're a teacher creating review games, a friend making trivia for your group, or someone testing family knowledge,
-                QzonMe makes quiz creation fun, fast, and completely free!
+                QzonMe makes quiz creation fun, fast, and completely free - with or without AI assistance!
               </p>
               <div className="flex justify-center">
                 <Link href="/faq">

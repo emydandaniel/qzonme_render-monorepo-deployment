@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Share Page Test</title>
+</head>
+<body>
+    <h1>Local Share Page Test</h1>
+    <p>Test that the share page components work without API dependency</p>
+    
+    <div id="test-data">
+        <h2>Mock Quiz Data:</h2>
+        <pre id="quiz-data">{
+  "id": 1,
+  "creatorName": "emydan",
+  "urlSlug": "emydan-test123",
+  "dashboardToken": "dash-test-token",
+  "accessCode": "ABC123",
+  "createdAt": "2025-07-29T10:30:00Z"
+}</pre>
+    </div>
+    
+    <div id="share-links">
+        <h2>Generated Share Links:</h2>
+        <p><strong>Quiz URL:</strong> <span id="quiz-url"></span></p>
+        <p><strong>Dashboard URL:</strong> <span id="dashboard-url"></span></p>
+        <p><strong>Share Message:</strong></p>
+        <textarea id="share-message" rows="4" cols="60" readonly></textarea>
+    </div>
+    
+    <script type="module">
+        // Import domain utilities
+        import { getQuizUrl, getDashboardUrl, getShareMessage } from './client/src/lib/domain.ts';
+        
+        // Mock quiz data
+        const mockQuiz = {
+            urlSlug: "emydan-test123",
+            dashboardToken: "dash-test-token"
+        };
+        
+        // Generate URLs
+        const quizUrl = getQuizUrl(mockQuiz.urlSlug);
+        const dashboardUrl = getDashboardUrl(mockQuiz.dashboardToken);
+        const shareMessage = getShareMessage(mockQuiz.urlSlug);
+        
+        // Display results
+        document.getElementById('quiz-url').textContent = quizUrl;
+        document.getElementById('dashboard-url').textContent = dashboardUrl;
+        document.getElementById('share-message').value = shareMessage;
+        
+        console.log('Share URLs generated successfully:', {
+            quizUrl,
+            dashboardUrl,
+            shareMessage
+        });
+    </script>
+</body>
+</html>
