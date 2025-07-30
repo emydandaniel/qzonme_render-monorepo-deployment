@@ -11,6 +11,13 @@ async function initializePdfjs() {
     try {
       const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
       pdfjs = pdfjsLib.default || pdfjsLib;
+      
+      // Configure PDF.js for Node.js environment to avoid canvas warnings
+      if (pdfjs.GlobalWorkerOptions) {
+        pdfjs.GlobalWorkerOptions.workerSrc = null; // Disable worker in Node.js
+      }
+      
+      console.log("✅ PDF.js initialized successfully for Node.js");
     } catch (error) {
       console.error("Failed to load pdfjs-dist:", error);
       throw new Error("PDF processing library could not be loaded");
@@ -60,10 +67,10 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
 
     // Extract text using pdfjs-dist
     const loadingTask = pdfjsInstance.getDocument({
-      data: pdfBuffer,
-      standardFontDataUrl: undefined, // Disable font loading to avoid browser dependencies
-      disableFontFace: true,           // Disable font face loading
-      verbosity: 0                     // Reduce verbosity
+      data: new Uint8Array(pdfBuffer),  // Convert Buffer to Uint8Array for PDF.js compatibility
+      standardFontDataUrl: undefined,   // Disable font loading to avoid browser dependencies
+      disableFontFace: true,            // Disable font face loading
+      verbosity: 0                      // Reduce verbosity
     });
     
     const pdf = await loadingTask.promise;
