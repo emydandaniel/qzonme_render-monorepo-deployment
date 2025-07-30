@@ -4,7 +4,7 @@ services:
     name: qzonme-api
     env: node
     plan: free
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -37,7 +37,7 @@ services:
   - type: static
     name: qzonme-frontend
     env: static
-    buildCommand: npm ci && npm run build:client
+    buildCommand: npm install --legacy-peer-deps && npm run build:client
     staticPublishPath: ./client/dist
     pullRequestPreviewsEnabled: false
     headers:

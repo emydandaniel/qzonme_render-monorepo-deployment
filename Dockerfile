@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production --legacy-peer-deps && npm cache clean --force
 
 # Build the application
 FROM base AS builder
@@ -15,7 +15,7 @@ WORKDIR /app
 
 # Copy package files and install all dependencies (including dev)
 COPY package*.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
