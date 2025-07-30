@@ -19,8 +19,33 @@ export const mockDb = {
   select: () => ({
     from: (table: any) => ({
       where: (condition: any) => ({
-        limit: (num: number) => [],
-        then: (callback: any) => Promise.resolve([])
+        limit: (num: number) => {
+          // Handle autoCreateUsage queries for rate limiting
+          if (table === autoCreateUsage || (table.name && table.name === 'auto_create_usage')) {
+            const today = new Date().toISOString().split('T')[0];
+            const results = Array.from(mockDb.autoCreateUsage.values()).filter((record: any) => {
+              // Check if record is for today
+              const recordDate = record.date ? new Date(record.date).toISOString().split('T')[0] : today;
+              return recordDate === today;
+            });
+            console.log(`📊 Mock DB: Found ${results.length} autoCreateUsage records for today`);
+            return Promise.resolve(results.slice(0, num));
+          }
+          return Promise.resolve([]);
+        },
+        then: (callback: any) => {
+          // Handle autoCreateUsage queries for rate limiting
+          if (table === autoCreateUsage || (table.name && table.name === 'auto_create_usage')) {
+            const today = new Date().toISOString().split('T')[0];
+            const results = Array.from(mockDb.autoCreateUsage.values()).filter((record: any) => {
+              const recordDate = record.date ? new Date(record.date).toISOString().split('T')[0] : today;
+              return recordDate === today;
+            });
+            console.log(`📊 Mock DB: Found ${results.length} autoCreateUsage records for today (no limit)`);
+            return Promise.resolve(results);
+          }
+          return Promise.resolve([]);
+        }
       }),
       limit: (num: number) => ({
         then: (callback: any) => Promise.resolve([])
@@ -56,8 +81,15 @@ export const mockDb = {
           return [record];
         } else if (table === autoCreateUsage || (table.name && table.name === 'auto_create_usage')) {
           id = mockDb.nextAutoCreateUsageId++;
-          const record = { id, ...data };
+          const record = { 
+            id, 
+            ...data, 
+            date: data.date || new Date().toISOString().split('T')[0],
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
           mockDb.autoCreateUsage.set(id, record);
+          console.log(`📊 Mock DB: Created autoCreateUsage record:`, record);
           return [record];
         }
         
@@ -71,10 +103,38 @@ export const mockDb = {
   
   update: (table: any) => ({
     set: (data: any) => ({
-      where: (condition: any) => ({
-        returning: () => Promise.resolve([{ id: Date.now(), ...data }]),
-        then: (callback: any) => Promise.resolve({ id: Date.now(), ...data })
-      })
+      where: (condition: any) => {
+        // Handle autoCreateUsage updates for rate limiting
+        if (table === autoCreateUsage || (table.name && table.name === 'auto_create_usage')) {
+          // Find and update the record for today
+          const today = new Date().toISOString().split('T')[0];
+          const entries = Array.from(mockDb.autoCreateUsage.entries());
+          
+          for (const [id, record] of entries) {
+            const recordDate = record.date ? new Date(record.date).toISOString().split('T')[0] : today;
+            if (recordDate === today) {
+              const updatedRecord = { ...record, ...data, updatedAt: new Date() };
+              mockDb.autoCreateUsage.set(id, updatedRecord);
+              console.log(`📊 Mock DB: Updated autoCreateUsage record:`, updatedRecord);
+              return Promise.resolve(updatedRecord);
+            }
+          }
+          
+          // If no record for today exists, create one
+          const newId = mockDb.nextAutoCreateUsageId++;
+          const newRecord = { 
+            id: newId, 
+            date: today,
+            usageCount: data.usageCount || 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          mockDb.autoCreateUsage.set(newId, newRecord);
+          console.log(`📊 Mock DB: Created new autoCreateUsage record:`, newRecord);
+          return Promise.resolve(newRecord);
+        }
+        return Promise.resolve({ id: Date.now(), ...data });
+      }
     })
   }),
   
