@@ -18,7 +18,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from 'url';
 import { registerContactRoutes } from "./routes/contact";
-// import { registerAutoCreateRoutes } from "./routes/autoCreateRoutes";
+import { registerAutoCreateRoutes } from "./routes/autoCreateRoutes";
 import { requireAdmin } from "./auth";
 import { 
   secureUserSchema, 
@@ -199,7 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const allQuizzesList = await db.select().from(quizzes);
         
         // Find a case-insensitive match
-        const slugMatch = allQuizzesList.find(q => 
+        const slugMatch = allQuizzesList.find((q: any) => 
           q.urlSlug.toLowerCase() === urlSlug.toLowerCase()
         );
         
@@ -213,13 +213,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if the quiz is expired (older than 7 days)
-      const isExpired = storage.isQuizExpired(quiz);
-      if (isExpired) {
-        return res.status(410).json({ 
+      if (quiz) {
+        const isExpired = storage.isQuizExpired(quiz);
+        if (isExpired) {
+          return res.status(410).json({ 
           message: "Quiz expired", 
           expired: true,
           detail: "This quiz has expired. Quizzes are available for 7 days after creation."
         });
+        }
       }
       
       res.json(quiz);
@@ -453,7 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allQuestions = await db.select().from(questions);
       
       // Find the specific question
-      const question = allQuestions.find(q => q.id === questionId);
+      const question = allQuestions.find((q: any) => q.id === questionId);
       
       if (!question) {
         console.error(`[SERVER ERROR] Question not found: ${questionId}`);
@@ -572,8 +574,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register contact form routes
   registerContactRoutes(app);
   
-  // Register auto-create quiz routes (temporarily disabled for deployment)
-  // registerAutoCreateRoutes(app);
+  // Register auto-create quiz routes (re-enabled after successful deployment)
+  registerAutoCreateRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
