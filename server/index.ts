@@ -18,6 +18,9 @@ config();
 
 const app = express();
 
+// Set Express environment to match NODE_ENV
+app.set('env', process.env.NODE_ENV || 'development');
+
 // Setup security middleware FIRST (before any other middleware)
 setupSecurityMiddleware(app);
 
@@ -119,10 +122,23 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    const { setupVite } = await import("./vite");
-    await setupVite(app, server);
+  if (process.env.NODE_ENV === "development") {
+    try {
+      console.log('🔧 Setting up Vite for development...');
+      const { setupVite } = await import("./vite.js");
+      await setupVite(app, server);
+      console.log('✅ Vite development server setup complete');
+    } catch (error) {
+      console.warn('⚠️ Could not setup Vite development server:', error);
+      console.log('🔄 Falling back to static file serving...');
+      // Fallback to static file serving even in development
+      const distPath = pathModule.resolve(pathModule.dirname(new URL(import.meta.url).pathname), "../client/dist");
+      if (fs.existsSync(distPath)) {
+        app.use(express.static(distPath));
+      }
+    }
   } else {
+    console.log('🏭 Production mode: Setting up static file serving...');
     // Serve static files in production
     const distPath = pathModule.resolve(pathModule.dirname(new URL(import.meta.url).pathname), "../client/dist");
     
