@@ -39,8 +39,8 @@ COPY --from=builder --chown=qzonme:nodejs /app/package*.json ./
 # Copy production dependencies
 COPY --from=deps --chown=qzonme:nodejs /app/node_modules ./node_modules
 
-# Create directories for uploads if needed
-RUN mkdir -p temp_uploads uploads && chown -R qzonme:nodejs temp_uploads uploads
+# Create directories for uploads and contact messages if needed
+RUN mkdir -p temp_uploads uploads contact_messages && chown -R qzonme:nodejs temp_uploads uploads contact_messages
 
 # Switch to non-root user
 USER qzonme

@@ -13,9 +13,17 @@ interface ContactMessage {
 
 const CONTACT_MESSAGES_DIR = path.join(process.cwd(), 'contact_messages');
 
-// Ensure the contact_messages directory exists
-if (!fs.existsSync(CONTACT_MESSAGES_DIR)) {
-  fs.mkdirSync(CONTACT_MESSAGES_DIR, { recursive: true });
+// Function to ensure the contact_messages directory exists
+function ensureContactMessagesDir(): boolean {
+  try {
+    if (!fs.existsSync(CONTACT_MESSAGES_DIR)) {
+      fs.mkdirSync(CONTACT_MESSAGES_DIR, { recursive: true });
+    }
+    return true;
+  } catch (error) {
+    console.error('⚠️ Could not create contact_messages directory:', error);
+    return false;
+  }
 }
 
 export function registerContactRoutes(app: Express) {
@@ -41,9 +49,20 @@ export function registerContactRoutes(app: Express) {
         timestamp: new Date().toISOString()
       };
       
-      // Save the message to a JSON file in the contact_messages directory
-      const filePath = path.join(CONTACT_MESSAGES_DIR, `${contactMessage.id}.json`);
-      fs.writeFileSync(filePath, JSON.stringify(contactMessage, null, 2));
+      // Ensure contact messages directory exists before saving
+      if (ensureContactMessagesDir()) {
+        try {
+          // Save the message to a JSON file in the contact_messages directory
+          const filePath = path.join(CONTACT_MESSAGES_DIR, `${contactMessage.id}.json`);
+          fs.writeFileSync(filePath, JSON.stringify(contactMessage, null, 2));
+          console.log(`📧 Contact message saved: ${contactMessage.id}`);
+        } catch (error) {
+          console.error('⚠️ Could not save contact message to file:', error);
+          // Continue anyway - the message processing will still work
+        }
+      } else {
+        console.warn('⚠️ Contact messages directory not available, message not saved to file');
+      }
       
       // Return success response
       res.status(201).json({ 
@@ -112,17 +131,42 @@ export function registerContactRoutes(app: Express) {
   // Get all contact messages (ADMIN ONLY - now properly secured)
   app.get('/api/contact/messages', requireAdmin, async (req: Request, res: Response) => {
     try {
-      // Read all message files from the directory
-      const files = fs.readdirSync(CONTACT_MESSAGES_DIR);
       const messages: ContactMessage[] = [];
       
-      for (const file of files) {
-        if (file.endsWith('.json')) {
-          const filePath = path.join(CONTACT_MESSAGES_DIR, file);
-          const fileContent = fs.readFileSync(filePath, 'utf-8');
-          const message = JSON.parse(fileContent) as ContactMessage;
-          messages.push(message);
+      // Check if contact messages directory exists and is accessible
+      if (!ensureContactMessagesDir()) {
+        console.warn('⚠️ Contact messages directory not accessible');
+        return res.json({
+          success: true,
+          messages: [],
+          message: 'Contact messages directory not available'
+        });
+      }
+      
+      try {
+        // Read all message files from the directory
+        const files = fs.readdirSync(CONTACT_MESSAGES_DIR);
+        
+        for (const file of files) {
+          if (file.endsWith('.json')) {
+            try {
+              const filePath = path.join(CONTACT_MESSAGES_DIR, file);
+              const fileContent = fs.readFileSync(filePath, 'utf-8');
+              const message = JSON.parse(fileContent) as ContactMessage;
+              messages.push(message);
+            } catch (error) {
+              console.error(`⚠️ Could not read contact message file ${file}:`, error);
+              // Continue with other files
+            }
+          }
         }
+      } catch (error) {
+        console.error('⚠️ Could not read contact messages directory:', error);
+        return res.json({
+          success: true,
+          messages: [],
+          message: 'Could not access contact messages'
+        });
       }
       
       // Sort messages by timestamp (newest first)
