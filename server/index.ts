@@ -12,17 +12,9 @@ import {
   setupSecurityErrorHandling,
   sanitizeInput 
 } from './middleware/security';
-import { validateAndReport } from './security/configValidator';
 
 // Load environment variables FIRST
 config();
-
-// Validate security configuration
-console.log('🔒 Validating security configuration...');
-validateAndReport();
-
-// Now import and validate the auto-create config after env vars are loaded
-import { validateServerConfig } from './config/autoCreate';
 
 const app = express();
 
@@ -86,6 +78,27 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Import and validate configurations with error handling
+  let validateAndReport: () => void;
+  let validateServerConfig: () => { isValid: boolean, missingKeys: string[] };
+
+  try {
+    const configValidatorModule = await import('./security/configValidator.js');
+    validateAndReport = configValidatorModule.validateAndReport;
+    
+    const autoCreateModule = await import('./config/autoCreate.js');
+    validateServerConfig = autoCreateModule.validateServerConfig;
+    
+    // Validate security configuration
+    console.log('🔒 Validating security configuration...');
+    validateAndReport();
+  } catch (error) {
+    console.warn('⚠️ Could not load configuration validators:', error);
+    // Provide fallback functions
+    validateAndReport = () => console.log('⚠️ Security validation skipped - module not available');
+    validateServerConfig = () => ({ isValid: false, missingKeys: ['Configuration module not available'] });
+  }
+
   const server = await registerRoutes(app);
 
   // Setup endpoint-specific rate limits after routes are registered
