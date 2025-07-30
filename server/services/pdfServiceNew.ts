@@ -3,11 +3,21 @@ import fs from "fs/promises";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
 
-// Import pdfjs-dist for Node.js environments - using require for better compatibility
-const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
+// Import pdfjs-dist for Node.js environments - using dynamic import for ESM compatibility
+let pdfjs: any = null;
 
-// Configure pdfjs-dist for Node.js environment
-const pdfjs = pdfjsLib;
+async function initializePdfjs() {
+  if (!pdfjs) {
+    try {
+      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
+      pdfjs = pdfjsLib.default || pdfjsLib;
+    } catch (error) {
+      console.error("Failed to load pdfjs-dist:", error);
+      throw new Error("PDF processing library could not be loaded");
+    }
+  }
+  return pdfjs;
+}
 
 export interface PDFProcessingResult {
   success: boolean;
@@ -21,6 +31,9 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
   const startTime = Date.now();
   try {
     console.log("📄 Starting reliable PDF text extraction for:", filePath);
+    
+    // Initialize pdfjs library
+    const pdfjsInstance = await initializePdfjs();
     
     // Check if file exists
     const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
@@ -46,7 +59,7 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
     }
 
     // Extract text using pdfjs-dist
-    const loadingTask = pdfjs.getDocument({
+    const loadingTask = pdfjsInstance.getDocument({
       data: pdfBuffer,
       standardFontDataUrl: undefined, // Disable font loading to avoid browser dependencies
       disableFontFace: true,           // Disable font face loading
