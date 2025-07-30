@@ -1,10 +1,12 @@
-// Professional PDF Service using PDF.js (pdfjs-dist) for reliable text extraction
+// Professional PDF Service using pdf-text-extract for reliable Node.js text extraction
 import fs from "fs/promises";
 import path from "path";
-import * as pdfjsLib from 'pdfjs-dist';
+import { PDFDocument } from "pdf-lib";
+import { promisify } from "util";
 
-// Set up PDF.js worker for Node.js
-const PDFJS_WORKER_PATH = path.join(process.cwd(), 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.mjs');
+// Import pdf-text-extract with proper typing
+const pdfTextExtract = require('pdf-text-extract');
+const extractText = promisify(pdfTextExtract);
 
 export interface PDFProcessingResult {
   success: boolean;
@@ -17,7 +19,7 @@ export interface PDFProcessingResult {
 export async function extractTextFromPDF(filePath: string, maxPages: number = 10): Promise<PDFProcessingResult> {
   const startTime = Date.now();
   try {
-    console.log("📄 Starting professional PDF text extraction for:", filePath);
+    console.log("📄 Starting reliable PDF text extraction for:", filePath);
     
     // Check if file exists
     const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
@@ -25,70 +27,50 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
       throw new Error(`PDF file not found: ${filePath}`);
     }
 
-    // Read PDF file
-    const pdfBuffer: Buffer = await fs.readFile(filePath);
-    console.log(`📊 PDF file size: ${(pdfBuffer.length / 1024).toFixed(2)} KB`);
+    // Get file stats
+    const stats = await fs.stat(filePath);
+    console.log(`📊 PDF file size: ${(stats.size / 1024).toFixed(2)} KB`);
 
-    // Load PDF document using PDF.js
-    const loadingTask = pdfjsLib.getDocument({
-      data: pdfBuffer,
-      useSystemFonts: true,
-      disableFontFace: false,
-    });
-
-    const pdf = await loadingTask.promise;
-    const pageCount = pdf.numPages;
-    const pagesToProcess = Math.min(pageCount, maxPages);
-
-    console.log(`📚 PDF has ${pageCount} pages, processing first ${pagesToProcess} pages`);
-
-    let extractedText = "";
-    const textParts: string[] = [];
-
-    // Extract text from each page
-    for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
-      try {
-        console.log(`📄 Processing page ${pageNum}/${pagesToProcess}...`);
-        
-        const page = await pdf.getPage(pageNum);
-        const textContent = await page.getTextContent();
-        
-        let pageText = "";
-        
-        // Extract text items from the page
-        for (const item of textContent.items) {
-          if ('str' in item && item.str.trim()) {
-            pageText += item.str + " ";
-          }
-        }
-        
-        // Clean and filter the page text
-        const cleanedPageText = cleanExtractedText(pageText);
-        if (cleanedPageText.length > 20) {
-          textParts.push(cleanedPageText);
-        }
-        
-        console.log(`✅ Page ${pageNum}: extracted ${cleanedPageText.length} characters`);
-      } catch (pageError) {
-        console.warn(`⚠️ Failed to extract text from page ${pageNum}:`, pageError);
-      }
+    // Get page count using pdf-lib
+    let pageCount = 0;
+    try {
+      const pdfBuffer = await fs.readFile(filePath);
+      const pdfDoc = await PDFDocument.load(pdfBuffer);
+      pageCount = pdfDoc.getPageCount();
+      console.log(`📚 PDF has ${pageCount} pages`);
+    } catch (pageCountError) {
+      console.warn("⚠️ Could not get page count, proceeding with extraction");
     }
 
-    // Combine all extracted text
-    extractedText = textParts.join('\n\n').trim();
+    // Extract text using pdf-text-extract (Node.js optimized)
+    const extractedTextArray: string[] = await extractText(filePath, {
+      splitPages: false,
+      preserveLineBreaks: false
+    });
+
+    // Process extracted text
+    let rawText = "";
+    if (Array.isArray(extractedTextArray)) {
+      rawText = extractedTextArray.join(' ');
+    } else if (typeof extractedTextArray === 'string') {
+      rawText = extractedTextArray;
+    }
+
+    // Clean and filter the extracted text
+    const cleanedText = cleanExtractedText(rawText);
     
     const processingTime = Date.now() - startTime;
     console.log(`✅ PDF processed successfully: ${pageCount} pages in ${processingTime}ms`);
-    console.log(`� Total extracted text length: ${extractedText.length} characters`);
+    console.log(`📝 Total extracted text length: ${cleanedText.length} characters`);
 
-    if (extractedText.length > 100) {
-      const sample = extractedText.substring(0, 200) + (extractedText.length > 200 ? '...' : '');
+    if (cleanedText.length > 100) {
+      const sample = cleanedText.substring(0, 200) + (cleanedText.length > 200 ? '...' : '');
       console.log(`📝 Content sample: "${sample}"`);
     }
 
     return {
       success: true,
-      text: extractedText.length > 0 ? extractedText : `This PDF contains ${pageCount} pages but text extraction was not successful. The PDF might be image-based or have complex formatting.`,
+      text: cleanedText.length > 0 ? cleanedText : `This PDF contains ${pageCount} pages but text extraction was not successful. The PDF might be image-based or have complex formatting.`,
       pageCount,
       processingTime,
       error: undefined
@@ -97,6 +79,24 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
   } catch (error) {
     const processingTime = Date.now() - startTime;
     console.error("❌ PDF text extraction failed:", error);
+    
+    // Fallback to pdf-lib if primary extraction fails
+    try {
+      console.log("🔄 Attempting fallback extraction with pdf-lib...");
+      const fallbackResult = await fallbackExtraction(filePath);
+      if (fallbackResult.length > 0) {
+        return {
+          success: true,
+          text: fallbackResult,
+          pageCount: 0,
+          processingTime: Date.now() - startTime,
+          error: undefined
+        };
+      }
+    } catch (fallbackError) {
+      console.error("❌ Fallback extraction also failed:", fallbackError);
+    }
+
     return {
       success: false,
       text: "",
@@ -104,6 +104,45 @@ export async function extractTextFromPDF(filePath: string, maxPages: number = 10
       processingTime,
       error: error instanceof Error ? error.message : "Unknown error during PDF processing"
     };
+  }
+}
+
+async function fallbackExtraction(filePath: string): Promise<string> {
+  try {
+    const pdfBuffer = await fs.readFile(filePath);
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    
+    // Try to extract text using basic buffer analysis
+    const pdfString = pdfBuffer.toString('utf8');
+    
+    // Look for readable text patterns
+    const textMatches = pdfString.match(/[A-Za-z][A-Za-z0-9\s\.,!?;:\-()\[\]"']{15,}/g);
+    
+    if (textMatches && textMatches.length > 0) {
+      const extractedText = textMatches
+        .filter(match => {
+          // Filter out PDF technical terms
+          const lowerMatch = match.toLowerCase();
+          return !lowerMatch.includes('obj') &&
+                 !lowerMatch.includes('endobj') &&
+                 !lowerMatch.includes('stream') &&
+                 !lowerMatch.includes('filter') &&
+                 !lowerMatch.includes('length') &&
+                 !lowerMatch.includes('xref') &&
+                 match.split(' ').length >= 3;
+        })
+        .slice(0, 20)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      return cleanExtractedText(extractedText);
+    }
+    
+    return "";
+  } catch (error) {
+    console.error("Error in fallback extraction:", error);
+    return "";
   }
 }
 
