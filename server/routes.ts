@@ -275,7 +275,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`🔍 Calling storage.getQuiz(${quizId})`);
-      const quiz = await storage.getQuiz(quizId);
+      
+      // Add additional timeout at route level for safety
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`Route timeout after 8 seconds for quiz ID ${quizId}`));
+        }, 8000);
+      });
+      
+      const quiz = await Promise.race([
+        storage.getQuiz(quizId),
+        timeoutPromise
+      ]);
+      
       console.log(`🔍 Storage result:`, quiz);
       
       if (!quiz) {

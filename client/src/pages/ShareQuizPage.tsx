@@ -16,7 +16,7 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
   console.log('ShareQuizPage quizId:', quizId);
   const { toast } = useToast();
 
-  // Fetch quiz with proper type
+  // Fetch quiz with proper type and improved timeout handling
   const { data: quiz, isLoading: isLoadingQuiz, error } = useQuery<{
     id: number;
     accessCode: string;
@@ -27,22 +27,33 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     queryKey: [`/api/quizzes/${quizId}`],
     queryFn: async () => {
       console.log(`Making API request to: /api/quizzes/${quizId}`);
-      const response = await fetch(`/api/quizzes/${quizId}`, {
-        credentials: "include",
+      
+      // Create a faster timeout promise (5 seconds)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Query timeout after 5 seconds')), 5000);
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error (${response.status}):`, errorText);
-        throw new Error(`${response.status}: ${errorText}`);
-      }
+      // Race the fetch against the timeout
+      const fetchPromise = fetch(`/api/quizzes/${quizId}`, {
+        credentials: "include",
+      }).then(async (response) => {
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`API Error (${response.status}):`, errorText);
+          throw new Error(`${response.status}: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`API Success for quiz ${quizId}:`, data);
+        return data;
+      });
       
-      const data = await response.json();
-      console.log(`API Success for quiz ${quizId}:`, data);
-      return data;
+      return Promise.race([fetchPromise, timeoutPromise]);
     },
     staleTime: 0, // Don't use cached data
     refetchOnMount: true, // Always fetch on component mount
+    retry: false, // No retry for faster fallback trigger
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
 
   console.log('useQuery state:', {
@@ -72,17 +83,79 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     return () => clearTimeout(timer);
   }, [quizId]);
 
+  // Add state for timeout fallback
+  const [useFallback, setUseFallback] = React.useState(false);
+
+  // Add timer for fallback trigger
+  React.useEffect(() => {
+    if (isLoadingQuiz && !useFallback) {
+      const fallbackTimer = setTimeout(() => {
+        console.log('Triggering fallback due to slow API response');
+        setUseFallback(true);
+      }, 3000); // Trigger fallback after 3 seconds
+
+      return () => clearTimeout(fallbackTimer);
+    }
+  }, [isLoadingQuiz, useFallback]);
+
   React.useEffect(() => {
     if (error) {
+      console.log('Triggering fallback due to API error:', error);
+      setUseFallback(true);
       toast({
-        title: "Error",
-        description: "Failed to load quiz. Please try again.",
-        variant: "destructive",
+        title: "Connection Issue",
+        description: "Using cached quiz data...",
+        variant: "default",
       });
     }
   }, [error, toast]);
 
-  if (isLoadingQuiz) {
+  // Check for the just created quiz in session storage as fallback
+  const sessionQuizId = sessionStorage.getItem("currentQuizId");
+  const sessionQuizAccessCode = sessionStorage.getItem("currentQuizAccessCode");
+  const sessionQuizUrlSlug = sessionStorage.getItem("currentQuizUrlSlug");
+  const sessionQuizCreatorName = sessionStorage.getItem("currentQuizCreatorName");
+  
+  console.log("ShareQuizPage: Session storage data", { 
+    sessionQuizId, 
+    sessionQuizAccessCode, 
+    sessionQuizUrlSlug,
+    sessionQuizCreatorName,
+    paramsQuizId: params.quizId,
+    isLoading: isLoadingQuiz,
+    hasError: !!error,
+    hasQuiz: !!quiz,
+    useFallback
+  });
+
+  // Use fallback data if API is slow/failing and we have session data
+  const shouldUseFallback = (useFallback || error) && 
+    sessionQuizId === params.quizId && 
+    sessionQuizAccessCode && 
+    sessionQuizUrlSlug;
+
+  if (shouldUseFallback) {
+    console.log('Using session storage fallback data');
+    const fallbackQuiz = {
+      id: parseInt(sessionQuizId),
+      accessCode: sessionQuizAccessCode,
+      urlSlug: sessionQuizUrlSlug,
+      creatorName: sessionQuizCreatorName || 'Unknown Creator',
+      createdAt: new Date().toISOString(),
+    };
+    
+    return (
+      <>
+        <MetaTags 
+          title={`${fallbackQuiz.creatorName}'s Quiz`}
+          description={`Take ${fallbackQuiz.creatorName}'s custom quiz and see how well you know them!`}
+        />
+        <ShareQuiz quiz={fallbackQuiz} />
+      </>
+    );
+  }
+
+  if (isLoadingQuiz && !useFallback) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
@@ -101,25 +174,8 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
 
   // Add debugging info
   console.log("ShareQuizPage: quiz data", { quizId, quiz, error });
-  
-  // Check for the just created quiz in session storage as fallback
-  const sessionQuizId = sessionStorage.getItem("currentQuizId");
-  const sessionQuizAccessCode = sessionStorage.getItem("currentQuizAccessCode");
-  const sessionQuizUrlSlug = sessionStorage.getItem("currentQuizUrlSlug");
-  
-  // If quiz from API failed but we have session data, use that
-  if (!quiz && sessionQuizId && sessionQuizId === params.quizId && sessionQuizAccessCode && sessionQuizUrlSlug) {
-    console.log("Using session storage fallback for quiz data");
-    return (
-      <ShareQuiz
-        accessCode={sessionQuizAccessCode}
-        quizId={quizId}
-        urlSlug={sessionQuizUrlSlug}
-      />
-    );
-  }
 
-  if (!quiz) {
+  if (!quiz && !shouldUseFallback) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">

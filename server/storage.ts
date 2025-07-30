@@ -55,8 +55,23 @@ export class DatabaseStorage implements IStorage {
     console.log(`🔍 Storage.getQuiz(${id}) started`);
     try {
       console.log(`🔍 About to query database for quiz with id: ${id}`);
-      const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
-      console.log(`🔍 Database query completed, result:`, quiz);
+      
+      // Create a timeout promise
+      const timeoutPromise = new Promise<Quiz | undefined>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`Database query timeout after 5 seconds for quiz ID ${id}`));
+        }, 5000);
+      });
+      
+      // Create the actual query promise
+      const queryPromise = db.select().from(quizzes).where(eq(quizzes.id, id))
+        .then((result: Quiz[]) => {
+          console.log(`🔍 Database query completed, result:`, result[0] || 'No quiz found');
+          return result[0];
+        });
+      
+      // Race between timeout and query
+      const quiz = await Promise.race([queryPromise, timeoutPromise]);
       return quiz;
     } catch (error) {
       console.error(`🔍 Error in storage.getQuiz(${id}):`, error);
