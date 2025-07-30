@@ -213,7 +213,6 @@ async function extractTextFromPage(pdfBuffer: Buffer, pageIndex: number): Promis
   } catch (error) {
     console.error(`Error extracting text from page ${pageIndex}:`, error);
     return '';
-  }
 }
 
 async function extractTextFromBufferAdvanced(pdfBuffer: Buffer): Promise<string> {
