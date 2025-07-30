@@ -149,14 +149,42 @@ export async function generateQuestionsWithDeepSeekR1(request: QuestionGeneratio
     console.log('🧠 DeepSeek R1 Distill 70B raw response length:', responseText.length);
     
     const questions = parseAIResponse(responseText, request.difficulty);
+    console.log(`🔍 DETAILED LOGGING: Parsed ${questions.length} raw questions from AI response`);
+    questions.forEach((q, idx) => {
+      console.log(`Question ${idx + 1}: "${q.question.substring(0, 50)}..." - Valid: ${validateGeneratedQuestion(q)}`);
+    });
     
     // Validate generated questions
     const validQuestions = questions.filter(q => validateGeneratedQuestion(q));
+    console.log(`✅ After validation: ${validQuestions.length}/${questions.length} questions passed validation`);
     
     // Calculate quality score
     const qualityScore = calculateGenerationQuality(validQuestions, request);
     
     console.log(`✅ Generated ${validQuestions.length}/${request.numberOfQuestions} valid questions with quality score: ${qualityScore}/10`);
+    
+    // If we got fewer questions than requested and the difference is just 1-2, try to generate the missing ones
+    if (validQuestions.length < request.numberOfQuestions && validQuestions.length >= request.numberOfQuestions - 2) {
+      const missing = request.numberOfQuestions - validQuestions.length;
+      console.log(`🔄 Attempting to generate ${missing} additional question(s) to meet the requested count...`);
+      
+      try {
+        // Create a smaller request for the missing questions
+        const supplementRequest = {
+          ...request,
+          numberOfQuestions: missing,
+          content: request.content.substring(0, 2000) // Use a shorter excerpt to avoid repetition
+        };
+        
+        const supplementResult = await generateQuestionsWithDeepSeekR1(supplementRequest);
+        if (supplementResult.success && supplementResult.questions.length > 0) {
+          console.log(`✅ Successfully generated ${supplementResult.questions.length} additional question(s)`);
+          validQuestions.push(...supplementResult.questions.slice(0, missing));
+        }
+      } catch (supplementError) {
+        console.log('⚠️ Failed to generate supplementary questions:', supplementError);
+      }
+    }
     
     return {
       success: true,
@@ -276,7 +304,8 @@ Return ONLY a valid JSON array. No markdown, no explanations, just the JSON:
 ## CONTENT TO ANALYZE:
 ${content}
 
-Generate exactly ${numberOfQuestions} UNIQUE and DIVERSE questions now:`;
+Generate exactly ${numberOfQuestions} UNIQUE and DIVERSE questions now - NO MORE, NO LESS:
+CRITICAL: You MUST generate precisely ${numberOfQuestions} complete questions. Do not generate ${numberOfQuestions - 1} or ${numberOfQuestions + 1} questions. Generate exactly ${numberOfQuestions} questions.`;
 }
 
 /**
