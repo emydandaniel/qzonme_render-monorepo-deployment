@@ -168,7 +168,7 @@ app.use((req, res, next) => {
       }
       
       // For all other routes, serve the index.html file
-      const distPath = pathModule.resolve(import.meta.dirname, "public");
+      const distPath = pathModule.resolve(pathModule.dirname(new URL(import.meta.url).pathname), "../client/dist");
       res.sendFile(pathModule.resolve(distPath, "index.html"));
     });
   }

@@ -15,7 +15,7 @@ interface MetaTagsProps {
  */
 const MetaTags = ({
   title = "Check Out This Quiz I Made! 💬",
-  description = "Test your knowledge with this awesome quiz I created on QzonMe - the ultimate quiz platform for any topic!",
+  description = "Create any kind of quiz instantly! From friendship tests to trivia challenges, classroom games to fandom quizzes. Share with friends and see who scores highest!",
   imageUrl = "/favicon.png",
   url,
   type = "website",

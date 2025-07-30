@@ -1,20 +1,42 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRoute } from "wouter";
 import ShareQuiz from "@/components/quiz/ShareQuiz";
 import { useToast } from "@/hooks/use-toast";
 import MetaTags from "@/components/common/MetaTags";
 
-interface ShareQuizPageProps {
-  params: {
-    quizId: string;
-  };
-}
-
-const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
-  console.log('ShareQuizPage params:', params);
-  const quizId = parseInt(params.quizId);
-  console.log('ShareQuizPage quizId:', quizId);
+const ShareQuizPage: React.FC = () => {
+  // Get route parameters using wouter's useRoute hook
+  const [match, params] = useRoute("/share/:quizId");
+  console.log('ShareQuizPage match:', match, 'params:', params);
+  
+  let quizId = params?.quizId ? parseInt(params.quizId) : null;
+  console.log('ShareQuizPage quizId from params:', quizId);
+  
+  // Fallback: try to get quiz ID from sessionStorage if not in params
+  if (!quizId) {
+    const sessionQuizId = sessionStorage.getItem("currentQuizId");
+    if (sessionQuizId) {
+      quizId = parseInt(sessionQuizId);
+      console.log('ShareQuizPage quizId from sessionStorage:', quizId);
+    }
+  }
+  
+  console.log('ShareQuizPage final quizId:', quizId);
   const { toast } = useToast();
+
+  // Early return if no quiz ID available
+  if (!quizId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Quiz Not Found</h1>
+          <p className="text-gray-600 mb-4">No quiz ID provided or quiz not found.</p>
+          <a href="/" className="text-blue-500 hover:underline">Go to Home</a>
+        </div>
+      </div>
+    );
+  }
 
   // Fetch quiz with proper type and improved timeout handling
   const { data: quiz, isLoading: isLoadingQuiz, error } = useQuery<{
@@ -26,6 +48,10 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
   }>({
     queryKey: [`/api/quizzes/${quizId}`],
     queryFn: async () => {
+      if (!quizId) {
+        throw new Error('No quiz ID available');
+      }
+      
       console.log(`Making API request to: /api/quizzes/${quizId}`);
       
       // Create a faster timeout promise (5 seconds)
@@ -50,6 +76,7 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
       
       return Promise.race([fetchPromise, timeoutPromise]);
     },
+    enabled: !!quizId, // Only run query if quizId exists
     staleTime: 0, // Don't use cached data
     refetchOnMount: true, // Always fetch on component mount
     retry: false, // No retry for faster fallback trigger
@@ -148,7 +175,7 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
       <>
         <MetaTags 
           title={`${fallbackQuiz.creatorName}'s Custom Quiz`}
-          description={`Take ${fallbackQuiz.creatorName}'s custom quiz! Test your knowledge and see how well you score.`}
+          description={`Take ${fallbackQuiz.creatorName}'s quiz! From friendship tests to trivia challenges, classroom games to fandom quizzes. Share with friends and see who scores highest!`}
         />
         <ShareQuiz quiz={fallbackQuiz} />
       </>
@@ -205,7 +232,7 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
         url={`${window.location.origin}/quiz/${quizData.accessCode}`}
         imageUrl="/favicon.png"
         title={`${quizData.creatorName}'s Custom Quiz 🧠`}
-        description={`Test your knowledge with ${quizData.creatorName}'s custom quiz! Challenge yourself and see how well you score.`}
+        description={`Take ${quizData.creatorName}'s quiz! From friendship tests to trivia challenges, classroom games to fandom quizzes. Share with friends and see who scores highest!`}
       />
       
       <ShareQuiz
