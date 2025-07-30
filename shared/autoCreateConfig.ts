@@ -53,7 +53,7 @@ export type SupportedLanguage = typeof AUTO_CREATE_CONFIG.SUPPORTED_LANGUAGES[nu
 // Validation functions
 export const validateFileType = (fileName: string): boolean => {
   const extension = '.' + fileName.split('.').pop()?.toLowerCase();
-  return AUTO_CREATE_CONFIG.SUPPORTED_FILE_TYPES.includes(extension);
+  return AUTO_CREATE_CONFIG.SUPPORTED_FILE_TYPES.includes(extension as any);
 };
 
 export const validateFileSize = (fileSize: number): boolean => {
