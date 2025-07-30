@@ -152,6 +152,15 @@ async function extractTextFromPDFBuffer(pdfBuffer: Buffer, maxPages: number): Pr
       }
     }
     
+    // Method 3: Try direct content extraction if still no good results
+    if (extractedTexts.length === 0 || extractedTexts.join('').length < 500) {
+      console.log("🔄 Trying direct content pattern extraction...");
+      const directContent = await extractDirectContent(pdfBuffer);
+      if (directContent && directContent.length > 200) {
+        extractedTexts.push(directContent);
+      }
+    }
+    
     // Combine and clean the extracted text
     const combinedText = extractedTexts
       .join('\n\n')
@@ -160,6 +169,12 @@ async function extractTextFromPDFBuffer(pdfBuffer: Buffer, maxPages: number): Pr
       .trim();
     
     console.log(`✅ Extracted ${combinedText.length} characters from ${pagesToProcess} pages`);
+    
+    // Debug: Show a sample of the extracted content
+    if (combinedText.length > 100) {
+      const sample = combinedText.substring(0, 200) + (combinedText.length > 200 ? '...' : '');
+      console.log(`📝 Content sample: "${sample}"`);
+    }
     
     if (combinedText.length > 100) {
       return combinedText;
@@ -187,23 +202,39 @@ async function extractTextFromPage(pdfBuffer: Buffer, pageIndex: number): Promis
     if (textMatches && textMatches.length > pageIndex) {
       const pageTextBlock = textMatches[pageIndex];
       
-      // Extract text from within parentheses and brackets
+      // Extract text from within parentheses and brackets - improved for actual content
       const textContentRegex = /\((.*?)\)|<(.*?)>/g;
       let match;
       const texts = [];
       
       while ((match = textContentRegex.exec(pageTextBlock)) !== null) {
         const text = match[1] || match[2];
-        if (text && text.length > 2) {
+        if (text && text.length > 3) {
           // Decode basic PDF text encoding
-          const decoded = text
+          let decoded = text
             .replace(/\\n/g, '\n')
             .replace(/\\r/g, '\r')
             .replace(/\\t/g, '\t')
             .replace(/\\\\/g, '\\')
             .replace(/\\(\d{3})/g, (_, octal) => String.fromCharCode(parseInt(octal, 8)));
           
-          texts.push(decoded);
+          // Filter out PDF technical terms and keep meaningful content
+          const lowerDecoded = decoded.toLowerCase();
+          const isPdfTechnical = /^(\/[A-Z]|obj|endobj|stream|filter|length|xref|type|subtype|page|contents|resources|mediabox|parent|font|encoding|annot|link)$/i.test(decoded.trim()) ||
+                                lowerDecoded.includes('mediabox') ||
+                                lowerDecoded.includes('annotation') ||
+                                lowerDecoded.includes('cross-reference') ||
+                                lowerDecoded.includes('hyperlink') ||
+                                /^\d+\s+\d+\s+R$/.test(decoded.trim()) ||
+                                /^\/[A-Z]/.test(decoded.trim());
+          
+          // Only include text that appears to be actual document content
+          if (!isPdfTechnical && 
+              decoded.length > 5 && 
+              /[a-zA-Z]/.test(decoded) && 
+              !/^[\d\s\/\[\]<>]+$/.test(decoded)) {
+            texts.push(decoded);
+          }
         }
       }
       
@@ -226,21 +257,43 @@ async function extractTextFromBufferAdvanced(pdfBuffer: Buffer): Promise<string>
     for (const encoding of encodings) {
       const text = pdfBuffer.toString(encoding as BufferEncoding);
       
-      // Look for patterns that indicate readable text
-      const readableTextRegex = /[A-Za-z][A-Za-z0-9\s\.\,\!\?\;\:\-\(\)\[\]\"\']{15,}/g;
+      // Look for patterns that indicate readable text (improved filtering)
+      const readableTextRegex = /[A-Za-z][A-Za-z0-9\s\.\,\!\?\;\:\-\(\)\[\]\"\']{20,}/g;
       const matches = text.match(readableTextRegex);
       
       if (matches && matches.length > 0) {
         const extractedText = matches
           .filter(match => {
-            // Filter out likely PDF commands and metadata
+            // Enhanced filtering to exclude PDF technical content
+            const lowerMatch = match.toLowerCase();
             return !match.includes('obj') && 
                    !match.includes('endobj') && 
                    !match.includes('stream') &&
+                   !match.includes('endstream') &&
                    !match.includes('Filter') &&
-                   match.split(' ').length >= 3; // At least 3 words
+                   !match.includes('Length') &&
+                   !match.includes('xref') &&
+                   !match.includes('/Type') &&
+                   !match.includes('/Subtype') &&
+                   !match.includes('/Page') &&
+                   !match.includes('/Contents') &&
+                   !match.includes('/Resources') &&
+                   !match.includes('/MediaBox') &&
+                   !match.includes('/Parent') &&
+                   !match.includes('/Font') &&
+                   !match.includes('/Encoding') &&
+                   !match.includes('Annot') &&
+                   !match.includes('Link') &&
+                   !lowerMatch.includes('mediabox') &&
+                   !lowerMatch.includes('annotation') &&
+                   !lowerMatch.includes('cross-reference') &&
+                   !lowerMatch.includes('pdf structure') &&
+                   !lowerMatch.includes('hyperlink') &&
+                   !lowerMatch.includes('font encoding') &&
+                   match.split(' ').length >= 5 && // At least 5 words for meaningful content
+                   /[.!?]/.test(match); // Contains sentence-ending punctuation
           })
-          .slice(0, 100) // Limit to first 100 matches
+          .slice(0, 50) // Limit to first 50 matches to get varied content
           .join(' ')
           .replace(/\s+/g, ' ')
           .trim();
@@ -251,9 +304,78 @@ async function extractTextFromBufferAdvanced(pdfBuffer: Buffer): Promise<string>
       }
     }
     
+    // Additional cleaning to remove remaining PDF artifacts
+    bestText = bestText
+      .replace(/\b\d+\s+\d+\s+obj\b/g, '') // Remove object references
+      .replace(/\b(R|obj|endobj)\b/g, '') // Remove PDF keywords
+      .replace(/\/[A-Z][A-Za-z]+/g, '') // Remove PDF dictionary keys
+      .replace(/\[\s*\d+(\s+\d+)*\s*\]/g, '') // Remove arrays of numbers
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    console.log(`🔍 Advanced extraction found ${bestText.length} characters of cleaned content`);
+    
     return bestText;
   } catch (error) {
     console.error("Error in advanced buffer extraction:", error);
+    return '';
+  }
+}
+
+async function extractDirectContent(pdfBuffer: Buffer): Promise<string> {
+  try {
+    // Convert buffer to text and look for sentences/paragraphs directly
+    const text = pdfBuffer.toString('utf8');
+    
+    // Look for patterns that represent actual readable sentences
+    const sentencePatterns = [
+      // Complete sentences with proper punctuation
+      /[A-Z][^.!?]*[.!?]/g,
+      // Paragraphs with multiple sentences
+      /[A-Z][^.!?]*[.!?]\s+[A-Z][^.!?]*[.!?]/g,
+      // Common English sentence starters
+      /\b(The|This|That|It|In|On|For|With|When|Where|Why|How|Because|Since|Although|However|Therefore|Moreover|Furthermore)\s+[^.!?]{20,}[.!?]/gi
+    ];
+    
+    let allMatches: string[] = [];
+    
+    for (const pattern of sentencePatterns) {
+      const matches = text.match(pattern) || [];
+      allMatches = allMatches.concat(matches);
+    }
+    
+    if (allMatches.length === 0) {
+      return '';
+    }
+    
+    // Filter and clean the matches
+    const cleanedMatches = allMatches
+      .filter(match => {
+        const lowerMatch = match.toLowerCase();
+        // Exclude PDF-specific content
+        return !lowerMatch.includes('mediabox') &&
+               !lowerMatch.includes('annotation') &&
+               !lowerMatch.includes('cross-reference') &&
+               !lowerMatch.includes('hyperlink') &&
+               !lowerMatch.includes('pdf structure') &&
+               !lowerMatch.includes('font encoding') &&
+               !lowerMatch.includes('/type') &&
+               !lowerMatch.includes('/subtype') &&
+               !match.includes('obj') &&
+               !match.includes('endobj') &&
+               match.length > 20 &&
+               match.split(' ').length >= 4; // At least 4 words
+      })
+      .map(match => match.trim())
+      .filter((match, index, arr) => arr.indexOf(match) === index) // Remove duplicates
+      .slice(0, 30); // Limit to 30 sentences
+    
+    const result = cleanedMatches.join(' ').replace(/\s+/g, ' ').trim();
+    console.log(`🔍 Direct content extraction found ${result.length} characters`);
+    
+    return result;
+  } catch (error) {
+    console.error("Error in direct content extraction:", error);
     return '';
   }
 }
