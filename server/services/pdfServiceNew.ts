@@ -3,8 +3,8 @@ import fs from "fs/promises";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
 
-// Import pdfjs-dist for Node.js environments
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js';
+// Import pdfjs-dist for Node.js environments - using require for better compatibility
+const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
 
 // Configure pdfjs-dist for Node.js environment
 const pdfjs = pdfjsLib;
