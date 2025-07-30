@@ -18,7 +18,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from 'url';
 import { registerContactRoutes } from "./routes/contact";
-import { registerAutoCreateRoutes } from "./routes/autoCreateRoutes";
+// import { registerAutoCreateRoutes } from "./routes/autoCreateRoutes";
 import { requireAdmin } from "./auth";
 import { 
   secureUserSchema, 
@@ -572,8 +572,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register contact form routes
   registerContactRoutes(app);
   
-  // Register auto-create quiz routes
-  registerAutoCreateRoutes(app);
+  // Register auto-create quiz routes (temporarily disabled for deployment)
+  // registerAutoCreateRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
