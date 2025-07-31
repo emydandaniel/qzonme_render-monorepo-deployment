@@ -26,6 +26,15 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     createdAt: string;
   }>({
     queryKey: [`/api/quizzes/${quizId}`],
+    queryFn: async () => {
+      console.log(`Making API call to /api/quizzes/${quizId}`);
+      const response = await fetch(`/api/quizzes/${quizId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch quiz: ${response.status}`);
+      }
+      return response.json();
+    },
+    enabled: !isNaN(quizId) && quizId > 0, // Only run query if quizId is valid
     staleTime: 0, // Don't use cached data
     refetchOnMount: true, // Always fetch on component mount
   });
@@ -55,6 +64,14 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
   const sessionQuizId = sessionStorage.getItem("currentQuizId");
   const sessionQuizAccessCode = sessionStorage.getItem("currentQuizAccessCode");
   const sessionQuizUrlSlug = sessionStorage.getItem("currentQuizUrlSlug");
+  
+  console.log("Session storage data:", { 
+    sessionQuizId, 
+    sessionQuizAccessCode, 
+    sessionQuizUrlSlug,
+    paramsQuizId: params.quizId,
+    matches: sessionQuizId === params.quizId
+  });
   
   // If quiz from API failed but we have session data, use that
   if (!quiz && sessionQuizId && sessionQuizId === params.quizId && sessionQuizAccessCode && sessionQuizUrlSlug) {

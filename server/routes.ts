@@ -309,17 +309,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Quiz not found" });
       }
       
-      // Check if the quiz is expired (older than 7 days)
+      // Check if the quiz is expired (older than 7 days) - TEMPORARILY DISABLED FOR DEBUGGING
       const isExpired = storage.isQuizExpired(quiz);
       console.log(`🔍 Quiz expired check: ${isExpired}`);
-      if (isExpired) {
-        console.log(`🔍 Quiz ${quizId} is expired`);
-        return res.status(410).json({ 
-          message: "Quiz expired", 
-          expired: true,
-          detail: "This quiz has expired. Quizzes are available for 7 days after creation."
-        });
-      }
+      console.log(`🔍 Quiz data for debugging:`, JSON.stringify(quiz, null, 2));
+      
+      // TEMPORARILY COMMENTED OUT TO DEBUG THE QUIZ DATA
+      // if (isExpired) {
+      //   console.log(`🔍 Quiz ${quizId} is expired`);
+      //   return res.status(410).json({ 
+      //     message: "Quiz expired", 
+      //     expired: true,
+      //     detail: "This quiz has expired. Quizzes are available for 7 days after creation."
+      //   });
+      // }
       
       console.log(`🔍 Sending response for quiz ${quizId}:`, quiz);
       res.json(quiz);
