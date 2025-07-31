@@ -4,7 +4,7 @@ import { z } from "zod";
 
 // User schema
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   username: text("username").notNull(),
 });
 
@@ -14,7 +14,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 // Quiz schema (enhanced for auto-create)
 export const quizzes = pgTable("quizzes", {
-  id: serial("id").primaryKey(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   creatorId: integer("creator_id").notNull(),
   creatorName: text("creator_name").notNull(),
   accessCode: text("access_code").notNull().unique(),
@@ -30,13 +30,12 @@ export const quizzes = pgTable("quizzes", {
 });
 
 export const insertQuizSchema = createInsertSchema(quizzes).omit({
-  id: true,
   createdAt: true,
 });
 
 // Question schema
 export const questions = pgTable("questions", {
-  id: serial("id").primaryKey(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   quizId: integer("quiz_id").notNull(),
   text: text("text").notNull(),
   type: text("type").notNull(), // Now only "multiple-choice"
@@ -48,12 +47,11 @@ export const questions = pgTable("questions", {
 });
 
 export const insertQuestionSchema = createInsertSchema(questions).omit({
-  id: true,
 });
 
 // QuizAttempt schema
 export const quizAttempts = pgTable("quiz_attempts", {
-  id: serial("id").primaryKey(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   quizId: integer("quiz_id").notNull(),
   userAnswerId: integer("user_answer_id").notNull(),
   userName: text("user_name").notNull(),
@@ -64,7 +62,6 @@ export const quizAttempts = pgTable("quiz_attempts", {
 });
 
 export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({
-  id: true,
   completedAt: true,
 });
 
@@ -92,7 +89,7 @@ export type QuestionAnswer = z.infer<typeof questionAnswerSchema>;
 
 // Auto Create Usage Tracking schema
 export const autoCreateUsage = pgTable("auto_create_usage", {
-  id: serial("id").primaryKey(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   ipAddress: text("ip_address").notNull(),
   usageDate: text("usage_date").notNull(), // YYYY-MM-DD format
   usageCount: integer("usage_count").default(1).notNull(),
@@ -101,14 +98,13 @@ export const autoCreateUsage = pgTable("auto_create_usage", {
 });
 
 export const insertAutoCreateUsageSchema = createInsertSchema(autoCreateUsage).omit({
-  id: true,
   createdAt: true,
   updatedAt: true,
 });
 
 // Content Cache schema (for caching extracted content)
 export const contentCache = pgTable("content_cache", {
-  id: serial("id").primaryKey(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   contentHash: text("content_hash").notNull().unique(), // Hash of URL or content
   contentType: text("content_type").notNull(), // 'web', 'youtube', 'document'
   originalUrl: text("original_url"), // Original URL if applicable
@@ -120,13 +116,12 @@ export const contentCache = pgTable("content_cache", {
 });
 
 export const insertContentCacheSchema = createInsertSchema(contentCache).omit({
-  id: true,
   createdAt: true,
 });
 
 // Auto Create Generation Log schema (for tracking AI generations)
 export const autoCreateGenerationLog = pgTable("auto_create_generation_log", {
-  id: serial("id").primaryKey(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   ipAddress: text("ip_address").notNull(),
   userId: integer("user_id"), // Optional, if user is logged in
   quizId: integer("quiz_id"), // Link to generated quiz
@@ -141,7 +136,6 @@ export const autoCreateGenerationLog = pgTable("auto_create_generation_log", {
 });
 
 export const insertAutoCreateGenerationLogSchema = createInsertSchema(autoCreateGenerationLog).omit({
-  id: true,
   createdAt: true,
 });
 
