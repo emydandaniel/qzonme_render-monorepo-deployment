@@ -15,7 +15,7 @@ interface MetaTagsProps {
  */
 const MetaTags = ({
   title = "Take This Quiz! 🎯",
-  description = "Create any type of quiz instantly! Trivia challenges, friendship tests, classroom games, or any topic. AI-powered generation + manual creation options!",
+  description = "I created this quiz for you! Think you can get all the answers right? Take the challenge and see how well you score!",
   imageUrl = "/favicon.png",
   url,
   type = "website",
@@ -40,7 +40,7 @@ const MetaTags = ({
       : title;
       
     const personalizedDescription = creatorName
-      ? `Take this engaging quiz created by ${creatorName} on QzonMe! Challenge yourself and see how well you score.`
+      ? `${creatorName} created this quiz for you! Think you can get all the answers right? Take the challenge and see how well you score!`
       : description;
 
     // Update or create canonical link

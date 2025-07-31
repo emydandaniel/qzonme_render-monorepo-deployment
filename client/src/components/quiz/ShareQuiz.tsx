@@ -50,7 +50,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   // Use the custom domain for sharing
   const customDomain = "https://qzonme.com";
   const quizLink = `${customDomain}/quiz/${urlSlug}`;
-  const shareMessage = `🎯 I just created an awesome quiz on QzonMe! Think you can ace it?\nTest your knowledge and see how you score 👇\n${quizLink}`;
+  const shareMessage = `🎯 I created this quiz for you! Think you can get all the answers right?\nTake the challenge and see how well you score 👇\n${quizLink}`;
   
   const dashboardLink = dashboardToken ? `${customDomain}/dashboard/${dashboardToken}` : null;
   
@@ -120,7 +120,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
           
           <h2 className="text-2xl font-bold mb-4 font-poppins">Your Quiz is Ready!</h2>
           <p className="text-muted-foreground mb-6">
-            Share this link with your friends to see how well they know you.
+            Share this link with friends, family, or anyone to challenge them with your quiz.
           </p>
           
           {/* Expiration Alert */}
@@ -137,11 +137,11 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
           <div className="p-4 border border-gray-200 rounded-lg bg-gray-50 mb-6">
             <h3 className="font-poppins font-semibold text-lg mb-2 text-left">Share This Quiz</h3>
             <p className="text-sm text-gray-600 mb-3 text-left">
-              Copy this message to invite your friends to take your quiz!
+              Copy this message to challenge friends, family, coursemates, or anyone to take your quiz!
             </p>
             <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3 text-left">
-              🎯 I just created an awesome quiz on QzonMe! Think you can ace it?<br/>
-              Test your knowledge and see how you score 👇<br/>
+              🎯 I created this quiz for you! Think you can get all the answers right?<br/>
+              Take the challenge and see how well you score 👇<br/>
               <span className="text-blue-500 truncate block">{quizLink}</span>
             </div>
             <Button 
