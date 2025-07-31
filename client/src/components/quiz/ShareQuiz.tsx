@@ -51,7 +51,12 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   // Use the domain utilities for generating links
   const quizLink = getQuizUrl(urlSlug);
   const dashboardLink = getDashboardUrl(dashboardToken || "");
-  const shareMessage = getShareMessage(urlSlug);
+  
+  // Get creator name from API response or from sessionStorage as fallback
+  const creatorName = quiz?.creatorName || sessionStorage.getItem("currentQuizCreatorName") || sessionStorage.getItem("userName") || sessionStorage.getItem("username");
+  console.log("Creator name for share message:", creatorName);
+  
+  const shareMessage = getShareMessage(urlSlug, creatorName);
   
   // Format expiration date (7 days from today)
   const expirationDate = new Date();
@@ -119,7 +124,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
           
           <h2 className="text-2xl font-bold mb-4 font-poppins">Your Quiz is Ready!</h2>
           <p className="text-muted-foreground mb-6">
-            Share this link with your friends to see how well they know you.
+            Share with friends and see who scores highest! From friendship tests to trivia challenges - it's time to test their knowledge.
           </p>
           
           {/* Expiration Alert */}
@@ -138,21 +143,31 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
             <p className="text-sm text-gray-600 mb-3 text-left">
               Copy this message to invite your friends to take your quiz!
             </p>
-            <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3 text-left whitespace-pre-line">
+            <div className="bg-white p-4 rounded border border-gray-200 text-sm mb-3 text-left whitespace-pre-line font-mono border-2 border-blue-200 hover:border-blue-400 transition-colors">
               {shareMessage}
             </div>
-            <Button 
-              type="button" 
-              className="w-full" 
-              onClick={handleCopyLink}
-              disabled={copied}
-            >
-              {copied ? "Copied!" : (
-                <>
-                  <Copy className="h-4 w-4 mr-2" /> Copy Message
-                </>
-              )}
-            </Button>
+            <div className="flex space-x-2">
+              <Button 
+                type="button" 
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all" 
+                onClick={handleCopyLink}
+                disabled={copied}
+              >
+                {copied ? "Copied! ✅" : (
+                  <>
+                    <Copy className="h-4 w-4 mr-2" /> Copy Quiz Link
+                  </>
+                )}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline"
+                className="px-4 border-blue-300 text-blue-600 hover:bg-blue-50" 
+                onClick={() => window.open(getQuizUrl(urlSlug), '_blank')}
+              >
+                Open Quiz ↗
+              </Button>
+            </div>
           </div>
           
           {/* Dashboard Link Box */}
@@ -171,14 +186,18 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
                   <Input 
                     value={dashboardLink}
                     readOnly
-                    className="bg-white"
+                    className="bg-white font-mono text-blue-600 cursor-pointer border-2 border-green-200 hover:border-green-400 transition-colors"
+                    onClick={() => window.open(dashboardLink, '_blank')}
+                    title="Click to open dashboard"
                   />
                   <Button
                     type="button"
                     onClick={handleCopyDashboardLink}
                     disabled={copiedDashboard}
+                    variant="outline"
+                    className="border-green-300 text-green-600 hover:bg-green-50"
                   >
-                    {copiedDashboard ? "Copied!" : <Copy className="h-4 w-4" />}
+                    {copiedDashboard ? "Copied! ✅" : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
@@ -198,7 +217,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
             
             <Button 
               type="button" 
-              className="w-full" 
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all" 
               onClick={handleViewDashboard}
               disabled={isLoading || (!dashboardToken)}
             >

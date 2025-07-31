@@ -54,7 +54,12 @@ export function getDashboardUrl(dashboardToken: string): string {
 /**
  * Get a shareable message for the quiz
  */
-export function getShareMessage(urlSlug: string): string {
+export function getShareMessage(urlSlug: string, creatorName?: string): string {
   const quizUrl = getQuizUrl(urlSlug);
-  return `Hey! I created this custom quiz on QzonMe. 🧠\nTest your knowledge and see how well you score! 👇\n${quizUrl}`;
+  
+  if (creatorName) {
+    return `Hey! ${creatorName} created this quiz for you 🧠\nFrom friendship tests to trivia challenges - see how well you score! 🏆\n${quizUrl}`;
+  } else {
+    return `Hey! I created this quiz on QzonMe 🧠\nFrom friendship tests to trivia challenges - see how well you score! 🏆\n${quizUrl}`;
+  }
 }

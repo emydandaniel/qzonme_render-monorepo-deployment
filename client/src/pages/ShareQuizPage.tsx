@@ -1,22 +1,42 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useRoute } from "wouter";
 import ShareQuiz from "@/components/quiz/ShareQuiz";
 import { useToast } from "@/hooks/use-toast";
 import MetaTags from "@/components/common/MetaTags";
 
-const ShareQuizPage: React.FC = () => {
-  // Get route parameters using wouter's useRoute hook
-  const [match, params] = useRoute("/share/:quizId");
-  console.log('ShareQuizPage match:', match, 'params:', params);
+interface ShareQuizPageProps {
+  params: {
+    quizId: string;
+  };
+}
+
+const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
+  console.log('ShareQuizPage received props:', { params });
+  console.log('ShareQuizPage window.location:', window.location.pathname);
   
-  let quizId = params?.quizId ? parseInt(params.quizId) : null;
-  console.log('ShareQuizPage quizId from params:', quizId);
+  let quizId = null;
   
-  // Fallback: try to get quiz ID from sessionStorage if not in params
-  if (!quizId) {
+  // Strategy 1: Try params (the normal wouter way)
+  if (params?.quizId) {
+    quizId = parseInt(params.quizId);
+    console.log('ShareQuizPage quizId from params.quizId:', quizId);
+  }
+  
+  // Strategy 2: Parse directly from URL if params failed
+  if (!quizId || isNaN(quizId)) {
+    const currentPath = window.location.pathname;
+    console.log('ShareQuizPage currentPath:', currentPath);
+    const pathMatch = currentPath.match(/\/share\/(\d+)/);
+    if (pathMatch && pathMatch[1]) {
+      quizId = parseInt(pathMatch[1]);
+      console.log('ShareQuizPage quizId from URL parsing:', quizId);
+    }
+  }
+  
+  // Strategy 3: Try sessionStorage as fallback
+  if (!quizId || isNaN(quizId)) {
     const sessionQuizId = sessionStorage.getItem("currentQuizId");
-    if (sessionQuizId) {
+    if (sessionQuizId && sessionQuizId !== 'undefined') {
       quizId = parseInt(sessionQuizId);
       console.log('ShareQuizPage quizId from sessionStorage:', quizId);
     }
@@ -177,7 +197,11 @@ const ShareQuizPage: React.FC = () => {
           title={`${fallbackQuiz.creatorName}'s Custom Quiz`}
           description={`Take ${fallbackQuiz.creatorName}'s quiz! From friendship tests to trivia challenges, classroom games to fandom quizzes. Share with friends and see who scores highest!`}
         />
-        <ShareQuiz quiz={fallbackQuiz} />
+        <ShareQuiz 
+          accessCode={fallbackQuiz.accessCode}
+          quizId={fallbackQuiz.id}
+          urlSlug={fallbackQuiz.urlSlug}
+        />
       </>
     );
   }
