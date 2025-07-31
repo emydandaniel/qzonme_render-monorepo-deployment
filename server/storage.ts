@@ -96,22 +96,12 @@ export class DatabaseStorage implements IStorage {
   
   async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
     try {
-      // In development with mock DB, search manually
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔍 Mock DB: Searching for quiz with URL slug: "${urlSlug}"`);
-        const allQuizzes = Array.from(mockDb.quizzes.values());
-        const quiz = allQuizzes.find((q: any) => q.urlSlug === urlSlug) as Quiz | undefined;
-        console.log(`🔍 Mock DB: Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
-        return quiz;
-      }
-      
-      // Production database query
-      console.log(`🔍 Production DB: Searching for quiz with URL slug: "${urlSlug}"`);
+      console.log(`🔍 Searching for quiz with URL slug: "${urlSlug}"`);
       const [quiz] = await db
         .select()
         .from(quizzes)
         .where(eq(quizzes.urlSlug, urlSlug));
-      console.log(`🔍 Production DB: Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
+      console.log(`🔍 Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
       return quiz;
     } catch (error) {
       console.error(`🔍 Error in getQuizByUrlSlug("${urlSlug}"):`, error);
@@ -121,22 +111,12 @@ export class DatabaseStorage implements IStorage {
   
   async getQuizByDashboardToken(token: string): Promise<Quiz | undefined> {
     try {
-      // In development with mock DB, search manually
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔍 Mock DB: Searching for quiz with dashboard token: "${token}"`);
-        const allQuizzes = Array.from(mockDb.quizzes.values());
-        const quiz = allQuizzes.find((q: any) => q.dashboardToken === token) as Quiz | undefined;
-        console.log(`🔍 Mock DB: Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
-        return quiz;
-      }
-      
-      // Production database query
-      console.log(`🔍 Production DB: Searching for quiz with dashboard token: "${token}"`);
+      console.log(`🔍 Searching for quiz with dashboard token: "${token}"`);
       const [quiz] = await db
         .select()
         .from(quizzes)
         .where(eq(quizzes.dashboardToken, token));
-      console.log(`🔍 Production DB: Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
+      console.log(`🔍 Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
       return quiz;
     } catch (error) {
       console.error(`🔍 Error in getQuizByDashboardToken("${token}"):`, error);
@@ -174,23 +154,13 @@ export class DatabaseStorage implements IStorage {
   // Question methods
   async getQuestionsByQuizId(quizId: number): Promise<Question[]> {
     try {
-      // In development with mock DB, search manually
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔍 Mock DB: Searching for questions with quiz ID: ${quizId}`);
-        const allQuestions = Array.from(mockDb.questions.values());
-        const questions = allQuestions.filter((q: any) => q.quizId === quizId) as Question[];
-        console.log(`🔍 Mock DB: Found ${questions.length} questions for quiz ${quizId}`);
-        return questions.sort((a, b) => (a.order || 0) - (b.order || 0));
-      }
-      
-      // Production database query
-      console.log(`🔍 Production DB: Searching for questions with quiz ID: ${quizId}`);
+      console.log(`🔍 Searching for questions with quiz ID: ${quizId}`);
       const result = await db
         .select()
         .from(questions)
         .where(eq(questions.quizId, quizId))
         .orderBy(questions.order);
-      console.log(`🔍 Production DB: Found ${result.length} questions for quiz ${quizId}`);
+      console.log(`🔍 Found ${result.length} questions for quiz ${quizId}`);
       return result;
     } catch (error) {
       console.error(`🔍 Error in getQuestionsByQuizId(${quizId}):`, error);
