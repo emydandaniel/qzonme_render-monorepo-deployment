@@ -5,8 +5,24 @@ import {
   quizAttempts, type QuizAttempt, type InsertQuizAttempt
 } from "@shared/schema";
 import { db } from "./db";
-import { mockDb } from "./mock-db";
 import { eq, and } from "drizzle-orm";
+
+// Add retry helper function
+async function withRetry<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      console.error(`Database operation failed (attempt ${i + 1}/${maxRetries}):`, error);
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      }
+    }
+  }
+  throw lastError;
+}
 
 // Storage interface
 export interface IStorage {
@@ -37,91 +53,56 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    return await withRetry(async () => {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    });
   }
   
   async createUser(insertUser: InsertUser): Promise<User> {
+    console.log('Creating user with data:', insertUser);
+    
     // Validate the username is not empty
     if (!insertUser.username || !insertUser.username.trim()) {
+      console.error('Username validation failed - empty username');
       throw new Error("Username is required");
     }
     
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+    return await withRetry(async () => {
+      console.log('Attempting to create user in database...');
+      const [user] = await db.insert(users).values(insertUser).returning();
+      console.log('Successfully created user:', user);
+      return user;
+    });
   }
   
   // Quiz methods
   async getQuiz(id: number): Promise<Quiz | undefined> {
-    console.log(`🔍 Storage.getQuiz(${id}) started`);
-    try {
-      console.log(`🔍 About to query database for quiz with id: ${id}`);
-      
-      // Create a timeout promise
-      const timeoutPromise = new Promise<Quiz | undefined>((_, reject) => {
-        setTimeout(() => {
-          reject(new Error(`Database query timeout after 5 seconds for quiz ID ${id}`));
-        }, 5000);
-      });
-      
-      // Create the actual query promise
-      const queryPromise = db.select().from(quizzes).where(eq(quizzes.id, id))
-        .then((result: Quiz[]) => {
-          console.log(`🔍 Storage result:`, result);
-          console.log(`🔍 Storage result length:`, result.length);
-          if (result.length > 0) {
-            console.log(`✅ Found quiz ${id}:`, result[0]);
-          } else {
-            console.log(`❌ No quiz found with ID ${id}`);
-          }
-          return result[0];
-        });
-      
-      // Race between timeout and query
-      const quiz = await Promise.race([queryPromise, timeoutPromise]);
+    return await withRetry(async () => {
+      const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
       return quiz;
-    } catch (error) {
-      console.error(`🔍 Error in storage.getQuiz(${id}):`, error);
-      throw error;
-    }
+    });
   }
   
   async getQuizByAccessCode(accessCode: string): Promise<Quiz | undefined> {
-    const [quiz] = await db
-      .select()
-      .from(quizzes)
-      .where(eq(quizzes.accessCode, accessCode));
-    return quiz;
+    return await withRetry(async () => {
+      const [quiz] = await db.select().from(quizzes).where(eq(quizzes.accessCode, accessCode));
+      return quiz;
+    });
   }
   
   async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
-    try {
-      console.log(`🔍 Searching for quiz with URL slug: "${urlSlug}"`);
-      const [quiz] = await db
-        .select()
-        .from(quizzes)
-        .where(eq(quizzes.urlSlug, urlSlug));
-      console.log(`🔍 Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
+    return await withRetry(async () => {
+      const [quiz] = await db.select().from(quizzes).where(eq(quizzes.urlSlug, urlSlug));
       return quiz;
-    } catch (error) {
-      console.error(`🔍 Error in getQuizByUrlSlug("${urlSlug}"):`, error);
-      throw error;
-    }
+    });
   }
   
   async getQuizByDashboardToken(token: string): Promise<Quiz | undefined> {
-    try {
-      console.log(`🔍 Searching for quiz with dashboard token: "${token}"`);
-      const [quiz] = await db
-        .select()
-        .from(quizzes)
-        .where(eq(quizzes.dashboardToken, token));
-      console.log(`🔍 Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
+    return await withRetry(async () => {
+      const [quiz] = await db.select().from(quizzes).where(eq(quizzes.dashboardToken, token));
       return quiz;
-    } catch (error) {
-      console.error(`🔍 Error in getQuizByDashboardToken("${token}"):`, error);
-      throw error;
-    }
+    });
   }
   
   async createQuiz(insertQuiz: InsertQuiz): Promise<Quiz> {
@@ -142,91 +123,54 @@ export class DatabaseStorage implements IStorage {
     
     console.log(`Creating quiz with creator: "${insertQuiz.creatorName}", slug: "${insertQuiz.urlSlug}"`);
     
-    // Create the quiz
-    const [quiz] = await db
-      .insert(quizzes)
-      .values(insertQuiz)
-      .returning();
-    
-    return quiz;
+    return await withRetry(async () => {
+      const [quiz] = await db.insert(quizzes).values(insertQuiz).returning();
+      return quiz;
+    });
   }
   
   // Question methods
   async getQuestionsByQuizId(quizId: number): Promise<Question[]> {
-    try {
-      console.log(`🔍 Searching for questions with quiz ID: ${quizId}`);
-      const result = await db
-        .select()
-        .from(questions)
-        .where(eq(questions.quizId, quizId))
-        .orderBy(questions.order);
-      console.log(`🔍 Found ${result.length} questions for quiz ${quizId}`);
-      return result;
-    } catch (error) {
-      console.error(`🔍 Error in getQuestionsByQuizId(${quizId}):`, error);
-      throw error;
-    }
+    return await withRetry(async () => {
+      return await db.select().from(questions).where(eq(questions.quizId, quizId)).orderBy(questions.order);
+    });
   }
   
   async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
-    const [question] = await db
-      .insert(questions)
-      .values(insertQuestion)
-      .returning();
-    
-    return question;
+    return await withRetry(async () => {
+      const [question] = await db.insert(questions).values(insertQuestion).returning();
+      return question;
+    });
   }
   
-  // Quiz Attempt methods
+  // Quiz Attempt methods 
   async getQuizAttempts(quizId: number): Promise<QuizAttempt[]> {
-    const result = await db
-      .select()
-      .from(quizAttempts)
-      .where(eq(quizAttempts.quizId, quizId))
-      .orderBy(quizAttempts.score);
-    
-    return result.reverse(); // Reverse to get highest scores first
+    return await withRetry(async () => {
+      const result = await db.select().from(quizAttempts)
+        .where(eq(quizAttempts.quizId, quizId))
+        .orderBy(quizAttempts.score);
+      return result.reverse(); // Reverse to get highest scores first
+    });
   }
   
   async createQuizAttempt(insertAttempt: InsertQuizAttempt): Promise<QuizAttempt> {
-    const [attempt] = await db
-      .insert(quizAttempts)
-      .values(insertAttempt)
-      .returning();
-    
-    return attempt;
+    return await withRetry(async () => {
+      const [attempt] = await db.insert(quizAttempts).values(insertAttempt).returning();
+      return attempt;
+    });
   }
   
   // Check if a quiz is expired (older than 7 days)
   isQuizExpired(quiz: Quiz): boolean {
-    if (!quiz || !quiz.createdAt) {
-      console.log(`🔍 Quiz expiration check: Missing quiz or createdAt`);
-      return true;
-    }
+    if (!quiz || !quiz.createdAt) return true;
     
     const now = new Date();
     const createdAt = new Date(quiz.createdAt);
-    
-    console.log(`🔍 Quiz expiration debug: createdAt raw: ${quiz.createdAt}`);
-    console.log(`🔍 Quiz expiration debug: createdAt parsed: ${createdAt}`);
-    console.log(`🔍 Quiz expiration debug: now: ${now}`);
-    
-    // Check if the date parsing failed
-    if (isNaN(createdAt.getTime())) {
-      console.log(`🔍 Quiz expiration check: Invalid createdAt date`);
-      return true;
-    }
-    
     const diffInMs = now.getTime() - createdAt.getTime();
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
     
-    console.log(`🔍 Quiz expiration debug: diffInMs: ${diffInMs}, diffInDays: ${diffInDays}`);
-    
     // Changed from 30 days to 7 days expiration policy
-    const isExpired = diffInDays > 7;
-    console.log(`🔍 Quiz expiration result: ${isExpired}`);
-    
-    return isExpired;
+    return diffInDays > 7;
   }
 }
 
