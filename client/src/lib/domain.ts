@@ -56,5 +56,5 @@ export function getDashboardUrl(dashboardToken: string): string {
  */
 export function getShareMessage(urlSlug: string): string {
   const quizUrl = getQuizUrl(urlSlug);
-  return `Hey! I made this QzonMe quiz just for YOU. 👀\nLet's see if you really know me 👇\n${quizUrl}`;
+  return `Hey! I created this fun quiz about me on QzonMe 🎯\nTest your knowledge and see how well you really know me!\n${quizUrl}`;
 }

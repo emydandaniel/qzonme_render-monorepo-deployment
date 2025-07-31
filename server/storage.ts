@@ -94,6 +94,16 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getQuizByUrlSlug(urlSlug: string): Promise<Quiz | undefined> {
+    // In development with mock DB, search manually
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 Mock DB: Searching for quiz with URL slug: "${urlSlug}"`);
+      const allQuizzes = Array.from((global as any).mockDb?.quizzes?.values() || []);
+      const quiz = allQuizzes.find((q: any) => q.urlSlug === urlSlug) as Quiz | undefined;
+      console.log(`🔍 Mock DB: Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
+      return quiz;
+    }
+    
+    // Production database query
     const [quiz] = await db
       .select()
       .from(quizzes)
@@ -102,6 +112,16 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getQuizByDashboardToken(token: string): Promise<Quiz | undefined> {
+    // In development with mock DB, search manually
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 Mock DB: Searching for quiz with dashboard token: "${token}"`);
+      const allQuizzes = Array.from((global as any).mockDb?.quizzes?.values() || []);
+      const quiz = allQuizzes.find((q: any) => q.dashboardToken === token) as Quiz | undefined;
+      console.log(`🔍 Mock DB: Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
+      return quiz;
+    }
+    
+    // Production database query
     const [quiz] = await db
       .select()
       .from(quizzes)
@@ -138,6 +158,16 @@ export class DatabaseStorage implements IStorage {
   
   // Question methods
   async getQuestionsByQuizId(quizId: number): Promise<Question[]> {
+    // In development with mock DB, search manually
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 Mock DB: Searching for questions with quiz ID: ${quizId}`);
+      const allQuestions = Array.from((global as any).mockDb?.questions?.values() || []);
+      const questions = allQuestions.filter((q: any) => q.quizId === quizId) as Question[];
+      console.log(`🔍 Mock DB: Found ${questions.length} questions for quiz ${quizId}`);
+      return questions.sort((a, b) => (a.order || 0) - (b.order || 0));
+    }
+    
+    // Production database query
     const result = await db
       .select()
       .from(questions)

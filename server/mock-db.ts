@@ -34,6 +34,26 @@ export const mockDb = {
           return Promise.resolve([]);
         },
         then: (callback: any) => {
+          // Handle quiz lookups by dashboardToken, urlSlug, or ID
+          if (table === quizzes || (table.name && table.name === 'quizzes')) {
+            const results = Array.from(mockDb.quizzes.values()).filter((quiz: any) => {
+              // Extract field and value from condition (simple mock of eq() function)
+              const conditionStr = condition.toString();
+              if (conditionStr.includes('dashboardToken')) {
+                return quiz.dashboardToken === condition.value || quiz.dashboardToken === condition.right;
+              }
+              if (conditionStr.includes('urlSlug')) {
+                return quiz.urlSlug === condition.value || quiz.urlSlug === condition.right;
+              }
+              if (conditionStr.includes('id')) {
+                return quiz.id === condition.value || quiz.id === condition.right;
+              }
+              return false;
+            });
+            console.log(`📊 Mock DB: Found ${results.length} quiz records matching condition`);
+            return Promise.resolve(results);
+          }
+          
           // Handle autoCreateUsage queries for rate limiting
           if (table === autoCreateUsage || (table.name && table.name === 'auto_create_usage')) {
             const today = new Date().toISOString().split('T')[0];
@@ -44,6 +64,20 @@ export const mockDb = {
             console.log(`📊 Mock DB: Found ${results.length} autoCreateUsage records for today (no limit)`);
             return Promise.resolve(results);
           }
+          
+          // Handle questions by quizId
+          if (table === questions || (table.name && table.name === 'questions')) {
+            const results = Array.from(mockDb.questions.values()).filter((question: any) => {
+              const conditionStr = condition.toString();
+              if (conditionStr.includes('quizId')) {
+                return question.quizId === condition.value || question.quizId === condition.right;
+              }
+              return false;
+            });
+            console.log(`📊 Mock DB: Found ${results.length} question records matching condition`);
+            return Promise.resolve(results);
+          }
+          
           return Promise.resolve([]);
         }
       }),

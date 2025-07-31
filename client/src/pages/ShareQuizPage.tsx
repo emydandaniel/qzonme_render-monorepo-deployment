@@ -112,7 +112,7 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
         url={`${window.location.origin}/quiz/${quizData.accessCode}`}
         imageUrl="/favicon.png"
         title={`${quizData.creatorName}'s Quiz Just for You 💬`}
-        description={`How well do you know ${quizData.creatorName}? Try this private QzonMe quiz they made just for close friends.`}
+        description={`Test your knowledge of ${quizData.creatorName}! Take this fun interactive quiz to see how well you really know them.`}
       />
       
       <ShareQuiz
