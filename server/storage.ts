@@ -5,6 +5,7 @@ import {
   quizAttempts, type QuizAttempt, type InsertQuizAttempt
 } from "@shared/schema";
 import { db } from "./db";
+import { mockDb } from "./mock-db";
 import { eq, and } from "drizzle-orm";
 
 // Storage interface
@@ -97,7 +98,7 @@ export class DatabaseStorage implements IStorage {
     // In development with mock DB, search manually
     if (process.env.NODE_ENV === 'development') {
       console.log(`🔍 Mock DB: Searching for quiz with URL slug: "${urlSlug}"`);
-      const allQuizzes = Array.from((global as any).mockDb?.quizzes?.values() || []);
+      const allQuizzes = Array.from(mockDb.quizzes.values());
       const quiz = allQuizzes.find((q: any) => q.urlSlug === urlSlug) as Quiz | undefined;
       console.log(`🔍 Mock DB: Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
       return quiz;
@@ -115,7 +116,7 @@ export class DatabaseStorage implements IStorage {
     // In development with mock DB, search manually
     if (process.env.NODE_ENV === 'development') {
       console.log(`🔍 Mock DB: Searching for quiz with dashboard token: "${token}"`);
-      const allQuizzes = Array.from((global as any).mockDb?.quizzes?.values() || []);
+      const allQuizzes = Array.from(mockDb.quizzes.values());
       const quiz = allQuizzes.find((q: any) => q.dashboardToken === token) as Quiz | undefined;
       console.log(`🔍 Mock DB: Found quiz:`, quiz ? `ID ${quiz.id}` : 'None');
       return quiz;
@@ -161,7 +162,7 @@ export class DatabaseStorage implements IStorage {
     // In development with mock DB, search manually
     if (process.env.NODE_ENV === 'development') {
       console.log(`🔍 Mock DB: Searching for questions with quiz ID: ${quizId}`);
-      const allQuestions = Array.from((global as any).mockDb?.questions?.values() || []);
+      const allQuestions = Array.from(mockDb.questions.values());
       const questions = allQuestions.filter((q: any) => q.quizId === quizId) as Question[];
       console.log(`🔍 Mock DB: Found ${questions.length} questions for quiz ${quizId}`);
       return questions.sort((a, b) => (a.order || 0) - (b.order || 0));

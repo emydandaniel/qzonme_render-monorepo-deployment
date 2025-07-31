@@ -126,8 +126,8 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
     return (
       <Layout>
         <MetaTags 
-          title="Loading Quiz | QzonMe - How Well Do Your Friends Know You?"
-          description="Loading a personalized quiz on QzonMe. Take the quiz to see how well you know your friend!"
+          title="Loading Quiz | QzonMe - Take This Quiz"
+          description="Someone shared this quiz with you! Get ready to test your knowledge and see how well you score."
         />
         
         <h1 className="text-3xl font-bold mb-6">Loading Quiz</h1>
@@ -139,7 +139,7 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                 <p>Loading quiz...</p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Preparing questions and answers for you to test your knowledge
+                  Getting your quiz ready! This could be from a friend, teacher, colleague, or anyone who created it for you to enjoy.
                 </p>
               </div>
             </div>
