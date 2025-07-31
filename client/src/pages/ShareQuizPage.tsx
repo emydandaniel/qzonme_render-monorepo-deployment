@@ -14,8 +14,8 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
   const quizId = parseInt(params.quizId);
   const { toast } = useToast();
 
-  console.log("ShareQuizPage: About to create query with quizId:", quizId);
-  console.log("ShareQuizPage: params received:", params);
+  // Debug logging to understand what's happening
+  console.log("ShareQuizPage mounted:", { params, quizId, isValidQuizId: !isNaN(quizId) && quizId > 0 });
 
   // Fetch quiz with proper type - exact same config as old version
   const { data: quiz, isLoading: isLoadingQuiz, error } = useQuery<{
@@ -28,15 +28,6 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     queryKey: [`/api/quizzes/${quizId}`],
     staleTime: 0, // Don't use cached data
     refetchOnMount: true, // Always fetch on component mount
-    enabled: !isNaN(quizId) && quizId > 0, // Only run query if quizId is valid
-  });
-
-  console.log("ShareQuizPage: useQuery state:", { 
-    quizId, 
-    quiz, 
-    isLoadingQuiz, 
-    error: error?.message || error,
-    queryKey: `/api/quizzes/${quizId}`
   });
 
   React.useEffect(() => {
@@ -60,9 +51,6 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     );
   }
 
-  // Add debugging info
-  console.log("ShareQuizPage: quiz data", { quizId, quiz, error });
-  
   // Check for the just created quiz in session storage as fallback
   const sessionQuizId = sessionStorage.getItem("currentQuizId");
   const sessionQuizAccessCode = sessionStorage.getItem("currentQuizAccessCode");
