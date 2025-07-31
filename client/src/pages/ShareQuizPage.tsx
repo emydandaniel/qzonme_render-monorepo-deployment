@@ -14,7 +14,10 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
   const quizId = parseInt(params.quizId);
   const { toast } = useToast();
 
-  // Fetch quiz with proper type
+  console.log("ShareQuizPage: About to create query with quizId:", quizId);
+  console.log("ShareQuizPage: params received:", params);
+
+  // Fetch quiz with proper type - exact same config as old version
   const { data: quiz, isLoading: isLoadingQuiz, error } = useQuery<{
     id: number;
     accessCode: string;
@@ -25,6 +28,15 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     queryKey: [`/api/quizzes/${quizId}`],
     staleTime: 0, // Don't use cached data
     refetchOnMount: true, // Always fetch on component mount
+    enabled: !isNaN(quizId) && quizId > 0, // Only run query if quizId is valid
+  });
+
+  console.log("ShareQuizPage: useQuery state:", { 
+    quizId, 
+    quiz, 
+    isLoadingQuiz, 
+    error: error?.message || error,
+    queryKey: `/api/quizzes/${quizId}`
   });
 
   React.useEffect(() => {

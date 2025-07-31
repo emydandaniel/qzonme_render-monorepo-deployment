@@ -142,16 +142,27 @@ app.use((req, res, next) => {
       console.warn('⚠️ Could not setup Vite development server:', error);
       console.log('🔄 Falling back to static file serving...');
       // Fallback to static file serving even in development
-      const distPath = pathModule.resolve(pathModule.dirname(new URL(import.meta.url).pathname), "../client/dist");
+      const distPath = pathModule.join(process.cwd(), "client", "dist");
       if (fs.existsSync(distPath)) {
         app.use(express.static(distPath));
         console.log('📁 Serving static files from:', distPath);
+        
+        // History API fallback for development - serve index.html for any route that doesn't match an API or static resource
+        app.get('*', (req, res) => {
+          // Skip API routes
+          if (req.path.startsWith('/api') || req.path.startsWith('/uploads') || req.path.startsWith('/assets')) {
+            return;
+          }
+          
+          // For all other routes, serve the index.html file
+          res.sendFile(pathModule.resolve(distPath, "index.html"));
+        });
       }
     }
   } else {
     console.log('🏭 Production mode: Setting up static file serving...');
     // Serve static files in production
-    const distPath = pathModule.resolve(pathModule.dirname(new URL(import.meta.url).pathname), "../client/dist");
+    const distPath = pathModule.join(process.cwd(), "client", "dist");
     
     if (!fs.existsSync(distPath)) {
       console.error(`Could not find the build directory: ${distPath}, make sure to build the client first`);
@@ -168,7 +179,7 @@ app.use((req, res, next) => {
       }
       
       // For all other routes, serve the index.html file
-      const distPath = pathModule.resolve(pathModule.dirname(new URL(import.meta.url).pathname), "../client/dist");
+      const distPath = pathModule.join(process.cwd(), "client", "dist");
       res.sendFile(pathModule.resolve(distPath, "index.html"));
     });
   }
