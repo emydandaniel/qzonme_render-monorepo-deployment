@@ -14,8 +14,8 @@ interface MetaTagsProps {
  * Especially important for WhatsApp which uses Open Graph meta tags
  */
 const MetaTags = ({
-  title = "Check Out This Quiz I Made! 💬",
-  description = "Create fun interactive quizzes instantly! From friendship tests to trivia challenges, auto-generated topic quizzes to custom games. Test your knowledge with friends!",
+  title = "Take This Quiz! 🎯",
+  description = "Create any type of quiz instantly! Trivia challenges, friendship tests, classroom games, or any topic. AI-powered generation + manual creation options!",
   imageUrl = "/favicon.png",
   url,
   type = "website",
@@ -36,11 +36,11 @@ const MetaTags = ({
     
     // Create personalized title and description if creator name is provided
     const personalizedTitle = creatorName 
-      ? `${creatorName} Made This Quiz Just for You! 💬` 
+      ? `${creatorName} Created This Quiz For You! 🎯` 
       : title;
       
     const personalizedDescription = creatorName
-      ? `Test your knowledge of ${creatorName} with this fun interactive quiz! See how well you really know them on QzonMe.`
+      ? `Take this engaging quiz created by ${creatorName} on QzonMe! Challenge yourself and see how well you score.`
       : description;
 
     // Update or create canonical link

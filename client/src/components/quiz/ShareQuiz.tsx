@@ -50,7 +50,7 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
   // Use the custom domain for sharing
   const customDomain = "https://qzonme.com";
   const quizLink = `${customDomain}/quiz/${urlSlug}`;
-  const shareMessage = `Hey! I created this fun quiz about me on QzonMe 🎯\nTest your knowledge and see how well you really know me!\n${quizLink}`;
+  const shareMessage = `🎯 I just created an awesome quiz on QzonMe! Think you can ace it?\nTest your knowledge and see how you score 👇\n${quizLink}`;
   
   const dashboardLink = dashboardToken ? `${customDomain}/dashboard/${dashboardToken}` : null;
   
@@ -140,8 +140,8 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               Copy this message to invite your friends to take your quiz!
             </p>
             <div className="bg-white p-3 rounded border border-gray-200 text-sm mb-3 text-left">
-              Hey! I created this fun quiz about me on QzonMe 🎯<br/>
-              Test your knowledge and see how well you really know me!<br/>
+              🎯 I just created an awesome quiz on QzonMe! Think you can ace it?<br/>
+              Test your knowledge and see how you score 👇<br/>
               <span className="text-blue-500 truncate block">{quizLink}</span>
             </div>
             <Button 
