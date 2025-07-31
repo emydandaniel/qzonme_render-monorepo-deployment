@@ -66,7 +66,8 @@ export const mockDb = {
           return [record];
         } else if (table === quizzes || (table.name && table.name === 'quizzes')) {
           id = mockDb.nextQuizId++;
-          const record = { id, ...data };
+          // Add createdAt timestamp to mimic PostgreSQL defaultNow()
+          const record = { id, ...data, createdAt: new Date() };
           mockDb.quizzes.set(id, record);
           return [record];
         } else if (table === questions || (table.name && table.name === 'questions')) {
@@ -76,7 +77,8 @@ export const mockDb = {
           return [record];
         } else if (table === quizAttempts || (table.name && table.name === 'quiz_attempts')) {
           id = mockDb.nextQuizAttemptId++;
-          const record = { id, ...data };
+          // Add completedAt timestamp to mimic PostgreSQL defaultNow()
+          const record = { id, ...data, completedAt: new Date() };
           mockDb.quizAttempts.set(id, record);
           return [record];
         } else if (table === autoCreateUsage || (table.name && table.name === 'auto_create_usage')) {

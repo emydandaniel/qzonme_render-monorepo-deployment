@@ -14,10 +14,35 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
   const quizId = parseInt(params.quizId);
   const { toast } = useToast();
 
-  // Debug logging to understand what's happening
+  // Check session storage first, before making API calls
+  const sessionQuizId = sessionStorage.getItem("currentQuizId");
+  const sessionQuizAccessCode = sessionStorage.getItem("currentQuizAccessCode");
+  const sessionQuizUrlSlug = sessionStorage.getItem("currentQuizUrlSlug");
+  
   console.log("ShareQuizPage mounted:", { params, quizId, isValidQuizId: !isNaN(quizId) && quizId > 0 });
+  console.log("Session storage data:", { 
+    sessionQuizId, 
+    sessionQuizAccessCode, 
+    sessionQuizUrlSlug,
+    paramsQuizId: params.quizId,
+    matches: sessionQuizId === params.quizId
+  });
 
-  // Fetch quiz with proper type - exact same config as old version
+  // If we have session data for this quiz, use it immediately and skip API call
+  const hasSessionData = sessionQuizId && sessionQuizId === params.quizId && sessionQuizAccessCode && sessionQuizUrlSlug;
+  
+  if (hasSessionData) {
+    console.log("Using session storage fallback for quiz data - skipping API call");
+    return (
+      <ShareQuiz
+        accessCode={sessionQuizAccessCode}
+        quizId={quizId}
+        urlSlug={sessionQuizUrlSlug}
+      />
+    );
+  }
+
+  // Only make API call if we don't have session data
   const { data: quiz, isLoading: isLoadingQuiz, error } = useQuery<{
     id: number;
     accessCode: string;
@@ -34,7 +59,7 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
       }
       return response.json();
     },
-    enabled: !isNaN(quizId) && quizId > 0, // Only run query if quizId is valid
+    enabled: !isNaN(quizId) && quizId > 0 && !hasSessionData, // Only run if no session data
     staleTime: 0, // Don't use cached data
     refetchOnMount: true, // Always fetch on component mount
   });
@@ -60,31 +85,6 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
     );
   }
 
-  // Check for the just created quiz in session storage as fallback
-  const sessionQuizId = sessionStorage.getItem("currentQuizId");
-  const sessionQuizAccessCode = sessionStorage.getItem("currentQuizAccessCode");
-  const sessionQuizUrlSlug = sessionStorage.getItem("currentQuizUrlSlug");
-  
-  console.log("Session storage data:", { 
-    sessionQuizId, 
-    sessionQuizAccessCode, 
-    sessionQuizUrlSlug,
-    paramsQuizId: params.quizId,
-    matches: sessionQuizId === params.quizId
-  });
-  
-  // If quiz from API failed but we have session data, use that
-  if (!quiz && sessionQuizId && sessionQuizId === params.quizId && sessionQuizAccessCode && sessionQuizUrlSlug) {
-    console.log("Using session storage fallback for quiz data");
-    return (
-      <ShareQuiz
-        accessCode={sessionQuizAccessCode}
-        quizId={quizId}
-        urlSlug={sessionQuizUrlSlug}
-      />
-    );
-  }
-
   if (!quiz) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -93,9 +93,6 @@ const ShareQuizPage: React.FC<ShareQuizPageProps> = ({ params }) => {
           <p className="text-muted-foreground mb-4">
             Sorry, we couldn't find the quiz you're looking for (ID: {quizId}).
           </p>
-          <div className="mb-4">
-            <p className="text-sm text-gray-600">Debug info: session quiz ID: {sessionQuizId || 'none'}</p>
-          </div>
           <a href="/" className="text-primary hover:underline">
             Return to Home
           </a>
