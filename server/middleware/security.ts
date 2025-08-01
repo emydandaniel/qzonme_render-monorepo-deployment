@@ -150,6 +150,7 @@ const helmetConfig = {
         "'self'",
         "data:",
         "https:",
+        "blob:", // Allow blob: URLs for image file previews
         // Cloudinary domains for image uploads
         "https://res.cloudinary.com",
       ],
