@@ -96,6 +96,15 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
       answers: QuestionAnswer[];
       score: number;
     }) => {
+      console.log("Submitting quiz attempt with data:", {
+        quizId: quiz?.id,
+        userAnswerId: userId,
+        userName,
+        score: data.score,
+        totalQuestions: questions.length,
+        answersCount: data.answers.length
+      });
+      
       const response = await apiRequest("POST", "/api/quiz-attempts", {
         quizId: quiz?.id,
         userAnswerId: userId,
@@ -104,15 +113,24 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
         totalQuestions: questions.length,
         answers: data.answers
       });
-      return response.json();
+      
+      const result = await response.json();
+      console.log("Quiz attempt submission result:", result);
+      return result;
     },
     onSuccess: (data) => {
+      console.log("Quiz attempt successful, navigating to results with:", {
+        quizId: quiz?.id,
+        attemptId: data.id,
+        fullData: data
+      });
       navigate(`/results/${quiz?.id}/${data.id}`);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Quiz attempt submission failed:", error);
       toast({
         title: "Error",
-        description: "Failed to submit quiz attempt",
+        description: "Failed to submit quiz attempt. Please try again.",
         variant: "destructive"
       });
     }
