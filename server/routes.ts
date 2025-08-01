@@ -153,8 +153,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Increment auto-create usage count for rate limiting (only for auto-created quizzes)
       if (quizData.isAutoCreated) {
         try {
-          await incrementUsage(quizData.creatorName);
-          console.log(`✅ Auto-create usage incremented for user: ${quizData.creatorName}`);
+          // Use IP address for rate limiting, not creator name
+          const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+          await incrementUsage(ipAddress);
+          console.log(`✅ Auto-create usage incremented for IP: ${ipAddress}`);
         } catch (usageError) {
           console.error('❌ Failed to increment auto-create usage:', usageError);
           // Don't fail the quiz creation if usage tracking fails

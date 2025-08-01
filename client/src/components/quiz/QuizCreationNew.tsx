@@ -173,6 +173,19 @@ const QuizCreation: React.FC = () => {
           console.log('🔍 QuizEditor: Set form data - Options:', firstQuestion.options);
           console.log('🔍 QuizEditor: Set form data - Correct index:', correctIndex);
           
+          // Clear any previous image state and set up for first question
+          if (questionImagePreview) {
+            URL.revokeObjectURL(questionImagePreview);
+          }
+          setQuestionImage(null);
+          setQuestionImagePreview(null);
+          setEditingImageUrl(firstQuestion.imageUrl || null);
+          
+          // Reset file input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+          
           // Clear auto-review tracking - questions need to be reviewed individually
           setReviewedQuestions(new Set());
           
@@ -666,9 +679,20 @@ const QuizCreation: React.FC = () => {
       
       console.log(`🔍 Auto-review Q${nextIndex + 1}: Correct answer is "${correctAnswerText}" at index ${correctIndex}`);
       
-      // Clear any selected image
+      // Clean up any previous image state to prevent "sticking"
+      if (questionImagePreview) {
+        URL.revokeObjectURL(questionImagePreview);
+      }
       setQuestionImage(null);
+      setQuestionImagePreview(null);
+      
+      // Set up image state for the next question
       setEditingImageUrl(nextQuestion.imageUrl || null);
+      
+      // Reset file input to clear any previous selection
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       
       toast({
         title: "Next Question",
@@ -728,46 +752,83 @@ const QuizCreation: React.FC = () => {
         return;
       }
       
+      // Clean up any existing preview URL to prevent memory leaks
+      if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(questionImagePreview);
+      }
+      
       setQuestionImage(file);
       const imageUrl = URL.createObjectURL(file);
       setQuestionImagePreview(imageUrl);
+      
+      // Clear any existing editing image URL since we have a new file
+      setEditingImageUrl(null);
+      
+      console.log("🖼️ New image selected:", file.name, "Preview URL:", imageUrl);
     }
   };
   
   // Handle removing an image
   const handleRemoveImage = () => {
+    console.log("🗑️ Removing image - Current states:", {
+      hasQuestionImage: !!questionImage,
+      hasPreview: !!questionImagePreview,
+      hasEditingUrl: !!editingImageUrl
+    });
+    
+    // Clean up file object
     setQuestionImage(null);
-    if (questionImagePreview) {
+    
+    // Clean up preview URL
+    if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(questionImagePreview);
-      setQuestionImagePreview(null);
     }
+    setQuestionImagePreview(null);
+    
+    // Clear editing URL as well
+    setEditingImageUrl(null);
+    
+    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    
+    console.log("✅ Image removal complete");
   };
 
   // Reset form fields
   const resetForm = () => {
+    console.log("🔄 Form reset starting - Current image states:", {
+      hasQuestionImage: !!questionImage,
+      hasPreview: !!questionImagePreview,
+      hasEditingUrl: !!editingImageUrl
+    });
+    
     setQuestionText("");
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
     setEditingImageUrl(null); // Clear the editing image URL
     setEditingQuestionIndex(null); // Clear editing state
+    
+    // Comprehensive image cleanup
     setQuestionImage(null); // Clear any uploaded images
+    
+    // Clean up blob URLs to prevent memory leaks
+    if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(questionImagePreview);
+    }
+    setQuestionImagePreview(null);
     
     // Clear auto-review mode completely when reset is called
     setIsInAutoReviewMode(false);
     setCurrentAutoReviewIndex(0);
     
-    console.log("🔄 Form reset - cleared all states including auto-review mode");
-    
-    if (questionImagePreview) {
-      URL.revokeObjectURL(questionImagePreview);
-      setQuestionImagePreview(null);
-    }
+    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    
+    console.log("✅ Form reset complete - all image states cleared");
   };
 
 
@@ -775,6 +836,8 @@ const QuizCreation: React.FC = () => {
   // Edit existing question
   const handleEditQuestion = (index: number) => {
     const question = questions[index];
+    
+    console.log("✏️ Editing question", index + 1, "Image URL:", question.imageUrl);
     
     // Completely exit auto-review mode when editing any question
     if (isInAutoReviewMode) {
@@ -816,15 +879,38 @@ const QuizCreation: React.FC = () => {
       setCorrectOption(correctIndex >= 0 ? correctIndex : 0);
     }
     
-    // Handle the image
+    // Handle the image - COMPREHENSIVE IMAGE STATE MANAGEMENT
+    console.log("🖼️ Handling image for edit:", {
+      hasImageUrl: !!question.imageUrl,
+      imageUrl: question.imageUrl,
+      currentPreview: questionImagePreview,
+      currentFile: !!questionImage
+    });
+    
+    // Clean up any existing preview first to prevent memory leaks
+    if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(questionImagePreview);
+    }
+    
+    // Clear any existing file since we're editing an existing question
+    setQuestionImage(null);
+    
     if (question.imageUrl) {
+      // Set preview to the existing image URL
       setQuestionImagePreview(question.imageUrl);
       // Save the image URL separately so we can use it when updating the question
       setEditingImageUrl(question.imageUrl);
-      console.log("Editing question with image URL:", question.imageUrl);
+      console.log("🖼️ Set image preview to existing URL:", question.imageUrl);
     } else {
+      // No image for this question
       setQuestionImagePreview(null);
       setEditingImageUrl(null);
+      console.log("🖼️ No image for this question");
+    }
+    
+    // Reset file input to ensure no stale file selection
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
     
     // Store the index of the question being edited instead of removing it
