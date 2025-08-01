@@ -24,7 +24,8 @@ export const secureQuizSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "URL slug can only contain lowercase letters, numbers, and hyphens"),
   dashboardToken: z.string()
     .min(10, "Dashboard token must be at least 10 characters")
-    .max(500, "Dashboard token must not exceed 500 characters")
+    .max(500, "Dashboard token must not exceed 500 characters"),
+  isAutoCreated: z.boolean().optional().default(false) // Allow tracking of auto-created quizzes
 });
 
 export const secureQuestionSchema = z.object({

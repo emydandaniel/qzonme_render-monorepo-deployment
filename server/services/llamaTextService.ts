@@ -332,15 +332,32 @@ function generateCreativityInstructions(request: QuestionGenerationRequest): str
     'Include cause-and-effect relationships, comparisons, and analytical scenarios',
     'Explore different perspectives, debates, and controversial aspects when appropriate',
     'Use real-world examples, case studies, and practical applications',
-    'Consider interdisciplinary connections and cross-topic relationships'
+    'Consider interdisciplinary connections and cross-topic relationships',
+    'Ask "what if" scenarios and hypothetical situations',
+    'Focus on practical problem-solving and decision-making',
+    'Explore cultural, social, and economic impacts',
+    'Consider multiple viewpoints and perspectives on the same topic',
+    'Create questions that require synthesis and evaluation',
+    'Include contemporary relevance and current events when applicable'
   ];
+
+  // Add timestamp-based randomness to avoid repeated selections
+  const timeBasedSeed = Date.now() % 1000;
+  const contentBasedSeed = request.content.length % 100;
   
   const randomElements = creativityElements
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3)
+    .sort(() => (Math.random() + timeBasedSeed / 1000 + contentBasedSeed / 100) - 0.5)
+    .slice(0, Math.floor(Math.random() * 3) + 2) // 2-4 elements
     .join('. ');
   
-  return `CREATIVITY FOCUS: ${randomElements}.`;
+  // Add content-specific instructions
+  const contentHints = request.content.includes('YouTube') || request.contentType === 'youtube' 
+    ? 'Focus on video-specific content, key moments, and visual/audio elements. '
+    : request.contentType === 'document' 
+    ? 'Extract deeper insights from the text, analyze arguments and evidence. '
+    : 'Create varied question types that test different levels of understanding. ';
+  
+  return `CREATIVITY FOCUS: ${contentHints}${randomElements}. VARY your question styles and avoid repetitive patterns.`;
 }
 
 /**
@@ -668,52 +685,25 @@ function ensureAnswerVariety(questions: GeneratedQuestion[]): GeneratedQuestion[
   // ALWAYS redistribute to eliminate patterns - force aggressive randomization
   console.log(`🔄 FORCING complete answer redistribution to eliminate ALL patterns...`);
   
-  // Create a truly random distribution with aggressive anti-pattern logic
-  const answerOptions = ['B', 'C', 'D']; // Exclude A from initial pool to prevent first=A
+  // Create truly random answer distribution (simplified approach)
   const shuffledAnswers: string[] = [];
+  const answerOptions = ['A', 'B', 'C', 'D'];
   
-  // Generate completely random answers for each question with strict anti-pattern rules
   for (let i = 0; i < questions.length; i++) {
     let randomAnswer: string;
+    let attempts = 0;
     
-    if (i === 0) {
-      // ABSOLUTELY NEVER start with A for the first question
-      randomAnswer = answerOptions[Math.floor(Math.random() * 3)]; // B, C, or D only
-      console.log(`🚫 Question 1: FORCED to be non-A, selected ${randomAnswer}`);
-    } else {
-      // For subsequent questions, apply multiple anti-pattern rules
-      const fullOptions = ['A', 'B', 'C', 'D'];
-      let attempts = 0;
-      do {
-        randomAnswer = fullOptions[Math.floor(Math.random() * 4)];
-        attempts++;
-      } while (
-        (randomAnswer === shuffledAnswers[i - 1] || // No consecutive duplicates
-         (i >= 3 && randomAnswer === shuffledAnswers[i - 4]) || // No A-B-C-D pattern
-         (i >= 1 && i % 4 === 0 && randomAnswer === 'A') || // No cycling back to A every 4th
-         (i >= 1 && i % 4 === 1 && randomAnswer === 'B') || // No cycling pattern
-         (i >= 1 && i % 4 === 2 && randomAnswer === 'C') ||
-         (i >= 1 && i % 4 === 3 && randomAnswer === 'D') ||
-         (i === 1 && randomAnswer === 'A') || // Avoid A in second position too
-         (i <= 3 && randomAnswer === 'A' && Math.random() < 0.7)) && // Reduce A probability in first few questions
-        attempts < 15
-      );
-      
-      // Fallback if we can't find a good option
-      if (attempts >= 15) {
-        const availableOptions = fullOptions.filter(opt => 
-          opt !== shuffledAnswers[i - 1] && 
-          !(i === 0 && opt === 'A') // Never A for first question
-        );
-        randomAnswer = availableOptions.length > 0 
-          ? availableOptions[Math.floor(Math.random() * availableOptions.length)]
-          : 'B'; // Safe fallback
-      }
-      
-      console.log(`🎲 Question ${i + 1}: Selected ${randomAnswer} (pattern prevention)`);
-    }
+    do {
+      randomAnswer = answerOptions[Math.floor(Math.random() * 4)];
+      attempts++;
+    } while (
+      // Only avoid immediate consecutive duplicates and obvious patterns
+      (i > 0 && randomAnswer === shuffledAnswers[i - 1]) && // No consecutive duplicates
+      attempts < 5 // Give up after 5 attempts to avoid infinite loops
+    );
     
     shuffledAnswers.push(randomAnswer);
+    console.log(`🎲 Question ${i + 1}: Selected ${randomAnswer}`);
   }
   
   // Additional check - if first question is still A, force change it

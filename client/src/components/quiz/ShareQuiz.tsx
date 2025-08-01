@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Copy, BarChart, AlertTriangle, Clock, Bookmark } from "lucide-react";
+import { Check, Copy, BarChart, AlertTriangle, Clock, Bookmark, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "../common/Layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -206,6 +206,18 @@ const ShareQuiz: React.FC<ShareQuizProps> = ({ accessCode, quizId, urlSlug }) =>
               disabled={isLoading || (!dashboardToken)}
             >
               <BarChart className="h-4 w-4 mr-2" /> View My Dashboard
+            </Button>
+          </div>
+          
+          {/* Home button for easy navigation */}
+          <div className="mt-6">
+            <Button 
+              type="button" 
+              variant="outline"
+              className="w-full" 
+              onClick={() => navigate("/")}
+            >
+              <Home className="h-4 w-4 mr-2" /> Back to Home
             </Button>
           </div>
           

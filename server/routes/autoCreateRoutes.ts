@@ -369,11 +369,7 @@ export function registerAutoCreateRoutes(app: Express) {
       
       const result = await generateQuestions(requestData);
       
-      if (result.success) {
-        // Increment usage count on successful generation
-        const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
-        await incrementUsage(ipAddress);
-      }
+      // Don't increment usage here - wait until user completes and shares the quiz
       
       res.json({
         success: result.success,
@@ -686,9 +682,8 @@ export function registerAutoCreateRoutes(app: Express) {
       });
       
       if (questionResult.success) {
-        // Increment usage count on successful generation
-        const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
-        await incrementUsage(ipAddress);
+        // Note: Usage count will be incremented when quiz is completed/shared
+        // Not when questions are just generated
       }
       
       res.json({
@@ -811,9 +806,8 @@ export function registerAutoCreateRoutes(app: Express) {
       const result = await generateQuestionsWithImage(requestData);
       
       if (result.success) {
-        // Increment usage count on successful generation
-        const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
-        await incrementUsage(ipAddress);
+        // Note: Usage count will be incremented when quiz is completed/shared
+        // Not when questions are just generated
       }
       
       res.json({

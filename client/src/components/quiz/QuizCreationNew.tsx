@@ -439,7 +439,8 @@ const QuizCreation: React.FC = () => {
         creatorName: creatorName,
         accessCode,
         urlSlug,
-        dashboardToken
+        dashboardToken,
+        isAutoCreated: isAutoCreateMode // Add flag to track auto-created quizzes
       });
       
       if (!quizResponse.ok) {
@@ -716,6 +717,7 @@ const QuizCreation: React.FC = () => {
   // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    
     if (file) {
       if (file.size > 10 * 1024 * 1024) { // 10MB limit
         toast({

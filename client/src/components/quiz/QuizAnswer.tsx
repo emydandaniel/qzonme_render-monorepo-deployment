@@ -236,7 +236,7 @@ const QuizAnswer: React.FC<QuizAnswerProps> = ({
             <div className="ml-3">
               <h2 className="font-poppins font-semibold">{quizCreator}'s Quiz</h2>
               <p className="text-sm text-muted-foreground">
-                Let's see how well you know {quizCreator}
+                Challenge yourself with this exciting quiz!
               </p>
             </div>
           </div>

@@ -304,15 +304,32 @@ function generateGeminiCreativityInstructions(request: QuestionGenerationRequest
     'Include cause-and-effect relationships, comparisons, and analytical scenarios',
     'Explore different perspectives, debates, and controversial aspects when appropriate',
     'Use real-world examples, case studies, and practical applications',
-    'Consider interdisciplinary connections and cross-topic relationships'
+    'Consider interdisciplinary connections and cross-topic relationships',
+    'Ask "what if" scenarios and hypothetical situations',
+    'Focus on practical problem-solving and decision-making',
+    'Explore cultural, social, and economic impacts',
+    'Consider multiple viewpoints and perspectives on the same topic',
+    'Create questions that require synthesis and evaluation',
+    'Include contemporary relevance and current events when applicable'
   ];
+
+  // Add timestamp-based randomness to avoid repeated selections
+  const timeBasedSeed = Date.now() % 1000;
+  const contentBasedSeed = request.content.length % 100;
   
   const randomElements = creativityElements
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3)
+    .sort(() => (Math.random() + timeBasedSeed / 1000 + contentBasedSeed / 100) - 0.5)
+    .slice(0, Math.floor(Math.random() * 3) + 2) // 2-4 elements
     .join('. ');
   
-  return `CREATIVITY FOCUS: ${randomElements}.`;
+  // Add content-specific instructions
+  const contentHints = request.content.includes('YouTube') || request.contentType === 'youtube' 
+    ? 'Focus on video-specific content, key moments, and visual/audio elements. '
+    : request.contentType === 'document' 
+    ? 'Extract deeper insights from the text, analyze arguments and evidence. '
+    : 'Create varied question types that test different levels of understanding. ';
+  
+  return `CREATIVITY FOCUS: ${contentHints}${randomElements}. VARY your question styles and avoid repetitive patterns.`;
 }
 
 /**
@@ -634,7 +651,7 @@ function ensureAnswerVariety(questions: GeneratedQuestion[]): GeneratedQuestion[
   if (questions.length === 0) return questions;
   
   // ALWAYS redistribute to eliminate patterns - force aggressive randomization
-  console.log(`🔄 FORCING complete answer redistribution to eliminate ALL patterns...`);
+  console.log(`🔄 GEMINI: Forcing complete answer redistribution to eliminate ALL patterns...`);
   
   // Create a truly random distribution with aggressive anti-pattern logic
   const answerOptions = ['B', 'C', 'D']; // Exclude A from initial pool to prevent first=A
@@ -647,7 +664,7 @@ function ensureAnswerVariety(questions: GeneratedQuestion[]): GeneratedQuestion[
     if (i === 0) {
       // ABSOLUTELY NEVER start with A for the first question
       randomAnswer = answerOptions[Math.floor(Math.random() * 3)]; // B, C, or D only
-      console.log(`🚫 Question 1: FORCED to be non-A, selected ${randomAnswer}`);
+      console.log(`🚫 GEMINI Question 1: FORCED to be non-A, selected ${randomAnswer}`);
     } else {
       // For subsequent questions, apply multiple anti-pattern rules
       const fullOptions = ['A', 'B', 'C', 'D'];
@@ -678,7 +695,7 @@ function ensureAnswerVariety(questions: GeneratedQuestion[]): GeneratedQuestion[
           : 'B'; // Safe fallback
       }
       
-      console.log(`🎲 Question ${i + 1}: Selected ${randomAnswer} (pattern prevention)`);
+      console.log(`🎲 GEMINI Question ${i + 1}: Selected ${randomAnswer} (pattern prevention)`);
     }
     
     shuffledAnswers.push(randomAnswer);
@@ -687,12 +704,15 @@ function ensureAnswerVariety(questions: GeneratedQuestion[]): GeneratedQuestion[
   // Additional check - if first question is still A, force change it
   if (shuffledAnswers[0] === 'A') {
     shuffledAnswers[0] = ['B', 'C', 'D'][Math.floor(Math.random() * 3)];
-    console.log(`🔄 EMERGENCY: Changed first question from A to ${shuffledAnswers[0]}`);
+    console.log(`🔄 GEMINI EMERGENCY: Changed first question from A to ${shuffledAnswers[0]}`);
   }
   
   // Final verification and logging
-  console.log(`✅ Final answer sequence: ${shuffledAnswers.join(' → ')}`);
-  
+  console.log(`✅ GEMINI Final answer sequence: ${shuffledAnswers.join(' → ')}`);
+  const patternCheck = shuffledAnswers.slice(0, 5).join('');
+  if (patternCheck.includes('ABCD') || patternCheck.includes('DCBA')) {
+    console.warn(`⚠️ GEMINI: Potential pattern detected in first 5: ${patternCheck}`);
+  }
   return questions.map((question, index) => {
     const newCorrectAnswer = shuffledAnswers[index];
     

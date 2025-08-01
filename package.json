@@ -55,6 +55,7 @@
     "@sendgrid/mail": "^8.1.5",
     "@tanstack/react-query": "^5.60.5",
     "@types/bcrypt": "^5.0.2",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",

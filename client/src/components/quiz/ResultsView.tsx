@@ -50,11 +50,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   }, [navigate]);
   
   const handleCreateOwnQuiz = () => {
-    // Store the current user's name for pre-filling
-    if (userName) {
-      sessionStorage.setItem("userName", userName);
-      sessionStorage.setItem("username", userName); // For compatibility
-    }
+    // Navigate to home page without auto-filling name
     navigate("/");
   };
   

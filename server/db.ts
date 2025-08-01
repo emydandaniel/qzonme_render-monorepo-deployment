@@ -1,9 +1,6 @@
-import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import * as schema from "@shared/schema";
-
-// Allow self-signed certificates for Render deployment
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 console.log('🔍 Environment:', process.env.NODE_ENV);
 console.log('🔍 DATABASE_URL present:', !!process.env.DATABASE_URL);
@@ -14,11 +11,16 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Check your Render database configuration.");
 }
 
-console.log('🔗 Connecting to Render PostgreSQL database...');
+const databaseUrl = process.env.DATABASE_URL;
 
-// Configure pool for Render PostgreSQL
+console.log('🔗 Connecting to PostgreSQL database...');
+
+// Allow self-signed certificates for Render deployment
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+// Configure pool for PostgreSQL
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
@@ -36,12 +38,14 @@ pool.on('error', (err) => {
 // Test the connection
 pool.connect()
   .then(() => {
-    console.log('✅ Successfully connected to Render PostgreSQL database');
+    console.log('✅ Successfully connected to PostgreSQL database');
   })
   .catch(err => {
-    console.error('❌ Error connecting to Render PostgreSQL database:', err);
+    console.error('❌ Error connecting to PostgreSQL database:', err);
     console.error('Check if the database is properly provisioned in Render');
     process.exit(-1);
   });
 
-export const db = drizzle(pool, { schema });
+const db = drizzle(pool, { schema });
+
+export { db };
