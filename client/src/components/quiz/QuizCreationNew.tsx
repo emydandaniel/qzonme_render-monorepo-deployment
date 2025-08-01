@@ -543,6 +543,15 @@ const QuizCreation: React.FC = () => {
       // Handle image upload if present
       let imageUrl = null;
       
+      console.log("🔍 Image handling debug:", {
+        hasEditingImageUrl: !!editingImageUrl,
+        editingImageUrl,
+        hasQuestionImage: !!questionImage,
+        questionImageName: questionImage?.name,
+        hasQuestionImagePreview: !!questionImagePreview,
+        questionImagePreview
+      });
+      
       // Use the existing image URL if we're editing a question
       if (editingImageUrl) {
         console.log("Using existing image URL from edit:", editingImageUrl);
@@ -738,6 +747,8 @@ const QuizCreation: React.FC = () => {
         return;
       }
       
+      // Clear any existing editingImageUrl when selecting a new file
+      setEditingImageUrl(null);
       setQuestionImage(file);
       const imageUrl = URL.createObjectURL(file);
       setQuestionImagePreview(imageUrl);
@@ -747,6 +758,7 @@ const QuizCreation: React.FC = () => {
   // Handle removing an image
   const handleRemoveImage = () => {
     setQuestionImage(null);
+    setEditingImageUrl(null); // Clear editing URL when removing image
     if (questionImagePreview) {
       URL.revokeObjectURL(questionImagePreview);
       setQuestionImagePreview(null);
