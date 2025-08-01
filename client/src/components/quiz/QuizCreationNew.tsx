@@ -34,6 +34,7 @@ const QuizCreation: React.FC = () => {
   // Image handling for questions
   const [questionImage, setQuestionImage] = useState<File | null>(null);
   const [questionImagePreview, setQuestionImagePreview] = useState<string | null>(null);
+  const [editingImageUrl, setEditingImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Collection of questions for this quiz - start empty, load in effect
@@ -538,8 +539,13 @@ const QuizCreation: React.FC = () => {
       // Handle image upload if present
       let imageUrl = null;
       
-      // Upload image if one is selected
-      if (questionImage) {
+      // Use the existing image URL if we're editing a question
+      if (editingImageUrl) {
+        console.log("Using existing image URL from edit:", editingImageUrl);
+        imageUrl = editingImageUrl;
+      }
+      // Otherwise, upload the new image if one is selected
+      else if (questionImage) {
         try {
           console.log("🔄 Uploading new image file:", questionImage.name);
           const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
@@ -611,15 +617,8 @@ const QuizCreation: React.FC = () => {
       // Increment ad refresh counter to reload ads
       setAdRefreshCounter(prev => prev + 1);
       
-      // Reset form for next question - CRITICAL: Ensure complete cleanup
+      // Reset form for next question
       resetForm();
-      
-      // Force a small delay to ensure the file input is completely reset
-      setTimeout(() => {
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      }, 100);
       
     } catch (error) {
       console.error("❌ Error in handleAddQuestion:", error);
@@ -787,22 +786,12 @@ const QuizCreation: React.FC = () => {
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
     setEditingQuestionIndex(null);
-    
-    // Simple image cleanup
-    setQuestionImage(null);
-    if (questionImagePreview) {
-      URL.revokeObjectURL(questionImagePreview);
-      setQuestionImagePreview(null);
-    }
+    setEditingImageUrl(null); // Clear the editing image URL
+    handleRemoveImage();
     
     // Clear auto-review mode
     setIsInAutoReviewMode(false);
     setCurrentAutoReviewIndex(0);
-    
-    // Simple file input reset
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
 
@@ -833,9 +822,6 @@ const QuizCreation: React.FC = () => {
       console.log(`📝 Question ${question.id} marked as reviewed (edited)`);
     }
     
-    // Set editing state to prevent duplication
-    setEditingQuestionIndex(index);
-    
     // Set the question text
     setQuestionText(question.text);
     
@@ -853,40 +839,18 @@ const QuizCreation: React.FC = () => {
       setCorrectOption(correctIndex >= 0 ? correctIndex : 0);
     }
     
-    // Handle the image - COMPREHENSIVE IMAGE STATE MANAGEMENT
-    console.log("🖼️ Handling image for edit:", {
-      hasImageUrl: !!question.imageUrl,
-      imageUrl: question.imageUrl,
-      currentPreview: questionImagePreview,
-      currentFile: !!questionImage
-    });
-    
-    // Clean up any existing preview first to prevent memory leaks
-    if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
-      URL.revokeObjectURL(questionImagePreview);
-    }
-    
-    // Clear any existing file since we're editing an existing question
-    setQuestionImage(null);
-    
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    
+    // Handle the image
     if (question.imageUrl) {
-      // Set preview to the existing image URL
       setQuestionImagePreview(question.imageUrl);
       // Save the image URL separately so we can use it when updating the question
-      setQuestionImagePreview(question.imageUrl);
-      console.log("🖼️ Set image preview to existing URL:", question.imageUrl);
+      setEditingImageUrl(question.imageUrl);
+      console.log("Editing question with image URL:", question.imageUrl);
     } else {
-      // No image for this question
-      setQuestionImagePreview(null);
-      console.log("🖼️ No image for this question");
+      handleRemoveImage();
+      setEditingImageUrl(null);
     }
     
-    // Store the index of the question being edited instead of removing it
+    // Store the index of the question being edited
     setEditingQuestionIndex(index);
     
     // Scroll to the form
@@ -1141,10 +1105,7 @@ const QuizCreation: React.FC = () => {
               ) : (
                 <div 
                   className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-primary transition-colors mb-2"
-                  onClick={() => {
-                    console.log("🖼️ Image upload area clicked, opening file dialog");
-                    fileInputRef.current?.click();
-                  }}
+                  onClick={() => fileInputRef.current?.click()}
                 >
                   <div className="flex flex-col items-center">
                     <Image className="h-8 w-8 text-gray-400 mb-2" />
@@ -1175,7 +1136,7 @@ const QuizCreation: React.FC = () => {
             <Button 
               type="button" 
               className="flex-1" 
-              onClick={handleNextAutoReview}
+              onClick={isInAutoReviewMode ? handleNextAutoReview : handleAddQuestion}
               disabled={uploadImageMutation.isPending}
             >
               {uploadImageMutation.isPending ? (
