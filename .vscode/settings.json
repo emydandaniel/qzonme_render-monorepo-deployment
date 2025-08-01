@@ -1,0 +1,33 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.next": true,
+    "**/temp_uploads": true,
+    "**/persistent_uploads": true,
+    "**/*.log": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.next": true,
+    "**/temp_uploads": true,
+    "**/persistent_uploads": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.next/**": true,
+    "**/temp_uploads/**": true,
+    "**/persistent_uploads/**": true
+  },
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": false,
+  "files.autoSave": "onFocusChange",
+  "editor.formatOnSave": false,
+  "git.autofetch": false,
+  "extensions.autoUpdate": false
+}
