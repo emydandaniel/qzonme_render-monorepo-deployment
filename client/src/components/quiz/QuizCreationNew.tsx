@@ -691,12 +691,9 @@ const QuizCreation: React.FC = () => {
       setQuestionImage(null);
       setQuestionImagePreview(null);
       
-      // Reset file input to clear any previous selection - ensure complete reset
+      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
-        // Force a change event to ensure React state is synced
-        const event = new Event('change', { bubbles: true });
-        fileInputRef.current.dispatchEvent(event);
       }
       
       // THEN set up image state for the next question (after cleanup)
@@ -786,38 +783,26 @@ const QuizCreation: React.FC = () => {
 
   // Reset form fields
   const resetForm = () => {
-    console.log("🔄 Form reset starting - Current image states:", {
-      hasQuestionImage: !!questionImage,
-      hasPreview: !!questionImagePreview
-    });
-    
     setQuestionText("");
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
-    setEditingQuestionIndex(null); // Clear editing state
+    setEditingQuestionIndex(null);
     
-    // Comprehensive image cleanup
-    setQuestionImage(null); // Clear any uploaded images
-    
-    // Clean up blob URLs to prevent memory leaks
-    if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
+    // Simple image cleanup
+    setQuestionImage(null);
+    if (questionImagePreview) {
       URL.revokeObjectURL(questionImagePreview);
+      setQuestionImagePreview(null);
     }
-    setQuestionImagePreview(null);
     
-    // Clear auto-review mode completely when reset is called
+    // Clear auto-review mode
     setIsInAutoReviewMode(false);
     setCurrentAutoReviewIndex(0);
     
-    // Reset file input - CRITICAL: Force complete reset
+    // Simple file input reset
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
-      // Also trigger change event to ensure React state is synced
-      const event = new Event('change', { bubbles: true });
-      fileInputRef.current.dispatchEvent(event);
     }
-    
-    console.log("✅ Form reset complete - all image states cleared");
   };
 
 
@@ -884,12 +869,9 @@ const QuizCreation: React.FC = () => {
     // Clear any existing file since we're editing an existing question
     setQuestionImage(null);
     
-    // Reset file input to ensure no stale file selection
+    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
-      // Force a change event to ensure React state is synced
-      const event = new Event('change', { bubbles: true });
-      fileInputRef.current.dispatchEvent(event);
     }
     
     if (question.imageUrl) {
@@ -1140,20 +1122,12 @@ const QuizCreation: React.FC = () => {
                 Question Image (Optional)
               </Label>
               
-              {/* Debug log */}
-              {console.log("🔍 Debug - questionImagePreview:", questionImagePreview, "Type:", typeof questionImagePreview)}
-              
               {questionImagePreview ? (
                 <div className="relative w-full h-40 bg-gray-100 rounded-md overflow-hidden mb-2">
                   <img 
                     src={questionImagePreview} 
                     alt="Question preview" 
                     className="w-full h-full object-contain"
-                    onError={(e) => {
-                      console.error("❌ Image preview failed to load:", questionImagePreview);
-                      // If image fails to load, remove it from state
-                      handleRemoveImage();
-                    }}
                   />
                   <button
                     type="button"

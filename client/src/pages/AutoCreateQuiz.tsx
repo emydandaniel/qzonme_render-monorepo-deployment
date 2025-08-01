@@ -370,13 +370,8 @@ const AutoCreateQuiz: React.FC = () => {
       
       setProgressPercentage(100);
       
-      // Update usage count (this is also done on backend, but update UI)
-      const today = new Date().toDateString();
-      const usageKey = `auto_create_usage_${today}`;
-      const newUsage = dailyUsageCount + 1;
-      localStorage.setItem(usageKey, newUsage.toString());
-      setDailyUsageCount(newUsage);
-      setCanUseFeature(newUsage < 3);
+      // Note: Usage count will be incremented when the quiz is actually published,
+      // not when questions are just generated
       
       toast({
         title: "Success!",
