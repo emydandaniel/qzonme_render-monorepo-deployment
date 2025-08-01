@@ -324,8 +324,8 @@ const AnswerQuiz: React.FC<AnswerQuizProps> = ({ params }) => {
           <CardContent className="pt-6">
             <div className="text-center mb-4">
               <p className="text-muted-foreground">
-                This quiz was created by {quiz.creatorName} to test how well you know them.
-                Answer all the questions carefully to get the highest score!
+                Challenge yourself with this quiz created by {quiz.creatorName}.
+                Test your knowledge and see how many questions you can get right!
               </p>
             </div>
             

@@ -535,10 +535,10 @@ const AutoCreateQuiz: React.FC = () => {
             {/* Link Section */}
             <div className="space-y-2">
               <Label htmlFor="link-url" className="text-base font-medium">
-                Web Link or YouTube Video (Optional)
+                YouTube Video (Optional)
               </Label>
               <p className="text-sm text-muted-foreground">
-                Paste a blog post, article, or YouTube video URL
+                Paste a YouTube video URL to generate questions from the video content
               </p>
               <div className="flex gap-2">
                 {formData.linkUrl.includes('youtube.com') || formData.linkUrl.includes('youtu.be') ? (
@@ -551,7 +551,7 @@ const AutoCreateQuiz: React.FC = () => {
                 <Input
                   id="link-url"
                   type="url"
-                  placeholder="https://example.com/article or https://youtube.com/watch?v=..."
+                  placeholder="https://youtube.com/watch?v=... or https://youtu.be/..."
                   value={formData.linkUrl}
                   onChange={(e) => setFormData(prev => ({ ...prev, linkUrl: e.target.value }))}
                 />
@@ -561,10 +561,10 @@ const AutoCreateQuiz: React.FC = () => {
                   <Youtube className="h-3 w-3" />
                   YouTube video detected - we'll extract the transcript
                 </p>
-              ) : formData.linkUrl.trim() && (formData.linkUrl.startsWith('http://') || formData.linkUrl.startsWith('https://')) ? (
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <Globe className="h-3 w-3" />
-                  Web page detected - we'll extract the content
+              ) : formData.linkUrl.trim() ? (
+                <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <LinkIcon className="h-3 w-3" />
+                  Please enter a valid YouTube URL
                 </p>
               ) : null}
             </div>
@@ -651,7 +651,6 @@ const AutoCreateQuiz: React.FC = () => {
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• Upload PDFs, Word docs, or text files</li>
                 <li>• Upload images (we'll extract text using OCR)</li>
-                <li>• Paste links to blog posts or articles</li>
                 <li>• Share YouTube video URLs (we'll use transcripts)</li>
                 <li>• Simply describe your topic in text</li>
               </ul>

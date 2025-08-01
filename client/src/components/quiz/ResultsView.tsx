@@ -116,7 +116,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({
         <CardContent className="pt-6">
           <div className="text-center mb-6">
             <div className="mx-auto mb-4 w-20 h-20 rounded-full bg-primary bg-opacity-10 flex items-center justify-center">
-              <span className="text-xl font-bold text-primary">{score}/{questions.length}</span>
+              <span className="text-xl font-bold text-primary-foreground bg-primary rounded-full px-3 py-1">{formatPercentage(score, questions.length)}</span>
             </div>
             <h2 className="text-2xl font-bold mb-2 font-poppins">
               {personalizedRemark}
