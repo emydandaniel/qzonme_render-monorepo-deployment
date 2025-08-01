@@ -34,7 +34,6 @@ const QuizCreation: React.FC = () => {
   // Image handling for questions
   const [questionImage, setQuestionImage] = useState<File | null>(null);
   const [questionImagePreview, setQuestionImagePreview] = useState<string | null>(null);
-  const [editingImageUrl, setEditingImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Collection of questions for this quiz - start empty, load in effect
@@ -173,32 +172,11 @@ const QuizCreation: React.FC = () => {
           console.log('🔍 QuizEditor: Set form data - Options:', firstQuestion.options);
           console.log('🔍 QuizEditor: Set form data - Correct index:', correctIndex);
           
-          // Clear any previous image state and set up for first question
-          console.log("🧹 Auto-create setup - clearing all image state");
-          if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
-            URL.revokeObjectURL(questionImagePreview);
+          // Set up the first question's image if it exists
+          if (firstQuestion.imageUrl) {
+            console.log("🖼️ Setting up image for first question:", firstQuestion.imageUrl);
+            setQuestionImagePreview(firstQuestion.imageUrl);
           }
-          setQuestionImage(null);
-          setQuestionImagePreview(null);
-          setEditingImageUrl(null);
-
-          // Reset file input completely
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-            const event = new Event('change', { bubbles: true });
-            fileInputRef.current.dispatchEvent(event);
-          }
-          
-          // THEN set up the first question's image (after cleanup)
-          setTimeout(() => {
-            if (firstQuestion.imageUrl) {
-              console.log("🖼️ Setting up image for first question:", firstQuestion.imageUrl);
-              setEditingImageUrl(firstQuestion.imageUrl);
-              setQuestionImagePreview(firstQuestion.imageUrl);
-            } else {
-              console.log("📭 First question has no image");
-            }
-          }, 50);
           
           // Clear auto-review tracking - questions need to be reviewed individually
           setReviewedQuestions(new Set());
@@ -560,13 +538,8 @@ const QuizCreation: React.FC = () => {
       // Handle image upload if present
       let imageUrl = null;
       
-      // Use the existing image URL if we're editing a question
-      if (editingImageUrl) {
-        console.log("Using existing image URL from edit:", editingImageUrl);
-        imageUrl = editingImageUrl;
-      }
-      // Otherwise, upload the new image if one is selected
-      else if (questionImage) {
+      // Upload image if one is selected
+      if (questionImage) {
         try {
           console.log("🔄 Uploading new image file:", questionImage.name);
           const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
@@ -717,7 +690,6 @@ const QuizCreation: React.FC = () => {
       // Force complete image state reset
       setQuestionImage(null);
       setQuestionImagePreview(null);
-      setEditingImageUrl(null);
       
       // Reset file input to clear any previous selection - ensure complete reset
       if (fileInputRef.current) {
@@ -731,11 +703,9 @@ const QuizCreation: React.FC = () => {
       setTimeout(() => {
         if (nextQuestion.imageUrl) {
           console.log("🖼️ Setting up image for next question:", nextQuestion.imageUrl);
-          setEditingImageUrl(nextQuestion.imageUrl);
           setQuestionImagePreview(nextQuestion.imageUrl);
         } else {
           console.log("📭 Next question has no image");
-          setEditingImageUrl(null);
           setQuestionImagePreview(null);
         }
       }, 50); // Small delay to ensure cleanup completes first
@@ -765,7 +735,6 @@ const QuizCreation: React.FC = () => {
       setOptions(["", "", "", ""]);
       setCorrectOption(0);
       setQuestionImage(null);
-      setEditingImageUrl(null);
       if (questionImagePreview) {
         URL.revokeObjectURL(questionImagePreview);
         setQuestionImagePreview(null);
@@ -787,91 +756,44 @@ const QuizCreation: React.FC = () => {
   // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
     if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid File Type",
-          description: "Please select an image file (PNG, JPG, GIF, etc.)",
-          variant: "destructive"
-        });
-        // Reset the file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-        return;
-      }
-      
       if (file.size > 10 * 1024 * 1024) { // 10MB limit
         toast({
           title: "File Too Large",
           description: "Image must be less than 10MB",
           variant: "destructive"
         });
-        // Reset the file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
         return;
-      }
-      
-      // Clean up any existing preview URL to prevent memory leaks
-      if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
-        URL.revokeObjectURL(questionImagePreview);
       }
       
       setQuestionImage(file);
       const imageUrl = URL.createObjectURL(file);
       setQuestionImagePreview(imageUrl);
-      
-      // Clear any existing editing image URL since we have a new file
-      setEditingImageUrl(null);
-      
-      console.log("🖼️ New image selected:", file.name, "Preview URL:", imageUrl);
     }
   };
   
   // Handle removing an image
   const handleRemoveImage = () => {
-    console.log("🗑️ Removing image - Current states:", {
-      hasQuestionImage: !!questionImage,
-      hasPreview: !!questionImagePreview,
-      hasEditingUrl: !!editingImageUrl
-    });
-    
-    // Clean up file object
     setQuestionImage(null);
-    
-    // Clean up preview URL
-    if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
+    if (questionImagePreview) {
       URL.revokeObjectURL(questionImagePreview);
+      setQuestionImagePreview(null);
     }
-    setQuestionImagePreview(null);
-    
-    // Clear editing URL as well
-    setEditingImageUrl(null);
-    
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    
-    console.log("✅ Image removal complete");
   };
 
   // Reset form fields
   const resetForm = () => {
     console.log("🔄 Form reset starting - Current image states:", {
       hasQuestionImage: !!questionImage,
-      hasPreview: !!questionImagePreview,
-      hasEditingUrl: !!editingImageUrl
+      hasPreview: !!questionImagePreview
     });
     
     setQuestionText("");
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
-    setEditingImageUrl(null); // Clear the editing image URL
     setEditingQuestionIndex(null); // Clear editing state
     
     // Comprehensive image cleanup
@@ -974,12 +896,11 @@ const QuizCreation: React.FC = () => {
       // Set preview to the existing image URL
       setQuestionImagePreview(question.imageUrl);
       // Save the image URL separately so we can use it when updating the question
-      setEditingImageUrl(question.imageUrl);
+      setQuestionImagePreview(question.imageUrl);
       console.log("🖼️ Set image preview to existing URL:", question.imageUrl);
     } else {
       // No image for this question
       setQuestionImagePreview(null);
-      setEditingImageUrl(null);
       console.log("🖼️ No image for this question");
     }
     
@@ -1219,6 +1140,9 @@ const QuizCreation: React.FC = () => {
                 Question Image (Optional)
               </Label>
               
+              {/* Debug log */}
+              {console.log("🔍 Debug - questionImagePreview:", questionImagePreview, "Type:", typeof questionImagePreview)}
+              
               {questionImagePreview ? (
                 <div className="relative w-full h-40 bg-gray-100 rounded-md overflow-hidden mb-2">
                   <img 
@@ -1259,7 +1183,6 @@ const QuizCreation: React.FC = () => {
                     accept="image/*"
                     className="hidden"
                     onChange={handleImageChange}
-                    key={`image-input-${Date.now()}`} // Force re-render to clear state
                   />
                 </div>
               )}
