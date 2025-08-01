@@ -173,15 +173,11 @@ const QuizCreation: React.FC = () => {
           console.log('🔍 QuizEditor: Set form data - Options:', firstQuestion.options);
           console.log('🔍 QuizEditor: Set form data - Correct index:', correctIndex);
           
-          // Set up the first question's image if it exists
-          if (firstQuestion.imageUrl) {
-            console.log("🖼️ Setting up image for first question:", firstQuestion.imageUrl);
-            setQuestionImagePreview(firstQuestion.imageUrl);
-            setEditingImageUrl(firstQuestion.imageUrl); // CRITICAL: Set editingImageUrl for auto-review
-          } else {
-            setQuestionImagePreview(null);
-            setEditingImageUrl(null);
-          }
+          // AI-generated questions don't have images - start with clean image state
+          console.log("🖼️ AI-generated question loaded - no image, clean state");
+          setQuestionImagePreview(null);
+          setEditingImageUrl(null);
+          setQuestionImage(null);
           
           // Clear auto-review tracking - questions need to be reviewed individually
           setReviewedQuestions(new Set());
@@ -299,8 +295,14 @@ const QuizCreation: React.FC = () => {
             const correctIndex = (firstQuestion.options as string[]).findIndex((opt: string) => opt === correctAnswerText);
             setCorrectOption(correctIndex >= 0 ? correctIndex : 0);
           }
-          if (firstQuestion.imageUrl) {
+          // Only set image if it's not an AI-generated question (they don't have images)
+          if (firstQuestion.imageUrl && !isAutoCreateMode) {
             setQuestionImagePreview(firstQuestion.imageUrl);
+            setEditingImageUrl(firstQuestion.imageUrl);
+          } else {
+            // AI-generated questions don't have images
+            setQuestionImagePreview(null);
+            setEditingImageUrl(null);
           }
         }
         
@@ -655,19 +657,62 @@ const QuizCreation: React.FC = () => {
     setReviewedQuestions(prev => new Set([...Array.from(prev), currentQuestion.id]));
 
     // Update the current question being reviewed with any edits using the same logic as manual editing
-    const updatedQuestion = {
-      ...questions[currentAutoReviewIndex],
-      text: questionText,
-      options: [...options],
-      correctAnswers: [options[correctOption]],
-      // CRITICAL: Use editingImageUrl if available (for existing images), otherwise preserve existing imageUrl
-      imageUrl: editingImageUrl || questions[currentAutoReviewIndex].imageUrl
-    };
-
-    // Update the question in the list
-    const updatedQuestions = [...questions];
-    updatedQuestions[currentAutoReviewIndex] = updatedQuestion;
-    setQuestions(updatedQuestions);
+    try {
+      // Handle image upload if present
+      let imageUrl = null;
+      
+      console.log("🔍 Auto-review image handling:", {
+        hasEditingImageUrl: !!editingImageUrl,
+        editingImageUrl,
+        hasQuestionImage: !!questionImage,
+        questionImageName: questionImage?.name
+      });
+      
+      // Use the existing image URL if we're editing a question with an image
+      if (editingImageUrl) {
+        console.log("Using existing image URL from edit:", editingImageUrl);
+        imageUrl = editingImageUrl;
+      }
+      // Otherwise, upload the new image if one is selected
+      else if (questionImage) {
+        try {
+          console.log("🔄 Uploading new image file:", questionImage.name);
+          const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
+          imageUrl = uploadResult.imageUrl;
+          console.log("✅ Image uploaded successfully:", imageUrl);
+        } catch (error) {
+          console.error("❌ Failed to upload image:", error);
+          toast({
+            title: "Image Upload Failed", 
+            description: "Question will be saved without the image. Please try uploading again.",
+            variant: "destructive"
+          });
+          // Continue without image rather than failing completely
+        }
+      }
+      
+      const updatedQuestion = {
+        ...questions[currentAutoReviewIndex],
+        text: questionText,
+        options: [...options],
+        correctAnswers: [options[correctOption]],
+        // Only set imageUrl if we actually have one (from upload or editing)
+        imageUrl: imageUrl || null
+      };
+      
+      // Update the question in the list
+      const updatedQuestions = [...questions];
+      updatedQuestions[currentAutoReviewIndex] = updatedQuestion;
+      setQuestions(updatedQuestions);
+    } catch (error) {
+      console.error("❌ Error updating question in auto-review:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update question. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     // Move to next question or complete review
     const nextIndex = currentAutoReviewIndex + 1;
@@ -687,19 +732,12 @@ const QuizCreation: React.FC = () => {
       
       console.log(`🔍 Auto-review Q${nextIndex + 1}: Correct answer is "${correctAnswerText}" at index ${correctIndex}`);
       
-      // Use the same simple image handling as manual editing
+      // AI-generated questions don't have images - always start with clean image state
+      console.log("🖼️ Loading next AI-generated question - clean image state");
       handleRemoveImage(); // Clean up any previous image state
       setEditingImageUrl(null); // Clear any editing URL
-      
-      if (nextQuestion.imageUrl) {
-        console.log("🖼️ Setting up image for next question:", nextQuestion.imageUrl);
-        setQuestionImagePreview(nextQuestion.imageUrl);
-        setEditingImageUrl(nextQuestion.imageUrl); // Set for editing
-      } else {
-        console.log("📭 Next question has no image");
-        setQuestionImagePreview(null);
-        setEditingImageUrl(null);
-      }
+      setQuestionImagePreview(null);
+      setQuestionImage(null);
       
       toast({
         title: "Next Question",
@@ -827,15 +865,17 @@ const QuizCreation: React.FC = () => {
       setCorrectOption(correctIndex >= 0 ? correctIndex : 0);
     }
     
-    // Handle the image
+    // Handle the image - AI-generated questions start with no images
     if (question.imageUrl) {
       setQuestionImagePreview(question.imageUrl);
       // Save the image URL separately so we can use it when updating the question
       setEditingImageUrl(question.imageUrl);
       console.log("Editing question with image URL:", question.imageUrl);
     } else {
+      // AI-generated questions or questions without images
       handleRemoveImage();
       setEditingImageUrl(null);
+      console.log("Editing question with no image (AI-generated or manual without image)");
     }
     
     // Store the index of the question being edited
