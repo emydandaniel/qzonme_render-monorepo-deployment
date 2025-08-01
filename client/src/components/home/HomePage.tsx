@@ -24,8 +24,14 @@ const HomePage: React.FC = () => {
     value: string;
   } | null>(null);
   
-  // Only check for pending quiz in session storage
+  // Check for pending quiz and pre-fill name if user came from results page
   useEffect(() => {
+    // Pre-fill name if user came from results page
+    const savedUserName = sessionStorage.getItem("userName") || sessionStorage.getItem("username");
+    if (savedUserName && !userName) {
+      setUserName(savedUserName);
+    }
+    
     // Check if there's a pending quiz code or slug in session storage
     const pendingQuizCode = sessionStorage.getItem("pendingQuizCode");
     const pendingQuizSlug = sessionStorage.getItem("pendingQuizSlug");
@@ -37,7 +43,7 @@ const HomePage: React.FC = () => {
       setPendingQuiz({ type: 'slug', value: pendingQuizSlug });
       sessionStorage.removeItem("pendingQuizSlug");
     }
-  }, []);
+  }, [userName]);
 
   const createUserMutation = useMutation({
     mutationFn: async (name: string) => {

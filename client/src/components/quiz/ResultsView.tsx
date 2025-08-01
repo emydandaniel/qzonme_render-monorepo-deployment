@@ -32,8 +32,30 @@ const ResultsView: React.FC<ResultsViewProps> = ({
   const [, navigate] = useLocation();
   const percentage = formatPercentage(score, questions.length);
   
+  // Add navigation control to prevent going back to create page
+  React.useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Prevent default back behavior and redirect to home instead
+      event.preventDefault();
+      navigate("/");
+    };
+    
+    // Push a state to history so back button can be intercepted
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handlePopState);
+    
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [navigate]);
+  
   const handleCreateOwnQuiz = () => {
-    navigate("/create");
+    // Store the current user's name for pre-filling
+    if (userName) {
+      sessionStorage.setItem("userName", userName);
+      sessionStorage.setItem("username", userName); // For compatibility
+    }
+    navigate("/");
   };
   
   const handleTryAgain = () => {
@@ -94,13 +116,13 @@ const ResultsView: React.FC<ResultsViewProps> = ({
         <CardContent className="pt-6">
           <div className="text-center mb-6">
             <div className="mx-auto mb-4 w-20 h-20 rounded-full bg-primary bg-opacity-10 flex items-center justify-center">
-              <span className="text-2xl font-bold text-primary">{percentage}</span>
+              <span className="text-xl font-bold text-primary">{score}/{questions.length}</span>
             </div>
             <h2 className="text-2xl font-bold mb-2 font-poppins">
               {personalizedRemark}
             </h2>
             <p className="text-muted-foreground">
-              You scored {score} out of {questions.length} on {quizCreator}'s quiz
+              You scored {score} out of {questions.length} on {quizCreator}'s quiz ({percentage})
             </p>
           </div>
           

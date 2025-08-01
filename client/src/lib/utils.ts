@@ -92,7 +92,7 @@ export function generateDashboardToken(): string {
 }
 
 export function getRemarkByScore(score: number, total: number): string {
-  if (total <= 0) return "Perfect score! You're absolutely amazing! 🧠❤️";
+  if (total <= 0) return "Incredible! You're absolutely amazing! 🌟✨";
   
   // Ensure score doesn't exceed total
   const validScore = Math.min(score, total);
@@ -100,15 +100,19 @@ export function getRemarkByScore(score: number, total: number): string {
   // Calculate percentage with the valid score
   const percentage = (validScore / total) * 100;
   
-  if (percentage <= 20) {
-    return "Don't worry, practice makes perfect! 😅";
+  if (percentage === 0) {
+    return "Every master was once a beginner! 🚀";
+  } else if (percentage <= 20) {
+    return "Just getting started! Keep going! �";
   } else if (percentage <= 40) {
-    return "Good effort! Keep learning 🤔";
+    return "Good effort! Keep learning 😊";
   } else if (percentage <= 60) {
-    return "Not bad! You're doing well 👀";
+    return "Nice work! You're on the right track! �";
   } else if (percentage <= 80) {
-    return "Great job! You really know your stuff! 🔥🔥";
+    return "Impressive! You really know your stuff! 🔥";
+  } else if (percentage < 100) {
+    return "Outstanding! You're amazing! 🎉";
   } else {
-    return "Perfect score! You're absolutely amazing! 🧠❤️";
+    return "Perfect score! You're absolutely incredible! 🌟✨";
   }
 }
