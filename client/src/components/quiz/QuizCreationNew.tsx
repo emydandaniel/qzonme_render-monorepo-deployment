@@ -174,17 +174,31 @@ const QuizCreation: React.FC = () => {
           console.log('🔍 QuizEditor: Set form data - Correct index:', correctIndex);
           
           // Clear any previous image state and set up for first question
-          if (questionImagePreview) {
+          console.log("🧹 Auto-create setup - clearing all image state");
+          if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
             URL.revokeObjectURL(questionImagePreview);
           }
           setQuestionImage(null);
           setQuestionImagePreview(null);
-          setEditingImageUrl(firstQuestion.imageUrl || null);
-          
-          // Reset file input
+          setEditingImageUrl(null);
+
+          // Reset file input completely
           if (fileInputRef.current) {
             fileInputRef.current.value = '';
+            const event = new Event('change', { bubbles: true });
+            fileInputRef.current.dispatchEvent(event);
           }
+          
+          // THEN set up the first question's image (after cleanup)
+          setTimeout(() => {
+            if (firstQuestion.imageUrl) {
+              console.log("🖼️ Setting up image for first question:", firstQuestion.imageUrl);
+              setEditingImageUrl(firstQuestion.imageUrl);
+              setQuestionImagePreview(firstQuestion.imageUrl);
+            } else {
+              console.log("📭 First question has no image");
+            }
+          }, 50);
           
           // Clear auto-review tracking - questions need to be reviewed individually
           setReviewedQuestions(new Set());
@@ -554,15 +568,18 @@ const QuizCreation: React.FC = () => {
       // Otherwise, upload the new image if one is selected
       else if (questionImage) {
         try {
+          console.log("🔄 Uploading new image file:", questionImage.name);
           const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
           imageUrl = uploadResult.imageUrl;
+          console.log("✅ Image uploaded successfully:", imageUrl);
         } catch (error) {
-          console.error("Failed to upload image:", error);
+          console.error("❌ Failed to upload image:", error);
           toast({
-            title: "Image Upload Failed",
-            description: "Your question will be added without the image",
+            title: "Image Upload Failed", 
+            description: "Your question will be added without the image. Please try uploading the image again.",
             variant: "destructive"
           });
+          // Continue without image rather than failing completely
         }
       }
 
@@ -621,12 +638,21 @@ const QuizCreation: React.FC = () => {
       // Increment ad refresh counter to reload ads
       setAdRefreshCounter(prev => prev + 1);
       
-      // Reset form for next question
+      // Reset form for next question - CRITICAL: Ensure complete cleanup
       resetForm();
+      
+      // Force a small delay to ensure the file input is completely reset
+      setTimeout(() => {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }, 100);
+      
     } catch (error) {
+      console.error("❌ Error in handleAddQuestion:", error);
       toast({
         title: "Error",
-        description: "Failed to add question",
+        description: "Failed to add question. Please try again.",
         variant: "destructive"
       });
     }
@@ -679,20 +705,40 @@ const QuizCreation: React.FC = () => {
       
       console.log(`🔍 Auto-review Q${nextIndex + 1}: Correct answer is "${correctAnswerText}" at index ${correctIndex}`);
       
+      // CRITICAL: Complete image state cleanup to prevent image sharing between questions
+      console.log("🧹 Auto-review cleanup - clearing image state for question", nextIndex + 1);
+      
       // Clean up any previous image state to prevent "sticking"
-      if (questionImagePreview) {
+      if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
         URL.revokeObjectURL(questionImagePreview);
+        console.log("🗑️ Revoked blob URL:", questionImagePreview);
       }
+      
+      // Force complete image state reset
       setQuestionImage(null);
       setQuestionImagePreview(null);
+      setEditingImageUrl(null);
       
-      // Set up image state for the next question
-      setEditingImageUrl(nextQuestion.imageUrl || null);
-      
-      // Reset file input to clear any previous selection
+      // Reset file input to clear any previous selection - ensure complete reset
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
+        // Force a change event to ensure React state is synced
+        const event = new Event('change', { bubbles: true });
+        fileInputRef.current.dispatchEvent(event);
       }
+      
+      // THEN set up image state for the next question (after cleanup)
+      setTimeout(() => {
+        if (nextQuestion.imageUrl) {
+          console.log("🖼️ Setting up image for next question:", nextQuestion.imageUrl);
+          setEditingImageUrl(nextQuestion.imageUrl);
+          setQuestionImagePreview(nextQuestion.imageUrl);
+        } else {
+          console.log("📭 Next question has no image");
+          setEditingImageUrl(null);
+          setQuestionImagePreview(null);
+        }
+      }, 50); // Small delay to ensure cleanup completes first
       
       toast({
         title: "Next Question",
@@ -743,12 +789,30 @@ const QuizCreation: React.FC = () => {
     const file = e.target.files?.[0];
     
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please select an image file (PNG, JPG, GIF, etc.)",
+          variant: "destructive"
+        });
+        // Reset the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+      
       if (file.size > 10 * 1024 * 1024) { // 10MB limit
         toast({
           title: "File Too Large",
           description: "Image must be less than 10MB",
           variant: "destructive"
         });
+        // Reset the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
         return;
       }
       
@@ -823,9 +887,12 @@ const QuizCreation: React.FC = () => {
     setIsInAutoReviewMode(false);
     setCurrentAutoReviewIndex(0);
     
-    // Reset file input
+    // Reset file input - CRITICAL: Force complete reset
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+      // Also trigger change event to ensure React state is synced
+      const event = new Event('change', { bubbles: true });
+      fileInputRef.current.dispatchEvent(event);
     }
     
     console.log("✅ Form reset complete - all image states cleared");
@@ -855,7 +922,7 @@ const QuizCreation: React.FC = () => {
     
     // Mark this question as reviewed (for AI-generated quizzes)
     if (requiresReview) {
-      setReviewedQuestions(prev => new Set([...Array.from(prev), question.id]));
+      setReviewedQuestions((prev: Set<any>) => new Set([...Array.from(prev), question.id]));
       console.log(`📝 Question ${question.id} marked as reviewed (edited)`);
     }
     
@@ -895,6 +962,14 @@ const QuizCreation: React.FC = () => {
     // Clear any existing file since we're editing an existing question
     setQuestionImage(null);
     
+    // Reset file input to ensure no stale file selection
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      // Force a change event to ensure React state is synced
+      const event = new Event('change', { bubbles: true });
+      fileInputRef.current.dispatchEvent(event);
+    }
+    
     if (question.imageUrl) {
       // Set preview to the existing image URL
       setQuestionImagePreview(question.imageUrl);
@@ -906,11 +981,6 @@ const QuizCreation: React.FC = () => {
       setQuestionImagePreview(null);
       setEditingImageUrl(null);
       console.log("🖼️ No image for this question");
-    }
-    
-    // Reset file input to ensure no stale file selection
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
     }
     
     // Store the index of the question being edited instead of removing it
@@ -1155,6 +1225,11 @@ const QuizCreation: React.FC = () => {
                     src={questionImagePreview} 
                     alt="Question preview" 
                     className="w-full h-full object-contain"
+                    onError={(e) => {
+                      console.error("❌ Image preview failed to load:", questionImagePreview);
+                      // If image fails to load, remove it from state
+                      handleRemoveImage();
+                    }}
                   />
                   <button
                     type="button"
@@ -1168,7 +1243,10 @@ const QuizCreation: React.FC = () => {
               ) : (
                 <div 
                   className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-primary transition-colors mb-2"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    console.log("🖼️ Image upload area clicked, opening file dialog");
+                    fileInputRef.current?.click();
+                  }}
                 >
                   <div className="flex flex-col items-center">
                     <Image className="h-8 w-8 text-gray-400 mb-2" />
@@ -1181,6 +1259,7 @@ const QuizCreation: React.FC = () => {
                     accept="image/*"
                     className="hidden"
                     onChange={handleImageChange}
+                    key={`image-input-${Date.now()}`} // Force re-render to clear state
                   />
                 </div>
               )}

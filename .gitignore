@@ -1,9 +1,31 @@
 node_modules
 dist
+build
+.next
 .DS_Store
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Large files and databases
+*.sqlite
+*.db
+eng.traineddata
+dev.sqlite
+
+# Temporary and upload directories
+temp_uploads/
+persistent_uploads/
+uploads/
+
+# Test files
+test-*.js
+test-*.mjs
+test-*.ts
+test-*.html
+test-*.cjs
+*.test.*
+*.spec.*
 
 # Environment variables - NEVER commit these!
 .env
