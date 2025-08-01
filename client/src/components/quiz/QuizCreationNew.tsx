@@ -177,6 +177,10 @@ const QuizCreation: React.FC = () => {
           if (firstQuestion.imageUrl) {
             console.log("🖼️ Setting up image for first question:", firstQuestion.imageUrl);
             setQuestionImagePreview(firstQuestion.imageUrl);
+            setEditingImageUrl(firstQuestion.imageUrl); // CRITICAL: Set editingImageUrl for auto-review
+          } else {
+            setQuestionImagePreview(null);
+            setEditingImageUrl(null);
           }
           
           // Clear auto-review tracking - questions need to be reviewed individually
@@ -641,23 +645,20 @@ const QuizCreation: React.FC = () => {
     const currentQuestion = questions[currentAutoReviewIndex];
     setReviewedQuestions(prev => new Set([...Array.from(prev), currentQuestion.id]));
 
-    // Update the current question being reviewed with any edits (but don't duplicate)
-    if (editingQuestionIndex === currentAutoReviewIndex) {
-      const updatedQuestion = {
-        ...questions[currentAutoReviewIndex],
-        text: questionText,
-        options: [...options],
-        correctAnswers: [options[correctOption]]
-      };
+    // Update the current question being reviewed with any edits using the same logic as manual editing
+    const updatedQuestion = {
+      ...questions[currentAutoReviewIndex],
+      text: questionText,
+      options: [...options],
+      correctAnswers: [options[correctOption]],
+      // CRITICAL: Use editingImageUrl if available (for existing images), otherwise preserve existing imageUrl
+      imageUrl: editingImageUrl || questions[currentAutoReviewIndex].imageUrl
+    };
 
-      // Update the question in the list
-      const updatedQuestions = [...questions];
-      updatedQuestions[currentAutoReviewIndex] = updatedQuestion;
-      setQuestions(updatedQuestions);
-      
-      // Clear editing state
-      setEditingQuestionIndex(null);
-    }
+    // Update the question in the list
+    const updatedQuestions = [...questions];
+    updatedQuestions[currentAutoReviewIndex] = updatedQuestion;
+    setQuestions(updatedQuestions);
 
     // Move to next question or complete review
     const nextIndex = currentAutoReviewIndex + 1;
@@ -677,34 +678,19 @@ const QuizCreation: React.FC = () => {
       
       console.log(`🔍 Auto-review Q${nextIndex + 1}: Correct answer is "${correctAnswerText}" at index ${correctIndex}`);
       
-      // CRITICAL: Complete image state cleanup to prevent image sharing between questions
-      console.log("🧹 Auto-review cleanup - clearing image state for question", nextIndex + 1);
+      // Use the same simple image handling as manual editing
+      handleRemoveImage(); // Clean up any previous image state
+      setEditingImageUrl(null); // Clear any editing URL
       
-      // Clean up any previous image state to prevent "sticking"
-      if (questionImagePreview && questionImagePreview.startsWith('blob:')) {
-        URL.revokeObjectURL(questionImagePreview);
-        console.log("🗑️ Revoked blob URL:", questionImagePreview);
+      if (nextQuestion.imageUrl) {
+        console.log("🖼️ Setting up image for next question:", nextQuestion.imageUrl);
+        setQuestionImagePreview(nextQuestion.imageUrl);
+        setEditingImageUrl(nextQuestion.imageUrl); // Set for editing
+      } else {
+        console.log("📭 Next question has no image");
+        setQuestionImagePreview(null);
+        setEditingImageUrl(null);
       }
-      
-      // Force complete image state reset
-      setQuestionImage(null);
-      setQuestionImagePreview(null);
-      
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      
-      // THEN set up image state for the next question (after cleanup)
-      setTimeout(() => {
-        if (nextQuestion.imageUrl) {
-          console.log("🖼️ Setting up image for next question:", nextQuestion.imageUrl);
-          setQuestionImagePreview(nextQuestion.imageUrl);
-        } else {
-          console.log("📭 Next question has no image");
-          setQuestionImagePreview(null);
-        }
-      }, 50); // Small delay to ensure cleanup completes first
       
       toast({
         title: "Next Question",
@@ -712,12 +698,12 @@ const QuizCreation: React.FC = () => {
         variant: "default"
       });
     } else {
-      // Review complete - COMPLETELY exit review mode and clear form
+      // Review complete - exit review mode and clear form
       setIsInAutoReviewMode(false);
       setCurrentAutoReviewIndex(0);
-      setEditingQuestionIndex(null); // Clear any editing state
+      setEditingQuestionIndex(null);
       
-      // IMPORTANT: Clear the requiresReview flag since review is now complete
+      // Clear the requiresReview flag since review is now complete
       setRequiresReview(false);
       
       // Clear auto-create mode flags from sessionStorage since review is done
@@ -726,18 +712,8 @@ const QuizCreation: React.FC = () => {
       sessionStorage.removeItem('generatedQuestions');
       sessionStorage.removeItem('generationMetadata');
       
-      // Force a complete form reset
-      setQuestionText("");
-      setOptions(["", "", "", ""]);
-      setCorrectOption(0);
-      setQuestionImage(null);
-      if (questionImagePreview) {
-        URL.revokeObjectURL(questionImagePreview);
-        setQuestionImagePreview(null);
-      }
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      // Use the simple resetForm to clear everything
+      resetForm();
       
       console.log("🏁 Review completed - form cleared and ready for new questions");
       
