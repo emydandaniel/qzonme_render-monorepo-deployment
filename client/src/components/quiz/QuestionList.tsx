@@ -103,7 +103,18 @@ const QuestionList: React.FC<QuestionListProps> = ({
             </div>
             <div className="flex space-x-2">
               {question.imageUrl && (
-                <ImageIcon className="h-5 w-5 text-green-500 mr-1" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center justify-center h-8 w-8">
+                        <ImageIcon className="h-5 w-5 text-green-500" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>This question has an image</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               
               {/* Mark as Reviewed Button - DISABLED during auto-review mode */}
