@@ -69,44 +69,78 @@ const AutoCreateQuiz: React.FC = () => {
     }
     setUserName(username);
     
-    // Check daily usage from backend API
+    // Check daily usage from backend API (IP-based rate limiting)
     const checkUsageStatus = async () => {
       try {
+        console.log('🔍 Checking auto-create usage status from backend...');
         const response = await fetch('/api/auto-create/usage-status');
         if (response.ok) {
           const result = await response.json();
+          console.log('📊 Usage status response:', result);
           if (result.success) {
             setDailyUsageCount(result.data.currentUsage);
             setCanUseFeature(result.data.canUseFeature);
+            console.log(`✅ Backend usage: ${result.data.currentUsage}/3, can use: ${result.data.canUseFeature}`);
           } else {
-            // Fallback to localStorage if API fails
-            const today = new Date().toDateString();
-            const usageKey = `auto_create_usage_${today}`;
-            const todayUsage = parseInt(localStorage.getItem(usageKey) || "0");
-            setDailyUsageCount(todayUsage);
-            setCanUseFeature(todayUsage < 3);
+            console.warn('❌ Backend returned unsuccessful response, defaulting to 0 usage');
+            setDailyUsageCount(0);
+            setCanUseFeature(true);
           }
         } else {
-          // Fallback to localStorage if API fails
-          const today = new Date().toDateString();
-          const usageKey = `auto_create_usage_${today}`;
-          const todayUsage = parseInt(localStorage.getItem(usageKey) || "0");
-          setDailyUsageCount(todayUsage);
-          setCanUseFeature(todayUsage < 3);
+          console.warn('❌ Backend API call failed, defaulting to 0 usage');
+          setDailyUsageCount(0);
+          setCanUseFeature(true);
         }
       } catch (error) {
-        console.warn('Failed to check usage status from API, using localStorage fallback');
-        // Fallback to localStorage if API fails
-        const today = new Date().toDateString();
-        const usageKey = `auto_create_usage_${today}`;
-        const todayUsage = parseInt(localStorage.getItem(usageKey) || "0");
-        setDailyUsageCount(todayUsage);
-        setCanUseFeature(todayUsage < 3);
+        console.warn('❌ Failed to check usage status from API, defaulting to 0 usage:', error);
+        setDailyUsageCount(0);
+        setCanUseFeature(true);
       }
     };
     
     checkUsageStatus();
   }, [navigate, toast]);
+
+  // Add an effect to refresh usage status when the user returns to the page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Page became visible, refresh usage status
+        console.log('🔄 Page became visible, refreshing usage status...');
+        const checkUsageStatus = async () => {
+          try {
+            console.log('🔍 Checking auto-create usage status from backend...');
+            const response = await fetch('/api/auto-create/usage-status');
+            if (response.ok) {
+              const result = await response.json();
+              console.log('📊 Usage status response:', result);
+              if (result.success) {
+                setDailyUsageCount(result.data.currentUsage);
+                setCanUseFeature(result.data.canUseFeature);
+                console.log(`✅ Backend usage: ${result.data.currentUsage}/3, can use: ${result.data.canUseFeature}`);
+              } else {
+                console.warn('❌ Backend returned unsuccessful response, defaulting to 0 usage');
+                setDailyUsageCount(0);
+                setCanUseFeature(true);
+              }
+            } else {
+              console.warn('❌ Backend API call failed, defaulting to 0 usage');
+              setDailyUsageCount(0);
+              setCanUseFeature(true);
+            }
+          } catch (error) {
+            console.warn('❌ Failed to check usage status from API, defaulting to 0 usage:', error);
+            setDailyUsageCount(0);
+            setCanUseFeature(true);
+          }
+        };
+        checkUsageStatus();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
   
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);

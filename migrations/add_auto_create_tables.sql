@@ -12,8 +12,8 @@ ADD COLUMN generation_metadata JSONB;
 -- Create auto_create_usage table for rate limiting
 CREATE TABLE IF NOT EXISTS auto_create_usage (
     id SERIAL PRIMARY KEY,
-    ip_address VARCHAR(45) NOT NULL,
-    usage_date DATE NOT NULL,
+    ip_address TEXT NOT NULL,
+    usage_date TEXT NOT NULL, -- YYYY-MM-DD format as text to match Drizzle schema
     usage_count INTEGER DEFAULT 1 NOT NULL,
     created_at TIMESTAMP DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL,

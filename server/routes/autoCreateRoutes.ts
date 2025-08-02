@@ -153,7 +153,16 @@ export function registerAutoCreateRoutes(app: Express) {
   app.get("/api/auto-create/usage-status", async (req, res) => {
     try {
       const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+      console.log(`🔍 Usage status request from IP: ${ipAddress}`);
+      console.log(`🔍 Request headers: X-Forwarded-For: ${req.headers['x-forwarded-for']}, X-Real-IP: ${req.headers['x-real-ip']}`);
+      
       const rateLimitResult = await checkRateLimit(ipAddress);
+      
+      console.log(`📊 Returning usage status for IP ${ipAddress}:`, {
+        currentUsage: rateLimitResult.currentUsage,
+        limit: rateLimitResult.limit,
+        allowed: rateLimitResult.allowed
+      });
       
       res.json({
         success: true,

@@ -25,6 +25,8 @@ export async function checkRateLimit(ipAddress: string): Promise<RateLimitResult
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
   const limit = AUTO_CREATE_SERVER_CONFIG.DAILY_LIMIT;
   
+  console.log(`🔍 Rate limiting check for IP: ${ipAddress} on date: ${today}`);
+  
   try {
     // Get current usage for today
     const existingUsage = await db
@@ -40,6 +42,8 @@ export async function checkRateLimit(ipAddress: string): Promise<RateLimitResult
     
     const currentUsage = existingUsage.length > 0 ? existingUsage[0].usageCount : 0;
     const allowed = currentUsage < limit;
+    
+    console.log(`📊 IP ${ipAddress} usage: ${currentUsage}/${limit} (allowed: ${allowed})`);
     
     // Calculate reset time (midnight of next day)
     const resetTime = new Date();
@@ -77,11 +81,14 @@ export async function incrementUsage(ipAddress: string): Promise<RateLimitResult
   const today = new Date().toISOString().split('T')[0];
   const limit = AUTO_CREATE_SERVER_CONFIG.DAILY_LIMIT;
   
+  console.log(`🔄 Incrementing usage for IP: ${ipAddress} on date: ${today}`);
+  
   try {
     // First check current limit
     const rateLimitCheck = await checkRateLimit(ipAddress);
     
     if (!rateLimitCheck.allowed) {
+      console.log(`❌ Rate limit exceeded for IP: ${ipAddress} (${rateLimitCheck.currentUsage}/${rateLimitCheck.limit})`);
       const error = new Error('Rate limit exceeded') as RateLimitError;
       error.code = 'RATE_LIMIT_EXCEEDED';
       error.currentUsage = rateLimitCheck.currentUsage;
@@ -114,6 +121,7 @@ export async function incrementUsage(ipAddress: string): Promise<RateLimitResult
           updatedAt: new Date()
         })
         .where(eq(autoCreateUsage.id, existingUsage[0].id));
+      console.log(`✅ Updated usage for IP ${ipAddress}: ${existingUsage[0].usageCount} → ${newUsageCount}`);
     } else {
       // Create new record
       newUsageCount = 1;
@@ -122,12 +130,15 @@ export async function incrementUsage(ipAddress: string): Promise<RateLimitResult
         usageDate: today,
         usageCount: newUsageCount
       });
+      console.log(`✅ Created new usage record for IP ${ipAddress}: ${newUsageCount}`);
     }
     
     // Calculate reset time
     const resetTime = new Date();
     resetTime.setDate(resetTime.getDate() + 1);
     resetTime.setHours(0, 0, 0, 0);
+    
+    console.log(`📊 Final usage for IP ${ipAddress}: ${newUsageCount}/${limit}`);
     
     return {
       allowed: newUsageCount < limit,
