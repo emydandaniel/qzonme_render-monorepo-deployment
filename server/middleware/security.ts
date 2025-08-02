@@ -170,6 +170,12 @@ const helmetConfig = {
         "https://api.together.xyz",
         "https://generativelanguage.googleapis.com",
         "https://vision.googleapis.com", // Google Vision API
+        // Add Google Fonts for service worker
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com",
+        // Add Cloudinary for image loading in service worker
+        "https://res.cloudinary.com",
+        "https://*.cloudinary.com",
       ],
       mediaSrc: ["'self'"],
       objectSrc: ["'none'"],
