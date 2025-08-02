@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { trackEvent } from "@/lib/analytics";
 import AdPlaceholder from "@/components/common/AdPlaceholder";
 import PWAInstallBanner from "@/components/common/PWAInstallBanner";
 import Layout from "@/components/common/Layout";
@@ -65,6 +66,9 @@ const HomePage: React.FC = () => {
     }
     
     try {
+      // Track manual quiz creation start
+      trackEvent('quiz_creation_started', 'engagement', 'manual_quiz');
+      
       const user = await createUserMutation.mutateAsync(userName);
       // Store user in session - ensure both variations are set to prevent issues
       sessionStorage.setItem("username", userName); 
@@ -113,6 +117,9 @@ const HomePage: React.FC = () => {
     }
     
     try {
+      // Track AI quiz creation start
+      trackEvent('quiz_creation_started', 'engagement', 'ai_auto_create');
+      
       const user = await createUserMutation.mutateAsync(userName);
       // Store user in session - ensure both variations are set to prevent issues
       sessionStorage.setItem("username", userName); 
@@ -146,6 +153,9 @@ const HomePage: React.FC = () => {
     }
     
     try {
+      // Track quiz answering attempt
+      trackEvent('quiz_answer_started', 'engagement', pendingQuiz ? 'direct_link' : 'find_quiz');
+      
       const user = await createUserMutation.mutateAsync(userName);
       // Store user in session - ensure both variations are set to prevent issues
       sessionStorage.setItem("username", userName); 

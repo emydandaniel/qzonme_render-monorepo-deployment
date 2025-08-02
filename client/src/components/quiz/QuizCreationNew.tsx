@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { trackEvent } from "@/lib/analytics";
 import { generateAccessCode, generateUrlSlug, generateDashboardToken } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -619,6 +620,9 @@ const QuizCreation: React.FC = () => {
         // Add to questions collection
         setQuestions(prev => [...prev, newQuestion]);
         
+        // Track question addition
+        trackEvent('question_added', 'engagement', 'manual', questions.length + 1);
+        
         // Automatically mark user-generated questions as reviewed since they don't need review
         setReviewedQuestions(prev => new Set([...Array.from(prev), newQuestion.id]));
         
@@ -946,6 +950,10 @@ const QuizCreation: React.FC = () => {
 
     try {
       console.log("Starting quiz creation process...");
+      
+      // Track quiz completion
+      trackEvent('quiz_created', 'engagement', isAutoCreateMode ? 'ai_generated' : 'manual', questions.length);
+      
       const quiz = await createQuizMutation.mutateAsync();
       console.log("Quiz created successfully:", quiz);
       
