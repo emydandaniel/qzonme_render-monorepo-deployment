@@ -68,15 +68,9 @@ export async function validateAdminCredentials(
 
   // Password validation
   if (!ADMIN_PASSWORD_HASH) {
-    console.error('⚠️  SECURITY WARNING: ADMIN_PASSWORD_HASH not set in environment');
-    // For development only - verify against the known password directly
-    // In production, this should use a proper bcrypt hash from environment
-    if (password === 'qzonmeadmin123') {
-      console.log('✅ Admin authenticated using development fallback');
-      return { isValid: true };
-    }
-    recordFailedAttempt(ip, 'invalid_password', userAgent);
-    return { isValid: false, reason: 'Authentication configuration error' };
+    console.error('🚨 SECURITY ERROR: ADMIN_PASSWORD_HASH not set in environment');
+    recordFailedAttempt(ip, 'authentication_error', userAgent);
+    return { isValid: false, reason: 'Authentication configuration error - contact administrator' };
   }
 
   try {
