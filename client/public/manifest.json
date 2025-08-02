@@ -1,7 +1,7 @@
 {
-  "name": "QzonMe - How Well Do You Know Me Quiz",
+  "name": "QzonMe - Create Any Quiz in Minutes",
   "short_name": "QzonMe",
-  "description": "Create and share personalized quizzes with friends. Test knowledge, discover fun facts, and challenge your relationships!",
+  "description": "Create any quiz instantly! From trivia challenges to friendship tests - it's free, fun, and takes just minutes!",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

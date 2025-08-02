@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import AdPlaceholder from "@/components/common/AdPlaceholder";
+import PWAInstallBanner from "@/components/common/PWAInstallBanner";
 import Layout from "@/components/common/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -285,11 +286,11 @@ const HomePage: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
+                <div className={`${isMobile ? 'flex flex-col space-y-3' : 'flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3'} mt-6`}>
                   {/* Always show all three buttons, with Auto Create Quiz as the newest feature last */}
                   <Button 
                     type="button" 
-                    className="btn-primary flex-1" 
+                    className={`btn-primary ${isMobile ? 'w-full' : 'flex-1'}`} 
                     onClick={handleCreateQuiz}
                     disabled={createUserMutation.isPending}
                   >
@@ -297,7 +298,7 @@ const HomePage: React.FC = () => {
                   </Button>
                   <Button 
                     type="button" 
-                    className={pendingQuiz ? "btn-primary flex-1" : "btn-secondary flex-1"} 
+                    className={`${pendingQuiz ? 'btn-primary' : 'btn-secondary'} ${isMobile ? 'w-full' : 'flex-1'}`} 
                     onClick={handleAnswerQuiz}
                     disabled={createUserMutation.isPending}
                   >
@@ -313,7 +314,7 @@ const HomePage: React.FC = () => {
                   </Button>
                   <Button 
                     type="button" 
-                    className="btn-secondary flex-1" 
+                    className={`btn-secondary ${isMobile ? 'w-full' : 'flex-1'}`} 
                     onClick={handleAutoCreateQuiz}
                     disabled={createUserMutation.isPending}
                   >
@@ -328,6 +329,9 @@ const HomePage: React.FC = () => {
           </CardContent>
         </Card>
       </section>
+
+      {/* PWA Install Banner */}
+      <PWAInstallBanner className="mb-6" />
 
       {/* Features Section */}
       <section className="mb-12">
@@ -413,11 +417,11 @@ const HomePage: React.FC = () => {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-center gap-4">
-            <Button onClick={handleCreateQuiz}>
+          <CardFooter className={`${isMobile ? 'flex flex-col gap-3' : 'flex flex-col sm:flex-row justify-center gap-3 sm:gap-4'}`}>
+            <Button onClick={handleCreateQuiz} className={isMobile ? "w-full" : "w-full sm:w-auto"}>
               <Plus className="h-4 w-4 mr-2" /> Create Manual Quiz
             </Button>
-            <Button onClick={handleAutoCreateQuiz} variant="secondary">
+            <Button onClick={handleAutoCreateQuiz} className={`bg-secondary text-secondary-foreground hover:bg-secondary/80 ${isMobile ? "w-full" : "w-full sm:w-auto"}`}>
               <Sparkles className="h-4 w-4 mr-2" /> Try AI Auto Create
             </Button>
           </CardFooter>
@@ -449,11 +453,11 @@ const HomePage: React.FC = () => {
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4">Ready to Create Your Quiz?</h2>
               <p className="mb-6">Choose manual creation for full control or let AI do the work - it's free, fun, and takes just minutes!</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button variant="secondary" size="lg" onClick={handleCreateQuiz}>
+              <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex flex-col sm:flex-row gap-3 justify-center'}`}>
+                <Button className={`bg-secondary text-secondary-foreground hover:bg-secondary/80 h-11 rounded-md px-8 ${isMobile ? "w-full" : ""}`} onClick={handleCreateQuiz}>
                   <Plus className="h-4 w-4 mr-2" /> Create Manual Quiz
                 </Button>
-                <Button variant="outline" size="lg" onClick={handleAutoCreateQuiz} className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary">
+                <Button className={`border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 rounded-md px-8 text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary ${isMobile ? "w-full" : ""}`} onClick={handleAutoCreateQuiz}>
                   <Sparkles className="h-4 w-4 mr-2" /> Try AI Auto Create
                 </Button>
               </div>
@@ -508,7 +512,7 @@ const HomePage: React.FC = () => {
               </p>
               <div className="flex justify-center">
                 <Link href="/faq">
-                  <Button variant="outline">Learn More About QzonMe</Button>
+                  <Button className="border border-input bg-background hover:bg-accent hover:text-accent-foreground">Learn More About QzonMe</Button>
                 </Link>
               </div>
             </div>
@@ -530,7 +534,7 @@ const HomePage: React.FC = () => {
               <h3 className="text-xl font-semibold mb-2">10 Fun Quiz Ideas to Challenge Your Friends</h3>
               <p className="text-muted-foreground mb-4">Creating a quiz is half the fun, but getting started with good questions makes all the difference.</p>
               <Link href="/blog/quiz-ideas">
-                <Button variant="outline">
+                <Button className="border border-input bg-background hover:bg-accent hover:text-accent-foreground">
                   Read More <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
@@ -542,7 +546,7 @@ const HomePage: React.FC = () => {
               <h3 className="text-xl font-semibold mb-2">Why QzonMe Is the Funniest Way to Bond</h3>
               <p className="text-muted-foreground mb-4">QzonMe isn't just another quiz platform. It's a space where humor, friendship, and personality collide.</p>
               <Link href="/blog/why-qzonme-is-the-funniest-way-to-bond">
-                <Button variant="outline">
+                <Button className="border border-input bg-background hover:bg-accent hover:text-accent-foreground">
                   Read More <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
