@@ -78,15 +78,20 @@ const QuestionList: React.FC<QuestionListProps> = ({
                           onError={(e) => {
                             console.error('🖼️ Image failed to load:', question.imageUrl);
                             console.error('🖼️ Error details:', e);
-                            // Try with cache-busted URL first
-                            if (!question.imageUrl.includes('?t=')) {
+                            
+                            // Prevent infinite retry - only try once with cache-busted URL
+                            const img = e.currentTarget as HTMLImageElement;
+                            if (!img.dataset.retried && !question.imageUrl.includes('?t=')) {
                               console.log('🔄 Trying cache-busted URL...');
-                              e.currentTarget.src = `${question.imageUrl}?t=${Date.now()}`;
+                              img.dataset.retried = 'true';
+                              img.src = `${question.imageUrl}?t=${Date.now()}`;
                               return;
                             }
-                            // If still failing, show broken image icon
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-red-100 text-red-500 text-xs">❌</div>';
+                            
+                            // If still failing or already retried, show broken image icon
+                            img.style.display = 'none';
+                            const parent = img.parentElement!;
+                            parent.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-red-100 text-red-500 text-xs">❌</div>';
                           }}
                           onLoad={() => {
                             console.log('✅ Image loaded successfully:', question.imageUrl);

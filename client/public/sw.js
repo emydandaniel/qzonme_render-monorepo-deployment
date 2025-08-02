@@ -11,8 +11,13 @@ self.addEventListener('activate', () => {
   self.clients.claim();
 });
 
-// Minimal fetch handler - just pass through to network
+// Minimal fetch handler - pass through to network but skip Cloudinary images to avoid CSP issues
 self.addEventListener('fetch', (event) => {
-  // Don't interfere with network requests - always go to network
+  // Skip service worker for Cloudinary images to avoid CSP violations
+  if (event.request.url.includes('cloudinary.com') || event.request.url.includes('res.cloudinary.com')) {
+    return; // Let the browser handle these requests directly
+  }
+  
+  // For all other requests, pass through to network
   event.respondWith(fetch(event.request));
 });
