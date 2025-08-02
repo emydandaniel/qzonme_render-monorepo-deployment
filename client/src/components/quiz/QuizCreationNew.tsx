@@ -388,19 +388,28 @@ const QuizCreation: React.FC = () => {
   // Image upload mutation
   const uploadImageMutation = useMutation({
     mutationFn: async (file: File) => {
+      console.log("🔄 Starting image upload mutation...");
       const formData = new FormData();
       formData.append("image", file);
       
+      console.log("🔄 Sending POST request to /api/upload-image");
       const response = await fetch("/api/upload-image", {
         method: "POST",
         body: formData
       });
       
+      console.log("🔄 Upload response status:", response.status);
+      console.log("🔄 Upload response headers:", Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        throw new Error("Failed to upload image");
+        const errorText = await response.text();
+        console.error("❌ Upload failed with status:", response.status, "Error:", errorText);
+        throw new Error(`Failed to upload image: ${response.status} ${errorText}`);
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log("✅ Upload successful, result:", result);
+      return result;
     }
   });
 
@@ -564,9 +573,12 @@ const QuizCreation: React.FC = () => {
       else if (questionImage) {
         try {
           console.log("🔄 Uploading new image file:", questionImage.name);
+          console.log("🔄 Image file size:", questionImage.size, "bytes");
+          console.log("🔄 Image file type:", questionImage.type);
           const uploadResult = await uploadImageMutation.mutateAsync(questionImage);
           imageUrl = uploadResult.imageUrl;
           console.log("✅ Image uploaded successfully:", imageUrl);
+          console.log("✅ Upload result details:", uploadResult);
         } catch (error) {
           console.error("❌ Failed to upload image:", error);
           toast({

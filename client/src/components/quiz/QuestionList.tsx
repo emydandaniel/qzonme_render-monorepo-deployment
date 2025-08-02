@@ -75,6 +75,26 @@ const QuestionList: React.FC<QuestionListProps> = ({
                           src={question.imageUrl} 
                           alt="" 
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error('🖼️ Image failed to load:', question.imageUrl);
+                            console.error('🖼️ Error details:', e);
+                            // Try with cache-busted URL first
+                            if (!question.imageUrl.includes('?t=')) {
+                              console.log('🔄 Trying cache-busted URL...');
+                              e.currentTarget.src = `${question.imageUrl}?t=${Date.now()}`;
+                              return;
+                            }
+                            // If still failing, show broken image icon
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-red-100 text-red-500 text-xs">❌</div>';
+                          }}
+                          onLoad={() => {
+                            console.log('✅ Image loaded successfully:', question.imageUrl);
+                          }}
+                          // Add crossOrigin for CORS issues
+                          crossOrigin="anonymous"
+                          // Add loading attribute for better performance
+                          loading="lazy"
                         />
                       </div>
                     </TooltipTrigger>
