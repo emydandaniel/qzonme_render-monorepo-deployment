@@ -570,15 +570,48 @@ const AutoCreateQuiz: React.FC = () => {
                 <Label htmlFor="num-questions" className="text-base font-medium">
                   Number of Questions *
                 </Label>
-                <Input
-                  id="num-questions"
-                  type="number"
-                  min="5"
-                  max="50"
-                  value={formData.numberOfQuestions}
-                  onChange={(e) => setFormData(prev => ({ ...prev, numberOfQuestions: parseInt(e.target.value) || 5 }))}
-                  required
-                />
+                <div className="flex items-center space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFormData(prev => ({ 
+                      ...prev, 
+                      numberOfQuestions: Math.max(5, prev.numberOfQuestions - 1) 
+                    }))}
+                    disabled={formData.numberOfQuestions <= 5}
+                    className="h-10 w-10 p-0"
+                    aria-label="Decrease number of questions"
+                  >
+                    -
+                  </Button>
+                  <Input
+                    id="num-questions"
+                    type="number"
+                    min="5"
+                    max="50"
+                    value={formData.numberOfQuestions}
+                    onChange={(e) => setFormData(prev => ({ ...prev, numberOfQuestions: parseInt(e.target.value) || 5 }))}
+                    required
+                    className="text-base text-center flex-1" // Prevent zoom on iOS
+                    inputMode="numeric" // Show numeric keypad on mobile
+                    pattern="[0-9]*" // Additional mobile support
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFormData(prev => ({ 
+                      ...prev, 
+                      numberOfQuestions: Math.min(50, prev.numberOfQuestions + 1) 
+                    }))}
+                    disabled={formData.numberOfQuestions >= 50}
+                    className="h-10 w-10 p-0"
+                    aria-label="Increase number of questions"
+                  >
+                    +
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">
